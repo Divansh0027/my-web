@@ -1,0 +1,263 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React from "react";
+
+interface LogoProps {
+  className?: string;
+  size?: number;
+}
+
+export default function Logo({ className = "", size = 40 }: LogoProps) {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 500 500" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <defs>
+        {/* Shiny metallic gold gradient */}
+        <linearGradient id="gold-metallic" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFF9E6" />
+          <stop offset="20%" stopColor="#F5D372" />
+          <stop offset="40%" stopColor="#D4AF37" />
+          <stop offset="60%" stopColor="#AA821C" />
+          <stop offset="80%" stopColor="#F5D372" />
+          <stop offset="100%" stopColor="#8A640F" />
+        </linearGradient>
+        
+        {/* Shimmer/sheen gradient for highlights */}
+        <linearGradient id="gold-sheen" x1="100%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#FFFCE6" />
+          <stop offset="35%" stopColor="#E6C45E" />
+          <stop offset="65%" stopColor="#A6801E" />
+          <stop offset="100%" stopColor="#5E470F" />
+        </linearGradient>
+
+        <linearGradient id="shield-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#131B2E" />
+          <stop offset="60%" stopColor="#080C16" />
+          <stop offset="100%" stopColor="#020306" />
+        </linearGradient>
+
+        {/* 3D bevel gold gradient for split stars */}
+        <linearGradient id="gold-light-half" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#FFF9E3" />
+          <stop offset="100%" stopColor="#E2C055" />
+        </linearGradient>
+        <linearGradient id="gold-dark-half" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#A8821B" />
+          <stop offset="100%" stopColor="#70540C" />
+        </linearGradient>
+        
+        {/* Ambient premium glow */}
+        <filter id="gold-glow" x="-15%" y="-15%" width="130%" height="130%">
+          <feDropShadow dx="0" dy="8" stdDeviation="6" floodColor="#D4AF37" floodOpacity="0.32" />
+        </filter>
+
+        {/* Re-usable 3D detailed star */}
+        <g id="star-3d">
+          {/* Top Point */}
+          <polygon points="0,0 0,-25 -8,-7" fill="url(#gold-light-half)" />
+          <polygon points="0,0 0,-25 8,-7" fill="url(#gold-dark-half)" />
+          {/* Right-Top Point */}
+          <polygon points="0,0 8,-7 24,-7" fill="url(#gold-light-half)" />
+          <polygon points="0,0 15,12 24,-7" fill="url(#gold-dark-half)" />
+          {/* Right-Bottom Point */}
+          <polygon points="0,0 15,12 10,25" fill="url(#gold-light-half)" />
+          <polygon points="0,0 0,16 10,25" fill="url(#gold-dark-half)" />
+          {/* Left-Bottom Point */}
+          <polygon points="0,0 0,16 -10,25" fill="url(#gold-light-half)" />
+          <polygon points="0,0 -15,12 -10,25" fill="url(#gold-dark-half)" />
+          {/* Left-Top Point */}
+          <polygon points="0,0 -15,12 -24,-7" fill="url(#gold-light-half)" />
+          <polygon points="0,0 -8,-7 -24,-7" fill="url(#gold-dark-half)" />
+        </g>
+      </defs>
+
+      {/* 5 Stars at the top, perfectly sized/arched */}
+      <g filter="url(#gold-glow)">
+        <use href="#star-3d" x="90" y="145" transform="rotate(-18, 90, 145) scale(0.62)" />
+        <use href="#star-3d" x="165" y="102" transform="rotate(-9, 165, 102) scale(0.85)" />
+        <use href="#star-3d" x="250" y="85" transform="scale(1.15)" />
+        <use href="#star-3d" x="335" y="102" transform="rotate(9, 335, 102) scale(0.85)" />
+        <use href="#star-3d" x="410" y="145" transform="rotate(18, 410, 145) scale(0.62)" />
+      </g>
+
+      {/* Main Shield Crest */}
+      {/* Outer beveled frame */}
+      <path 
+        d="M 250,110 C 370,140 400,140 400,240 C 400,345 320,405 250,445 C 180,405 100,345 100,240 C 100,140 130,140 250,110 Z" 
+        fill="url(#shield-dark)" 
+        stroke="url(#gold-metallic)" 
+        strokeWidth="14" 
+        strokeLinejoin="round"
+        filter="url(#gold-glow)"
+      />
+
+      {/* Inner thin highlight border */}
+      <path 
+        d="M 250,128 C 352,153 382,153 382,240 C 382,326 312,386 250,424 C 188,386 118,326 118,240 C 118,153 148,153 250,128 Z" 
+        stroke="url(#gold-metallic)" 
+        strokeWidth="3" 
+        strokeDasharray="8 4"
+        fill="none" 
+      />
+
+      {/* Skyscrapers / City Silhouette group (arranged inside shield) */}
+      <g>
+        {/* Building 1 (Leftmost, small flat-top with 3D side) */}
+        <rect x="155" y="235" width="22" height="70" fill="#0C1222" stroke="url(#gold-metallic)" strokeWidth="2.5" />
+        <path d="M 177,235 L 184,228 L 184,305 L 177,305 Z" fill="url(#gold-dark-half)" stroke="url(#gold-metallic)" strokeWidth="1.5" />
+        {/* Windows Building 1 */}
+        <g fill="url(#gold-metallic)">
+          <rect x="160" y="244" width="4" height="6" />
+          <rect x="168" y="244" width="4" height="6" />
+          <rect x="160" y="256" width="4" height="6" />
+          <rect x="168" y="256" width="4" height="6" />
+          <rect x="160" y="268" width="4" height="6" />
+          <rect x="168" y="268" width="4" height="6" />
+          <rect x="160" y="280" width="4" height="6" />
+          <rect x="168" y="280" width="4" height="6" />
+        </g>
+
+        {/* Building 2 (Left-center, slanted top corporate tower) */}
+        <path d="M 184,305 L 218,305 L 218,200 L 184,228 Z" fill="#050810" stroke="url(#gold-metallic)" strokeWidth="2.5" />
+        <path d="M 218,200 L 226,192 L 226,305 L 218,305 Z" fill="url(#gold-dark-half)" stroke="url(#gold-metallic)" strokeWidth="1.5" />
+        <path d="M 184,228 L 218,200 L 218,197 L 184,225 Z" fill="url(#gold-light-half)" />
+        {/* Windows Building 2 */}
+        <g fill="url(#gold-metallic)">
+          <rect x="191" y="238" width="5" height="10" />
+          <rect x="202" y="238" width="5" height="10" />
+          <rect x="191" y="254" width="5" height="10" />
+          <rect x="202" y="254" width="5" height="10" />
+          <rect x="191" y="270" width="5" height="10" />
+          <rect x="202" y="270" width="5" height="10" />
+          <rect x="191" y="286" width="5" height="10" />
+          <rect x="202" y="286" width="5" height="10" />
+        </g>
+
+        {/* Building 3 (Center Tallest Skyscraper, vertical column facade) */}
+        <rect x="226" y="150" width="54" height="155" fill="#0C1222" stroke="url(#gold-metallic)" strokeWidth="3" />
+        {/* Elegant triangular crown cap */}
+        <path d="M 226,150 L 280,150 L 253,125 Z" fill="url(#gold-sheen)" stroke="url(#gold-metallic)" strokeWidth="2.5" />
+        {/* 3D shadow face right under cap */}
+        <path d="M 253,125 L 280,150 L 280,305 L 273,305 L 273,158 L 253,138 Z" fill="url(#gold-dark-half)" opacity="0.3" />
+        {/* Premium vertical column facade stripes */}
+        <rect x="232" y="160" width="5" height="140" fill="url(#gold-metallic)" stroke="#050810" strokeWidth="0.5" />
+        <rect x="241" y="160" width="5" height="140" fill="url(#gold-metallic)" stroke="#050810" strokeWidth="0.5" />
+        <rect x="250" y="160" width="5" height="140" fill="url(#gold-metallic)" stroke="#050810" strokeWidth="0.5" />
+        <rect x="259" y="160" width="5" height="140" fill="url(#gold-metallic)" stroke="#050810" strokeWidth="0.5" />
+        <rect x="268" y="160" width="5" height="140" fill="url(#gold-metallic)" stroke="#050810" strokeWidth="0.5" />
+
+        {/* Building 4 (Right-center, flat top 3D tower block) */}
+        <rect x="280" y="210" width="38" height="95" fill="#050810" stroke="url(#gold-metallic)" strokeWidth="2.5" />
+        <path d="M 318,210 L 326,202 L 326,305 L 318,305 Z" fill="url(#gold-dark-half)" stroke="url(#gold-metallic)" strokeWidth="1.5" />
+        <rect x="288" y="200" width="22" height="10" fill="url(#gold-sheen)" stroke="url(#gold-metallic)" strokeWidth="1.5" />
+        {/* Windows Building 4 */}
+        <g fill="url(#gold-metallic)">
+          <rect x="286" y="222" width="6" height="8" />
+          <rect x="296" y="222" width="6" height="8" />
+          <rect x="306" y="222" width="6" height="8" />
+          <rect x="286" y="238" width="6" height="8" />
+          <rect x="296" y="238" width="6" height="8" />
+          <rect x="306" y="238" width="6" height="8" />
+          <rect x="286" y="254" width="6" height="8" />
+          <rect x="296" y="254" width="6" height="8" />
+          <rect x="306" y="254" width="6" height="8" />
+          <rect x="286" y="270" width="6" height="8" />
+          <rect x="296" y="270" width="6" height="8" />
+          <rect x="306" y="270" width="6" height="8" />
+        </g>
+
+        {/* Building 5 (Rightmost, small sloped-top tower) */}
+        <path d="M 326,305 L 348,305 L 348,245 L 326,245 Z" fill="#0C1222" stroke="url(#gold-metallic)" strokeWidth="2" />
+        <path d="M 326,245 L 348,245 L 337,233 Z" fill="url(#gold-sheen)" stroke="url(#gold-metallic)" strokeWidth="1.5" />
+        {/* Windows Building 5 */}
+        <g fill="url(#gold-metallic)">
+          <circle cx="332" cy="258" r="2.5" />
+          <circle cx="342" cy="258" r="2.5" />
+          <circle cx="332" cy="272" r="2.5" />
+          <circle cx="342" cy="272" r="2.5" />
+          <circle cx="332" cy="286" r="2.5" />
+          <circle cx="342" cy="286" r="2.5" />
+        </g>
+      </g>
+
+      {/* Layered Organic Golden Dune Hill (covers bottom base of buildings) */}
+      <path 
+        d="M 124,310 C 200,275 300,275 376,310 L 376,330 C 300,345 200,345 124,330 Z" 
+        fill="url(#gold-sheen)" 
+        stroke="url(#gold-metallic)" 
+        strokeWidth="3.5"
+      />
+      <path 
+        d="M 135,318 C 200,296 300,296 365,318" 
+        stroke="#080C16" 
+        strokeWidth="2.5" 
+        fill="none" 
+      />
+
+      {/* Shield Bottom Detailing: beveled V shape underneath the dunes */}
+      <path d="M 160,332 L 250,388 L 340,332" stroke="url(#gold-sheen)" strokeWidth="3" fill="none" />
+      <path d="M 180,344 L 250,396 L 320,344" stroke="url(#gold-metallic)" strokeWidth="1.5" fill="none" opacity="0.7" />
+      <line x1="250" y1="318" x2="250" y2="425" stroke="url(#gold-sheen)" strokeWidth="3" />
+
+      {/* Symmetrical 3D Gold Banner Ribbon Wrap at Bottom */}
+      {/* 1. Left folded back tail */}
+      <path d="M 50,442 L 80,417 L 50,392 Z" fill="#423107" />
+      <path d="M 50,392 L 105,375 L 105,425 L 50,442 Z" fill="url(#gold-sheen)" stroke="url(#gold-metallic)" strokeWidth="2" />
+      {/* Chevron split fold (looks directly proportional to upload) */}
+      <path d="M 50,392 L 75,417 L 50,442" stroke="url(#gold-metallic)" strokeWidth="2" fill="none" />
+
+      {/* 2. Right folded back tail */}
+      <path d="M 450,442 L 420,417 L 450,392 Z" fill="#423107" />
+      <path d="M 450,392 L 395,375 L 395,425 L 450,442 Z" fill="url(#gold-sheen)" stroke="url(#gold-metallic)" strokeWidth="2" />
+      {/* Chevron split fold */}
+      <path d="M 450,392 L 425,417 L 450,442" stroke="url(#gold-metallic)" strokeWidth="2" fill="none" />
+
+      {/* 3. Ribbon Side Overlap shadows (makes center stand forward) */}
+      <path d="M 105,425 L 94,444 L 100,382 Z" fill="#362604" />
+      <path d="M 395,425 L 406,444 L 400,382 Z" fill="#362604" />
+
+      {/* 4. Main Middle Ribbon Face Banner (placed on top) */}
+      <path 
+        d="M 94,382 C 190,409 310,409 406,382 L 395,439 C 300,466 200,466 105,439 Z" 
+        fill="url(#gold-metallic)" 
+        stroke="url(#gold-sheen)" 
+        strokeWidth="4" 
+        strokeLinejoin="round"
+        filter="url(#gold-glow)"
+      />
+
+      {/* Outer borders and trim of the ribbon */}
+      <path 
+        d="M 97,387 C 190,413 310,413 403,387" 
+        stroke="#FFFFFF" 
+        strokeWidth="1.2" 
+        fill="none" 
+        opacity="0.6" 
+      />
+      <path 
+        d="M 108,434 C 200,460 300,460 392,434" 
+        stroke="#473507" 
+        strokeWidth="1.2" 
+        fill="none" 
+        opacity="0.85" 
+      />
+
+      {/* Premium curved text "SHIV SAYA" inside the gold ribbon path */}
+      <path id="ribbonTextPathRefined" d="M 119,421 C 192,446 308,446 381,421" fill="none" />
+      <text fill="#060A13" fontSize="28" fontWeight="900" fontFamily="'Georgia', 'Times New Roman', serif" letterSpacing="4.5">
+        <textPath href="#ribbonTextPathRefined" startOffset="50%" textAnchor="middle">
+          SHIV SAYA
+        </textPath>
+      </text>
+    </svg>
+  );
+}

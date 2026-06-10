@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net (default-deny catch-all)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // Validation helper for Enquiries
+    function isValidEnquiry(data) {
+      return data.keys().hasAll(['name', 'phone', 'propertyId', 'propertyName', 'type'])
+        && data.keys().size() <= 8
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 150
+        && data.phone is string && data.phone.size() >= 8 && data.phone.size() <= 25
+        && (!data.keys().contains('message') || (data.message is string && data.message.size() <= 2000))
+        && (!data.keys().contains('id') || (data.id is string && data.id.size() <= 128))
+        && (!data.keys().contains('dateStr') || (data.dateStr is string && data.dateStr.size() <= 128))
+        && data.propertyId is string && data.propertyId.size() <= 128
+        && data.propertyName is string && data.propertyName.size() <= 300
+        && data.type is string && (data.type == 'enquiry' || data.type == 'visit');
+    }
+
+    // Validation helper for Favorites
+    function isValidFavorite(data) {
+      return data.keys().hasAll(['userId', 'propertyId'])
+        && data.keys().size() <= 3
+        && data.userId is string && data.userId.size() <= 128
+        && data.propertyId is string && data.propertyId.size() <= 128
+        && (!data.keys().contains('savedAt') || (data.savedAt is string && data.savedAt.size() <= 128));
+    }
+
+    // Properties: readable by anyone, only writable in Phase 2 with production auth
+    match /properties/{propertyId} {
+      allow get: if true;
+      allow list: if true;
+      allow create, update, delete: if false;
+    }
+
+    // Enquiries: anyone can submit if static validation passes
+    match /enquiries/{enquiryId} {
+      allow create: if isValidId(enquiryId) && isValidEnquiry(incoming());
+      allow get, list, update, delete: if false;
+    }
+
+    // Favorites: authenticated users can manage their own wishlist
+    match /users/{userId}/favorites/{propertyId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidFavorite(incoming()) && incoming().userId == request.auth.uid;
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+    }
+  }
+}

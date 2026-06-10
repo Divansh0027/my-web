@@ -1,0 +1,310 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Menu, X, PhoneCall, User as UserIcon, Heart, LogOut } from "lucide-react";
+import { loginWithGoogle, logoutUser, subscribeAuth } from "../firebase";
+import Logo from "./Logo";
+
+interface NavbarProps {
+  currentView: string;
+  onNavigate: (view: string, selectedPropertyId?: string) => void;
+  savedCount: number;
+}
+
+export default function Navbar({ currentView, onNavigate, savedCount }: NavbarProps) {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    
+    // Subscribe to auth state
+    const unsubscribe = subscribeAuth((usr) => {
+      setUser(usr);
+    });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      unsubscribe();
+    };
+  }, []);
+
+  const handleLogin = async () => {
+    await loginWithGoogle();
+  };
+
+  const handleLogout = async () => {
+    await logoutUser();
+  };
+
+  const navLinks = [
+    { name: "Home", view: "home" },
+    { name: "Properties", view: "properties" },
+    { name: "Services", view: "services_sec" },
+    { name: "About", view: "about_sec" },
+    { name: "Contact", view: "contact_sec" }
+  ];
+
+  const handleLinkClick = (view: string) => {
+    setIsMobileMenuOpen(false);
+    if (view === "services_sec" || view === "about_sec" || view === "contact_sec") {
+      onNavigate("home");
+      setTimeout(() => {
+        const element = document.getElementById(view);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    } else {
+      onNavigate(view);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  return (
+    <nav
+      id="main-navbar"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 font-sans ${
+        isScrolled 
+          ? "bg-[#0F172A]/90 backdrop-blur-md border-b border-white/5 py-4 shadow-xl" 
+          : "bg-transparent py-5"
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between">
+          
+          {/* Logo */}
+          <div 
+            onClick={() => handleLinkClick("home")}
+            className="flex items-center gap-2 cursor-pointer select-none"
+          >
+            <Logo size={42} className="shrink-0" />
+            <div className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+              Shiv <span className="text-[#D4AF37] relative font-semibold">Saya<span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#D4AF37] to-[#B5942B]"></span></span> Properties
+            </div>
+          </div>
+
+          {/* Desktop Navigation Links */}
+          <div className="hidden lg:flex items-center gap-8">
+            {navLinks.map((link) => {
+              const isSelected = currentView === link.view;
+              return (
+                <button
+                  key={link.name}
+                  onClick={() => handleLinkClick(link.view)}
+                  className="relative text-sm font-medium text-slate-300 hover:text-white transition-colors duration-150 py-1"
+                >
+                  {link.name}
+                  {isSelected && (
+                    <motion.span
+                      layoutId="nav-underline"
+                      className="absolute bottom-0 left-0 w-full h-[2px] bg-[#D4AF37]"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Desktop Actions */}
+          <div className="hidden lg:flex items-center gap-4">
+            {/* Saved Badges */}
+            <button 
+              onClick={() => handleLinkClick("saved")}
+              className="relative p-2 text-slate-400 hover:text-[#D4AF37] transition-colors"
+              title="Saved Properties"
+            >
+              <Heart className="h-[22px] w-[22px]" />
+              {savedCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white shadow-md">
+                  {savedCount}
+                </span>
+              )}
+            </button>
+
+            {/* WhatsApp CTA with Pulse */}
+            <a
+              href="https://wa.me/919911690027?text=Hi%20Shiv%20Saya%20Properties,%20I%20am%20interested%20in%20buying/renting%20a%20property."
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center h-10 w-10 rounded-full bg-[#10B981]/20 hover:bg-[#10B981]/30 text-[#10B981] transition-all relative group"
+            >
+              <div className="absolute inset-0 rounded-full bg-[#10B981]/10 animate-ping group-hover:animate-none"></div>
+              <PhoneCall className="h-[18px] w-[18px]" />
+            </a>
+
+            {/* Google Authentication */}
+            {user ? (
+              <div className="flex items-center gap-3 bg-slate-800/40 border border-white/5 pl-3 pr-2 py-1.5 rounded-full">
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt={user.displayName} referrerPolicy="no-referrer" className="h-6 w-6 rounded-full object-cover" />
+                ) : (
+                  <UserIcon className="h-5 w-5 text-[#D4AF37]" />
+                )}
+                <span className="text-xs font-semibold text-slate-200 select-none max-w-[80px] truncate">{user.displayName}</span>
+                <button 
+                  onClick={handleLogout}
+                  className="p-1 text-slate-400 hover:text-red-400 transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleLogin}
+                className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 border border-white/10 rounded-full transition-all"
+              >
+                <UserIcon className="h-4 w-4 text-[#D4AF37]" />
+                Login / Signup
+              </button>
+            )}
+
+            {/* List Your Property CTA */}
+            <button
+              onClick={() => handleLinkClick("list_property")}
+              className="px-5 py-2 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-900 text-xs font-bold shadow-lg hover:brightness-110 active:scale-95 transition-all"
+            >
+              List Your Property
+            </button>
+          </div>
+
+          {/* Mobile Right Bar */}
+          <div className="flex lg:hidden items-center gap-3">
+            <button 
+              onClick={() => handleLinkClick("saved")}
+              className="relative p-2 text-slate-400"
+            >
+              <Heart className="h-5 w-5 text-slate-300" />
+              {savedCount > 0 && (
+                <span className="absolute -top-[2px] -right-[2px] flex h-[16px] w-[16px] items-center justify-center rounded-full bg-emerald-500 text-[9px] font-bold text-white">
+                  {savedCount}
+                </span>
+              )}
+            </button>
+
+            {/* Hamburger button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 text-slate-400 hover:text-white focus:outline-none"
+            >
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Mobile Menu Drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 z-40 bg-black"
+            />
+
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "tween", duration: 0.25 }}
+              className="fixed right-0 top-0 bottom-0 z-50 w-80 max-w-[85vw] bg-[#0F172A] border-l border-white/10 p-6 flex flex-col justify-between shadow-2xl"
+            >
+              <div>
+                <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
+                  <div className="flex items-center gap-2">
+                    <Logo size={36} className="shrink-0" />
+                    <span className="font-bold text-white text-md">Shiv Saya Properties</span>
+                  </div>
+                  <button onClick={() => setIsMobileMenuOpen(false)} className="p-1 text-slate-400 hover:text-white">
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
+
+                {/* Profile in Mobile */}
+                <div className="mb-8 p-4 rounded-xl bg-slate-900 border border-white/5">
+                  {user ? (
+                    <div className="flex items-center gap-3">
+                      {user.photoURL ? (
+                        <img src={user.photoURL} alt={user.displayName} className="h-10 w-10 rounded-full" />
+                      ) : (
+                        <div className="h-10 w-10 bg-slate-800 rounded-full flex items-center justify-center text-slate-400"><UserIcon className="h-5 w-5" /></div>
+                      )}
+                      <div>
+                        <div className="font-semibold text-white text-sm">{user.displayName}</div>
+                        <div className="text-xs text-slate-400">{user.email}</div>
+                        <button onClick={handleLogout} className="text-xs text-red-400 font-medium mt-1 hover:underline">Sign Out</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <p className="text-xs text-slate-400 mb-3">Login to save listings & book consultation seamlessly</p>
+                      <button
+                        onClick={handleLogin}
+                        className="w-full py-2 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white border border-white/10 rounded-lg transition-all"
+                      >
+                        <UserIcon className="h-4 w-4 text-[#D4AF37]" />
+                        Connect Google Account
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Menu items */}
+                <div className="flex flex-col gap-4">
+                  {navLinks.map((link) => (
+                    <button
+                      key={link.name}
+                      onClick={() => handleLinkClick(link.view)}
+                      className="text-left py-2 text-base font-medium text-slate-300 hover:text-white border-b border-white/5"
+                    >
+                      {link.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Drawer Active CTA items */}
+              <div className="flex flex-col gap-3 mt-6 border-t border-white/5 pt-6">
+                <button
+                  onClick={() => handleLinkClick("list_property")}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-900 text-sm font-bold text-center shadow-md shadow-[#D4AF37]/10"
+                >
+                  List Your Property
+                </button>
+                <a
+                  href="https://wa.me/919911690027?text=Hi%20Shiv%20Saya%20Properties,%20I%20am%20interested%20in%20buying/renting%20a%20property."
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-3 rounded-xl bg-[#10B981] text-white text-sm font-bold flex items-center justify-center gap-2"
+                >
+                  <PhoneCall className="h-4 w-4" />
+                  Chat on WhatsApp
+                </a>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </nav>
+  );
+}
