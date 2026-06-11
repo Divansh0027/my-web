@@ -4,7 +4,18 @@
  */
 
 import { initializeApp, getApp, getApps } from "firebase/app";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, User, onAuthStateChanged } from "firebase/auth";
+import { 
+  getAuth, 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  signOut, 
+  User, 
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendPasswordResetEmail
+} from "firebase/auth";
 import { 
   getFirestore, 
   initializeFirestore,
@@ -17,7 +28,8 @@ import {
   deleteDoc,
   query, 
   where,
-  getDocFromServer
+  getDocFromServer,
+  onSnapshot
 } from "firebase/firestore";
 import firebaseConfig from "../firebase-applet-config.json";
 import { Property, Enquiry } from "./types";
@@ -115,6 +127,7 @@ export interface ClientUser {
   email: string;
   displayName: string;
   photoURL?: string;
+  phone?: string;
 }
 
 let simulatedUser: ClientUser | null = null;
@@ -329,14 +342,145 @@ export const loginWithGoogle = async (): Promise<ClientUser | null> => {
   // Simulated Login fallback (extremely elegant popup dialog simulation or fast autogen profile)
   const defaultUser: ClientUser = {
     uid: "dummy-user-123",
-    email: "divansh0027@gmail.com", // Set to user's email from runtime to provide premium tailored look!
-    displayName: "Divansh Sharma",
-    photoURL: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
+    email: "guest@shivsayaproperties.com", // Sanitized guest placeholder as per instructions
+    displayName: "Guest User",
+    photoURL: undefined
   };
   simulatedUser = defaultUser;
   localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(defaultUser));
   authListeners.forEach(cb => cb(defaultUser));
   return defaultUser;
+};
+
+const SIMULATED_DB_USERS_KEY = "ssp_simulated_db_users";
+
+const getSimulatedDbUsers = (): any[] => {
+  const usersStr = localStorage.getItem(SIMULATED_DB_USERS_KEY);
+  return usersStr ? JSON.parse(usersStr) : [];
+};
+
+const saveSimulatedDbUser = (user: any) => {
+  const users = getSimulatedDbUsers();
+  users.push(user);
+  localStorage.setItem(SIMULATED_DB_USERS_KEY, JSON.stringify(users));
+};
+
+export const loginWithEmailPassword = async (email: string, password: string): Promise<ClientUser> => {
+  if (!isPlaceholder && authInstance) {
+    try {
+      const result = await signInWithEmailAndPassword(authInstance, email, password);
+      return {
+        uid: result.user.uid,
+        email: result.user.email || "",
+        displayName: result.user.displayName || result.user.email?.split("@")[0] || "User",
+        photoURL: result.user.photoURL || undefined
+      };
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
+  }
+
+  // Simulated login check
+  const users = getSimulatedDbUsers();
+  const matchedUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+  if (!matchedUser) {
+    throw new Error("auth/user-not-found - Account does not exist. Please register first.");
+  }
+  if (matchedUser.password !== password) {
+    throw new Error("auth/wrong-password - Incorrect password provided.");
+  }
+
+  const clientUser: ClientUser = {
+    uid: matchedUser.uid,
+    email: matchedUser.email,
+    displayName: matchedUser.displayName,
+    photoURL: undefined
+  };
+  simulatedUser = clientUser;
+  localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(clientUser));
+  authListeners.forEach(cb => cb(clientUser));
+  return clientUser;
+};
+
+export const signUpWithEmailPassword = async (name: string, email: string, phone: string, password: string): Promise<ClientUser> => {
+  if (!isPlaceholder && authInstance) {
+    try {
+      const result = await createUserWithEmailAndPassword(authInstance, email, password);
+      await updateProfile(result.user, { displayName: name });
+
+      try {
+        await setDoc(doc(dbInstance, "users", result.user.uid), {
+          uid: result.user.uid,
+          email,
+          displayName: name,
+          phone,
+          createdAt: new Date().toISOString()
+        });
+      } catch (dbErr) {
+        console.warn("Failed index for users table", dbErr);
+      }
+
+      return {
+        uid: result.user.uid,
+        email: result.user.email || "",
+        displayName: name,
+        photoURL: undefined
+      };
+    } catch (error) {
+      console.error("Sign up error:", error);
+      throw error;
+    }
+  }
+
+  // Simulated Registration validation query
+  const users = getSimulatedDbUsers();
+  if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+    throw new Error("auth/email-already-in-use - This email address is already linked to an account.");
+  }
+
+  const newUser = {
+    uid: `simulated-uid-${Date.now()}`,
+    email,
+    displayName: name,
+    phone,
+    password,
+    createdAt: new Date().toISOString()
+  };
+
+  saveSimulatedDbUser(newUser);
+
+  const clientUser: ClientUser = {
+    uid: newUser.uid,
+    email: newUser.email,
+    displayName: newUser.displayName,
+    photoURL: undefined
+  };
+  simulatedUser = clientUser;
+  localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(clientUser));
+  authListeners.forEach(cb => cb(clientUser));
+  return clientUser;
+};
+
+export const sendPasswordReset = async (email: string): Promise<boolean> => {
+  if (!isPlaceholder && authInstance) {
+    try {
+      await sendPasswordResetEmail(authInstance, email);
+      return true;
+    } catch (error) {
+      console.error("Password reset error:", error);
+      throw error;
+    }
+  }
+
+  // Simulated
+  const users = getSimulatedDbUsers();
+  const exists = users.some(u => u.email.toLowerCase() === email.toLowerCase()) || email === "guest@shivsayaproperties.com";
+  if (!exists) {
+    throw new Error("auth/user-not-found - No profile connected to this email.");
+  }
+  return true;
 };
 
 export const logoutUser = async (): Promise<void> => {
@@ -350,4 +494,91 @@ export const logoutUser = async (): Promise<void> => {
   }
   localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
   authListeners.forEach(cb => cb(null));
+};
+
+export const updateUserProfileDetails = async (name: string, email: string, phone: string): Promise<boolean> => {
+  if (!isPlaceholder && authInstance && authInstance.currentUser) {
+    try {
+      await updateProfile(authInstance.currentUser, { displayName: name });
+      const docRef = doc(dbInstance, "users", authInstance.currentUser.uid);
+      await setDoc(docRef, {
+        uid: authInstance.currentUser.uid,
+        displayName: name,
+        email,
+        phone,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      return true;
+    } catch (err) {
+      console.error("Firestore user patch failed:", err);
+      return false;
+    }
+  }
+
+  if (simulatedUser) {
+    const updated = {
+      ...simulatedUser,
+      displayName: name,
+      email,
+      phone
+    };
+    simulatedUser = updated;
+    localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated));
+    authListeners.forEach(cb => cb(updated));
+    return true;
+  }
+  return false;
+};
+
+export const addProperty = async (property: Property): Promise<boolean> => {
+  if (isPlaceholder) {
+    // Return true, App.tsx handles state updates directly
+    return true;
+  }
+
+  try {
+    const docRef = doc(dbInstance, "properties", property.id);
+    await setDoc(docRef, property);
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, `properties/${property.id}`);
+    return false;
+  }
+};
+
+export const subscribeProperties = (callback: (props: Property[]) => void): (() => void) => {
+  if (isPlaceholder) {
+    callback(SAMPLE_PROPERTIES);
+    return () => {};
+  }
+
+  try {
+    const q = collection(dbInstance, "properties");
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (snapshot.empty) {
+        SAMPLE_PROPERTIES.forEach(async (prop) => {
+          try {
+            await setDoc(doc(dbInstance, "properties", prop.id), prop);
+          } catch (e) {
+            console.warn("Properties seeding snapshot issue", e);
+          }
+        });
+        callback(SAMPLE_PROPERTIES);
+        return;
+      }
+      const list: Property[] = [];
+      snapshot.forEach((docSnap) => {
+        list.push(docSnap.data() as Property);
+      });
+      callback(list);
+    }, (error) => {
+      console.warn("onSnapshot failed. Falling back to sample properties.", error);
+      callback(SAMPLE_PROPERTIES);
+    });
+    return unsubscribe;
+  } catch (err) {
+    console.warn("Properties subscription crash, listing standard list.", err);
+    callback(SAMPLE_PROPERTIES);
+    return () => {};
+  }
 };

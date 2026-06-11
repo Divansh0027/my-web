@@ -13,14 +13,23 @@ import SavedView from "./components/SavedView";
 import ListPropertyView from "./components/ListPropertyView";
 import ProfileView from "./components/ProfileView";
 import Notification from "./components/Notification";
-import { getProperties, getFavorites, toggleFavorite, subscribeAuth } from "./firebase";
+import { subscribeProperties, getFavorites, toggleFavorite, subscribeAuth, addProperty } from "./firebase";
 import { Property } from "./types";
 import { SAMPLE_PROPERTIES } from "./data/sampleData";
+import LoginModal from "./components/LoginModal";
 
 export default function App() {
   // Routing & View Managers
   const [currentView, setCurrentView] = useState<string>("home");
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+
+  // Authenticated Profile User & Savior list
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [savedPropertyIds, setSavedPropertyIds] = useState<string[]>([]);
+  
+  // Auth state modal triggers
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [redirectView, setRedirectView] = useState<string | null>(null);
 
   // Unified Database properties
   const [properties, setProperties] = useState<Property[]>(SAMPLE_PROPERTIES);
@@ -29,25 +38,29 @@ export default function App() {
   // Search parameters bridge (Home Hero -> Listings Sidebar)
   const [activeSearchFilters, setActiveSearchFilters] = useState<{ location: string; type: string; budgetMax: number; bhk: string } | null>(null);
 
-  // Authenticated Profile User & Savior list
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [savedPropertyIds, setSavedPropertyIds] = useState<string[]>([]);
-
   // Toast alert
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<"success" | "info">("success");
+
+  // Track user listings dynamically on properties changes or auth state changes
+  useEffect(() => {
+    if (currentUser) {
+      const filtered = properties.filter(p => (p as any).userId === currentUser.uid);
+      setUserProperties(filtered);
+    } else {
+      setUserProperties([]);
+    }
+  }, [properties, currentUser]);
 
   // Load properties and auth state
   useEffect(() => {
     // Scroll to top on root mount
     window.scrollTo({ top: 0, behavior: "smooth" });
 
-    // Stream properties
-    const fetchProps = async () => {
-      const dbProps = await getProperties();
+    // Stream properties via onSnapshot
+    const unsubscribeProperties = subscribeProperties((dbProps) => {
       setProperties(dbProps);
-    };
-    fetchProps();
+    });
 
     // Stream authenticated user
     const unsubscribeAuth = subscribeAuth(async (user) => {
@@ -63,6 +76,7 @@ export default function App() {
     });
 
     return () => {
+      unsubscribeProperties();
       unsubscribeAuth();
     };
   }, []);
@@ -88,15 +102,53 @@ export default function App() {
   };
 
   // Add a newly listed property (wizard submit)
-  const handleAddProperty = (newProp: Property) => {
-    // 1. Add to active state feed
-    setProperties(prev => [newProp, ...prev]);
-    // 2. Add to creator profile collection
-    setUserProperties(prev => [newProp, ...prev]);
+  const handleAddProperty = async (newProp: Property) => {
+    // Incorporate user details and auto status settings as per FIX 4
+    const docId = `prop-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const completedProp: Property = {
+      ...newProp,
+      id: docId,
+      status: "pending" as any, // Default pending status
+      postedDate: new Date().toISOString().split("T")[0],
+      postedBy: "Owner",
+    };
+
+    // Store custom userId, userEmail, userName for query filtering and administrative purposes
+    (completedProp as any).userId = currentUser?.uid || "guest-user";
+    (completedProp as any).userEmail = currentUser?.email || "guest@shivsayaproperties.com";
+    (completedProp as any).userName = currentUser?.displayName || "Guest User";
+    (completedProp as any).createdAt = new Date().toISOString();
+
+    const success = await addProperty(completedProp);
+    if (success) {
+      // Opt-in UI optimizations
+      setProperties(prev => [completedProp, ...prev]);
+      setUserProperties(prev => [completedProp, ...prev]);
+      triggerToast("Your property has been successfully listed and is pending review!", "success");
+    } else {
+      triggerToast("Listing failed. Verify network connection and try again.", "info");
+    }
   };
 
-  // Orchestrate active routing changes
+  const handleAuthSuccess = (user: any, welcomeMsg: string) => {
+    setCurrentUser(user);
+    triggerToast(welcomeMsg, "success");
+    if (redirectView) {
+      setCurrentView(redirectView);
+      setRedirectView(null);
+    }
+  };
+
+  // Orchestrate active routing changes (with dynamic Auth Guards)
   const handleNavigation = (view: string, targetPropertyId?: string) => {
+    const isProtected = view === "list_property" || view === "profile";
+    if (isProtected && !currentUser) {
+      setRedirectView(view);
+      setIsLoginModalOpen(true);
+      triggerToast("Authentication is required to access this resource.", "info");
+      return;
+    }
+
     if (view === "properties" && !targetPropertyId) {
       // Clear filters when clicking "Properties" directly
       setActiveSearchFilters(null);
@@ -152,6 +204,14 @@ export default function App() {
         currentView={currentView} 
         onNavigate={handleNavigation} 
         savedCount={savedPropertyIds.length} 
+        onOpenAuth={() => setIsLoginModalOpen(true)}
+      />
+
+      {/* SECURE LIGHTWEIGHT AUTH OVERLAY LOGIN PORTAL */}
+      <LoginModal 
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onSuccess={handleAuthSuccess}
       />
 
       {/* MAIN SCREEN WORKSPACE CONTAINER */}
@@ -209,6 +269,9 @@ export default function App() {
             onNavigate={handleNavigation} 
             userProperties={userProperties}
             onShowNotification={triggerToast}
+            allProperties={properties}
+            savedPropertyIds={savedPropertyIds}
+            onToggleSaved={handleToggleSaved}
           />
         )}
       </div>
