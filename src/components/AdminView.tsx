@@ -1,0 +1,2122 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { 
+  LayoutDashboard, Building, Mail, Users, BarChart3, Settings,
+  Plus, Search, Filter, Trash2, Edit, Shield, Ban, UserCheck, 
+  Download, RefreshCw, Check, X, Phone, Mail as MailIcon, 
+  ExternalLink, Eye, EyeOff, CheckSquare, Square, MoreVertical,
+  Sliders, AlertTriangle, ShieldCheck, Power, HelpCircle, AlertCircle, MapPin
+} from "lucide-react";
+import { Property, EnquiryRecord, AdminTab, AdminSettings } from "../types";
+import { BUSINESS_CONFIG } from "../config";
+import { ADMIN_EMAILS } from "../firebase";
+
+interface AdminViewProps {
+  currentView: string;
+  onNavigate: (view: string, selectedPropertyId?: string) => void;
+  properties: Property[];
+  onToggleApproval: (id: string) => void;
+  onDeleteProperty: (id: string) => void;
+  onUpdateProperty: (updated: Property) => void;
+  onAddProperty: (newProp: Property) => void;
+  onShowNotification: (msg: string, type: "success" | "info") => void;
+}
+
+export default function AdminView({
+  currentView,
+  onNavigate,
+  properties,
+  onToggleApproval,
+  onDeleteProperty,
+  onUpdateProperty,
+  onAddProperty,
+  onShowNotification
+}: AdminViewProps) {
+  
+  // Tab state
+  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+
+  // Enquiries state
+  const [enquiries, setEnquiries] = useState<EnquiryRecord[]>([]);
+
+  // Users state
+  const [dbUsers, setDbUsers] = useState<any[]>([]);
+
+  // Config/Settings state
+  const [settings, setSettings] = useState<AdminSettings>({
+    businessName: BUSINESS_CONFIG.businessName,
+    whatsappNumber: BUSINESS_CONFIG.whatsappNumber,
+    businessEmail: BUSINESS_CONFIG.businessEmail,
+    reraNumber: BUSINESS_CONFIG.reraNumber,
+    businessAddress: BUSINESS_CONFIG.businessAddress,
+    consultantName: BUSINESS_CONFIG.consultantName,
+    businessPhone: BUSINESS_CONFIG.businessPhone,
+  });
+
+  // Toggles state
+  const [controls, setControls] = useState({
+    offlineMaintenance: false,
+    slowOperations: false,
+    showWhatsappFloating: true,
+    autoApproveListings: false
+  });
+
+  // Admin emails state
+  const [adminsList, setAdminsList] = useState<string[]>([]);
+  const [newAdminEmail, setNewAdminEmail] = useState("");
+
+  // Search, filter, sorting, and modal states
+  const [propertySearch, setPropertySearch] = useState("");
+  const [propertyStatusFilter, setPropertyStatusFilter] = useState<string>("All");
+  const [propertySort, setPropertySort] = useState<string>("default");
+  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+
+  // Add/Edit Property modals
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+
+  // Enquiry states
+  const [enquirySearch, setEnquirySearch] = useState("");
+  const [enquiryFilter, setEnquiryFilter] = useState<string>("All");
+
+  // User states
+  const [userSearch, setUserSearch] = useState("");
+
+  // Confirmation dialogs
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    isDanger?: boolean;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
+
+  // Loading spinner simulation
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Initialize data on boot
+  useEffect(() => {
+    // 1. Initial Enquiries
+    try {
+      const storedEnq = localStorage.getItem("ssp_simulated_enquiries");
+      if (storedEnq) {
+        setEnquiries(JSON.parse(storedEnq));
+      } else {
+        const defaultEnquiries: EnquiryRecord[] = [
+          {
+            id: "enq-1",
+            name: "Rahul Sharma",
+            phone: "+91 98123 45678",
+            email: "rahul.sharma@gmail.com",
+            propertyId: properties[0]?.id || "p1",
+            propertyName: properties[0]?.title || "Premium 3 BHK Builder Floor",
+            message: "I am highly interested in visiting this builder floor this weekend. Is there any discount on direct registry?",
+            dateStr: new Date(Date.now() - 3600000 * 2).toISOString(),
+            status: "New"
+          },
+          {
+            id: "enq-2",
+            name: "Priyanka Sen",
+            phone: "+91 99887 76655",
+            email: "priyanka.sen@outlook.com",
+            propertyId: properties[1]?.id || "p2",
+            propertyName: properties[1]?.title || "Luxury Heritage Villa Complex",
+            message: "Please share the RERA approval document and structural warranty details via WhatsApp. Ready for token amount.",
+            dateStr: new Date(Date.now() - 3600000 * 24).toISOString(),
+            status: "Contacted"
+          },
+          {
+            id: "enq-3",
+            name: "Amit Khari",
+            phone: "+91 95401 22998",
+            email: "amitkhari90@gmail.com",
+            propertyId: "manual-ref",
+            propertyName: "Morta Industrial Plot",
+            message: "Wanted to know loan approval limit for land registry. Can you arrange meeting with Ritik Khari?",
+            dateStr: new Date(Date.now() - 3600000 * 48).toISOString(),
+            status: "Resolved"
+          },
+          {
+            id: "enq-4",
+            name: "Vikram Malhotra",
+            phone: "+91 90123 99911",
+            email: "v.malhotra@yahoo.com",
+            propertyId: properties[2]?.id || "p3",
+            propertyName: properties[2]?.title || "Penthouse Skyline Duplex",
+            message: "Is this penthouse direct owner listing? Please schedule a physical visit.",
+            dateStr: new Date(Date.now() - 3600000 * 5).toISOString(),
+            status: "New"
+          }
+        ];
+        setEnquiries(defaultEnquiries);
+        localStorage.setItem("ssp_simulated_enquiries", JSON.stringify(defaultEnquiries));
+      }
+    } catch (e) {
+      console.warn("Failed loading enquiries", e);
+    }
+
+    // 2. Initial Users
+    try {
+      const storedUsers = localStorage.getItem("ssp_simulated_db_users");
+      if (storedUsers) {
+        setDbUsers(JSON.parse(storedUsers));
+      } else {
+        const defaultUsers = [
+          {
+            uid: "simulated-user-1",
+            displayName: "Rohit Deshmukh",
+            email: "rohit.d@gmail.com",
+            phone: "+91 88771 22334",
+            createdAt: new Date(Date.now() - 3600000 * 240).toISOString(),
+            banned: false
+          },
+          {
+            uid: "simulated-user-2",
+            displayName: "Deepika Padukone",
+            email: "deepika@domain.com",
+            phone: "+91 90001 00002",
+            createdAt: new Date(Date.now() - 3600000 * 120).toISOString(),
+            banned: false
+          },
+          {
+            uid: "simulated-user-3",
+            displayName: "Kabir Singh",
+            email: "kabir.realty@gmail.com",
+            phone: "+91 70112 33445",
+            createdAt: new Date(Date.now() - 3600000 * 36).toISOString(),
+            banned: true
+          }
+        ];
+        setDbUsers(defaultUsers);
+        localStorage.setItem("ssp_simulated_db_users", JSON.stringify(defaultUsers));
+      }
+    } catch (e) {
+      console.warn("Failed loading users", e);
+    }
+
+    // 3. Initial Admins List
+    try {
+      const storedAdmins = localStorage.getItem("ssp_admin_emails");
+      if (storedAdmins) {
+        setAdminsList(JSON.parse(storedAdmins));
+      } else {
+        setAdminsList(ADMIN_EMAILS);
+        localStorage.setItem("ssp_admin_emails", JSON.stringify(ADMIN_EMAILS));
+      }
+    } catch (e) {
+      console.warn("Failed loading admins list", e);
+    }
+
+    // 4. Initial Controls
+    try {
+      const storedCont = localStorage.getItem("ssp_controls");
+      if (storedCont) {
+        setControls(JSON.parse(storedCont));
+      }
+    } catch (e) {
+      console.warn("Failed loading controls", e);
+    }
+  }, [properties]);
+
+  // Execute a delayed operation if simulated slow mode is on
+  const executeOperation = (callback: () => void, successMsg?: string) => {
+    if (controls.slowOperations) {
+      setIsLoading(true);
+      setTimeout(() => {
+        setIsLoading(false);
+        callback();
+        if (successMsg) {
+          onShowNotification(successMsg, "success");
+        }
+      }, 1000);
+    } else {
+      callback();
+      if (successMsg) {
+        onShowNotification(successMsg, "success");
+      }
+    }
+  };
+
+  // ----------------------------------------------------
+  // ENQUIRY ACTIONS
+  // ----------------------------------------------------
+  const handleUpdateEnquiryStatus = (id: string, newStatus: "New" | "Contacted" | "Resolved") => {
+    executeOperation(() => {
+      const updated = enquiries.map(e => e.id === id ? { ...e, status: newStatus } : e);
+      setEnquiries(updated);
+      localStorage.setItem("ssp_simulated_enquiries", JSON.stringify(updated));
+    }, `Enquiry status changed to ${newStatus}`);
+  };
+
+  const handleDeleteEnquiry = (id: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Enquiry Record",
+      message: "Are you sure you want to permanently erase this client enquiry? This action cannot be undone.",
+      isDanger: true,
+      onConfirm: () => {
+        executeOperation(() => {
+          const updated = enquiries.filter(e => e.id !== id);
+          setEnquiries(updated);
+          localStorage.setItem("ssp_simulated_enquiries", JSON.stringify(updated));
+        }, "Enquiry record successfully deleted");
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  const handleExportCSV = () => {
+    try {
+      // Create CSV structure
+      const headers = ["ID", "Name", "Phone", "Email", "Property Title", "Message", "Date", "Status"];
+      const rows = enquiries.map(e => [
+        e.id,
+        `"${e.name.replace(/"/g, '""')}"`,
+        e.phone,
+        e.email,
+        `"${e.propertyName.replace(/"/g, '""')}"`,
+        `"${e.message.replace(/"/g, '""')}"`,
+        e.dateStr,
+        e.status
+      ]);
+
+      const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Shiv_Saya_Enquiries_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      onShowNotification("CSV Sheet exported successfully!", "success");
+    } catch (e) {
+      console.error("Export failure", e);
+      onShowNotification("Failed to generate CSV download", "info");
+    }
+  };
+
+  // ----------------------------------------------------
+  // USER / BAN ACTIONS
+  // ----------------------------------------------------
+  const handleToggleBanUser = (uid: string, currentBanState: boolean) => {
+    const actionText = currentBanState ? "unban" : "suspend";
+    const userObj = dbUsers.find(u => u.uid === uid);
+    if (!userObj) return;
+
+    setConfirmDialog({
+      isOpen: true,
+      title: `${currentBanState ? "Lift Suspension" : "Suspend User Account"}`,
+      message: currentBanState 
+        ? `Are you sure you want to restore access for ${userObj.displayName}? Their direct listings will remain hidden until manually approved.`
+        : `Are you sure you want to suspend ${userObj.displayName}? This will lock them out of the platform and automatically hide ALL their properties immediately list-wide.`,
+      isDanger: !currentBanState,
+      onConfirm: () => {
+        executeOperation(() => {
+          // Toggle user ban status
+          const updatedUsers = dbUsers.map(u => u.uid === uid ? { ...u, banned: !currentBanState } : u);
+          setDbUsers(updatedUsers);
+          localStorage.setItem("ssp_simulated_db_users", JSON.stringify(updatedUsers));
+
+          // If banned, cascade hide their property listings
+          if (!currentBanState && userObj.email) {
+            properties.forEach(prop => {
+              if (prop.postedBy?.toLowerCase() === userObj.email.toLowerCase()) {
+                if (prop.status !== "hidden") {
+                  onUpdateProperty({
+                    ...prop,
+                    status: "hidden"
+                  });
+                }
+              }
+            });
+          }
+        }, `User ${userObj.displayName} successfully ${currentBanState ? "restored" : "suspended"}`);
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  // ----------------------------------------------------
+  // SETTINGS ACTIONS
+  // ----------------------------------------------------
+  const handleSaveSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    executeOperation(() => {
+      localStorage.setItem("ssp_settings", JSON.stringify(settings));
+      // Reload page immediately to re-bootstrap CONFIG values
+      onShowNotification("Core settings updated! Reloading parameters...", "success");
+      setTimeout(() => {
+        window.location.reload();
+      }, 800);
+    });
+  };
+
+  const handleToggleControl = (controlKey: keyof typeof controls) => {
+    const newCont = {
+      ...controls,
+      [controlKey]: !controls[controlKey]
+    };
+    setControls(newCont);
+    localStorage.setItem("ssp_controls", JSON.stringify(newCont));
+    onShowNotification(`${String(controlKey).replace(/([A-Z])/g, ' $1')} updated!`, "success");
+  };
+
+  const handleAddAdminEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanEmail = newAdminEmail.trim().toLowerCase();
+    if (!cleanEmail) return;
+
+    if (adminsList.map(a => a.toLowerCase()).includes(cleanEmail)) {
+      onShowNotification("Admin email already exists in system listings!", "info");
+      return;
+    }
+
+    executeOperation(() => {
+      const newList = [...adminsList, cleanEmail];
+      setAdminsList(newList);
+      localStorage.setItem("ssp_admin_emails", JSON.stringify(newList));
+      setNewAdminEmail("");
+    }, "New administrator access address provisioned");
+  };
+
+  const handleRemoveAdminEmail = (emailToRemove: string) => {
+    if (emailToRemove.toLowerCase() === "admin@shivsayaproperties.com") {
+      onShowNotification("The supreme root master administrator account cannot be expunged!", "info");
+      return;
+    }
+
+    setConfirmDialog({
+      isOpen: true,
+      title: "Remove Admin Rights",
+      message: `Are you sure you want to strip admin privileges from ${emailToRemove}? They will be demoted to standard user state instantly.`,
+      isDanger: true,
+      onConfirm: () => {
+        executeOperation(() => {
+          const newList = adminsList.filter(e => e.toLowerCase() !== emailToRemove.toLowerCase());
+          setAdminsList(newList);
+          localStorage.setItem("ssp_admin_emails", JSON.stringify(newList));
+        }, "Administrator access revoked successfully");
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  const handleFactoryReset = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "🚨 SYSTEM COLD HARDFIX RESTORATION",
+      message: "WARNING: This compiles a clean full purge wipe on simulated records. Removes all manual properties, local custom enquiries, suspension overrides, and resets business config defaults. DO YOU AUTHORIZE THIS TOTAL PURGE?",
+      isDanger: true,
+      onConfirm: () => {
+        executeOperation(() => {
+          localStorage.removeItem("ssp_simulated_enquiries");
+          localStorage.removeItem("ssp_simulated_db_users");
+          localStorage.removeItem("ssp_settings");
+          localStorage.removeItem("ssp_controls");
+          localStorage.removeItem("ssp_admin_emails");
+          localStorage.removeItem("ssp_properties"); // If custom property addition used it
+          onShowNotification("System storage cold purged. Reloading container...", "success");
+          setTimeout(() => {
+            window.location.reload();
+          }, 1200);
+        });
+      }
+    });
+  };
+
+  // ----------------------------------------------------
+  // PROPERTY DISMISS / APPROVAL CONSTRAINTS
+  // ----------------------------------------------------
+  const handlePropertyApprovalToggle = (id: string, currentStatus: string) => {
+    executeOperation(() => {
+      onToggleApproval(id);
+    }, `Listing status toggled for property successfully`);
+  };
+
+  const handlePropertyHideToggle = (prop: Property) => {
+    const nextStatus = prop.status === "hidden" ? "approved" : "hidden";
+    executeOperation(() => {
+      onUpdateProperty({
+        ...prop,
+        status: nextStatus
+      });
+    }, `Listing is now ${nextStatus === "hidden" ? "invisible to standard clients" : "approved and public active"}`);
+  };
+
+  const handlePropertyDelete = (id: string) => {
+    const matchedProp = properties.find(p => p.id === id);
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Real Estate Listing",
+      message: `Are you absolutely sure you want to permanently delete "${matchedProp?.title || 'this property'}"? This clears all customer linkages and details.`,
+      isDanger: true,
+      onConfirm: () => {
+        executeOperation(() => {
+          onDeleteProperty(id);
+          setSelectedProperties(prev => prev.filter(pId => pId !== id));
+        }, "Property listing permanently erased from core");
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  // ----------------------------------------------------
+  // BULK MANIPULATIONS ON TABLE
+  // ----------------------------------------------------
+  const handleSelectAllProps = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      const visibleIds = filteredPropertiesings.map(p => p.id);
+      setSelectedProperties(visibleIds);
+    } else {
+      setSelectedProperties([]);
+    }
+  };
+
+  const handleSelectProp = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedProperties(prev => [...prev, id]);
+    } else {
+      setSelectedProperties(prev => prev.filter(pId => pId !== id));
+    }
+  };
+
+  const handleBulkApprove = () => {
+    if (selectedProperties.length === 0) return;
+    executeOperation(() => {
+      selectedProperties.forEach(id => {
+        const found = properties.find(p => p.id === id);
+        if (found && found.status !== "approved") {
+          onToggleApproval(id);
+        }
+      });
+      setSelectedProperties([]);
+    }, `Bulk approved ${selectedProperties.length} listings successfully`);
+  };
+
+  const handleBulkHide = () => {
+    if (selectedProperties.length === 0) return;
+    executeOperation(() => {
+      selectedProperties.forEach(id => {
+        const found = properties.find(p => p.id === id);
+        if (found && found.status !== "hidden") {
+          onUpdateProperty({ ...found, status: "hidden" });
+        }
+      });
+      setSelectedProperties([]);
+    }, `Successfully hid ${selectedProperties.length} selected listings`);
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedProperties.length === 0) return;
+    setConfirmDialog({
+      isOpen: true,
+      title: `Permanently Erase ${selectedProperties.length} Listings`,
+      message: `WARNING: You are compiling a batch delete query on ${selectedProperties.length} properties. This clears them permanently from server index. Proceed?`,
+      isDanger: true,
+      onConfirm: () => {
+        executeOperation(() => {
+          selectedProperties.forEach(id => {
+            onDeleteProperty(id);
+          });
+          setSelectedProperties([]);
+        }, `Batch purge complete for ${selectedProperties.length} items`);
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  // ----------------------------------------------------
+  // ADD & EDIT PROPERTY ACTIONS
+  // ----------------------------------------------------
+  const handleAddNewManualProperty = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const data = new FormData(e.currentTarget);
+    const title = data.get("title") as string;
+    const price = Number(data.get("price"));
+    const location = data.get("location") as string;
+    const type = data.get("type") as string;
+    const bhkStr = data.get("bhk") as string;
+    const description = data.get("description") as string;
+    const area = Number(data.get("area"));
+    const areaUnit = data.get("areaUnit") as string;
+    const transactionType = data.get("transactionType") as "Buy" | "Rent";
+    const imageUrl = data.get("imageUrl") as string || "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=800&q=80";
+
+    if (!title || !price || !location) {
+      onShowNotification("Required fields cannot be left empty!", "info");
+      return;
+    }
+
+    const newProp: Property = {
+      id: `manual-p-${Date.now()}`,
+      title,
+      description,
+      price,
+      priceString: price >= 10000000 ? `₹${(price / 10000000).toFixed(2)} Crore` : `₹${(price / 100000).toFixed(0)} Lakhs`,
+      locality: location,
+      city: "Delhi NCR",
+      category: transactionType === "Rent" ? "Rent" : "Buy",
+      featured: false,
+      newLaunch: true,
+      verified: true,
+      postedDate: new Date().toISOString().split("T")[0],
+      location,
+      bhk: bhkStr,
+      type,
+      area,
+      areaUnit: areaUnit || "Sq.Ft.",
+      bathrooms: Number(data.get("bathrooms")) || 2,
+      floor: Number(data.get("floor")) || 0,
+      totalFloors: Number(data.get("totalFloors")) || 4,
+      possession: data.get("possession") as string || "Ready to Move",
+      postedBy: settings.businessEmail,
+      postedByUid: "admin-system",
+      createdAt: new Date().toISOString(),
+      status: controls.autoApproveListings ? "approved" : "pending",
+      images: [imageUrl],
+      amenities: ["Water Storage", "Security Ward", "Spacious Balcony"],
+      isPremium: data.get("isPremium") === "true",
+      reraApproved: data.get("reraApproved") === "true"
+    };
+
+    executeOperation(() => {
+      onAddProperty(newProp);
+      setIsAddModalOpen(false);
+    }, `New direct listing added! status: ${newProp.status}`);
+  };
+
+  const handleUpdateEditProperty = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingProperty) return;
+
+    const data = new FormData(e.currentTarget);
+    const title = data.get("title") as string;
+    const price = Number(data.get("price"));
+    const location = data.get("location") as string;
+    const type = data.get("type") as string;
+    const bhkStr = data.get("bhk") as string;
+    const description = data.get("description") as string;
+    const area = Number(data.get("area"));
+    const areaUnit = data.get("areaUnit") as string;
+    const transactionType = data.get("transactionType") as "Buy" | "Rent";
+    const imageUrl = data.get("imageUrl") as string;
+
+    const updated: Property = {
+      ...editingProperty,
+      title,
+      description,
+      price,
+      location,
+      bhk: bhkStr,
+      type,
+      area,
+      areaUnit,
+      bathrooms: Number(data.get("bathrooms")) || editingProperty.bathrooms,
+      floor: Number(data.get("floor")) || editingProperty.floor,
+      totalFloors: Number(data.get("totalFloors")) || editingProperty.totalFloors,
+      possession: data.get("possession") as string || editingProperty.possession,
+      images: imageUrl ? [imageUrl] : editingProperty.images,
+      isPremium: data.get("isPremium") === "true",
+      reraApproved: data.get("reraApproved") === "true"
+    };
+
+    executeOperation(() => {
+      onUpdateProperty(updated);
+      setIsEditModalOpen(false);
+      setEditingProperty(null);
+    }, "Property details modified successfully");
+  };
+
+  // ----------------------------------------------------
+  // COMPUTED METRICS AND FILTERS
+  // ----------------------------------------------------
+  // 1. Properties filters
+  const filteredPropertiesings = properties.filter(p => {
+    const matchesSearch = p.title.toLowerCase().includes(propertySearch.toLowerCase()) || 
+                          p.location.toLowerCase().includes(propertySearch.toLowerCase());
+    
+    if (propertyStatusFilter !== "All") {
+      return matchesSearch && p.status === propertyStatusFilter.toLowerCase();
+    }
+    return matchesSearch;
+  });
+
+  const sortedListings = [...filteredPropertiesings].sort((a, b) => {
+    if (propertySort === "price-asc") return a.price - b.price;
+    if (propertySort === "price-desc") return b.price - a.price;
+    if (propertySort === "newest") return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    return 0; // Default
+  });
+
+  // 2. Enquiries filters
+  const filteredEnquiries = enquiries.filter(e => {
+    const matchesSearch = e.name.toLowerCase().includes(enquirySearch.toLowerCase()) ||
+                          e.email.toLowerCase().includes(enquirySearch.toLowerCase()) ||
+                          e.propertyName.toLowerCase().includes(enquirySearch.toLowerCase());
+    if (enquiryFilter !== "All") {
+      return matchesSearch && e.status === enquiryFilter;
+    }
+    return matchesSearch;
+  });
+
+  // 3. User filters
+  const filteredUsers = dbUsers.filter(u => {
+    return u.displayName.toLowerCase().includes(userSearch.toLowerCase()) || 
+           u.email.toLowerCase().includes(userSearch.toLowerCase());
+  });
+
+  // 4. Stat counting variables
+  const approvedListingsCount = properties.filter(p => p.status === "approved").length;
+  const pendingApprovalsCount = properties.filter(p => p.status === "pending").length;
+  
+  // FLAT RATE of 1% commission on all approved "Buy" (sale) properties for "Estimated Revenue"
+  const totalApprovedSalesValue = properties
+    .filter(p => p.status === "approved" && (!p.transactionType || p.transactionType === "Buy"))
+    .reduce((sum, p) => sum + p.price, 0);
+  const estimatedRevenue = Math.round(totalApprovedSalesValue * 0.01);
+
+  // Formatting currency in Rupee (Cr / Lakh) formats beautifully
+  const formatIndianCurrency = (amount: number) => {
+    if (amount >= 10000000) {
+      return `₹${(amount / 10000000).toFixed(2)} Cr`;
+    }
+    if (amount >= 100000) {
+      return `₹${(amount / 100000).toFixed(1)} Lakh`;
+    }
+    return `₹${amount.toLocaleString()}`;
+  };
+
+  return (
+    <div className="font-sans text-slate-200 bg-[#0F172A] min-h-screen pt-24 pb-16 flex flex-col md:flex-row">
+      
+      {/* ----------------- SIDEBAR CONTAINER ----------------- */}
+      <aside className="w-full md:w-64 shrink-0 bg-slate-900 border-b md:border-b-0 md:border-r border-white/5 p-5 flex flex-col md:sticky md:top-24 md:h-[calc(100vh-140px)]">
+        <div className="flex items-center gap-2 mb-8 px-2">
+          <Shield className="h-6 w-6 text-[#D4AF37]" />
+          <div>
+            <h2 className="font-bold text-white text-base">Control Hub</h2>
+            <p className="text-[10px] text-slate-400 font-medium tracking-wide">SHIV SAYA ADVISORY</p>
+          </div>
+        </div>
+
+        {/* Sidebar Nav buttons */}
+        <nav className="flex flex-row md:flex-col gap-1.5 overflow-x-auto md:overflow-x-visible pb-3 md:pb-0 scrollbar-none">
+          {[
+            { id: "overview", label: "Dashboard", Icon: LayoutDashboard },
+            { id: "properties", label: "Properties", Icon: Building },
+            { id: "enquiries", label: "Enquiries", Icon: Mail, badge: enquiries.filter(e => e.status === "New").length },
+            { id: "users", label: "Users", Icon: Users },
+            { id: "analytics", label: "Analytics", Icon: BarChart3 },
+            { id: "settings", label: "Settings", Icon: Settings }
+          ].map(tab => {
+            const isSelected = activeTab === tab.id;
+            const TabIcon = tab.Icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as AdminTab)}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap transition-all ${
+                  isSelected 
+                    ? "bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 font-bold" 
+                    : "text-slate-400 hover:bg-slate-800 hover:text-white border border-transparent"
+                }`}
+              >
+                <TabIcon className={`h-4.5 w-4.5 ${isSelected ? "text-[#D4AF37]" : "text-slate-400"}`} />
+                <span>{tab.label}</span>
+                {tab.badge && tab.badge > 0 ? (
+                  <span className="ml-auto px-2 py-0.5 rounded-full bg-red-500 text-white font-bold text-[9px] min-w-4 text-center">
+                    {tab.badge}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* System parameters indicator */}
+        <div className="hidden md:block mt-auto bg-slate-950/50 rounded-xl p-3.5 border border-white/5">
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">
+            <span>Container Status</span>
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          </div>
+          <p className="text-[10px] text-slate-500 font-mono leading-relaxed">
+            API Sync: Active<br />
+            SimLoader: {controls.slowOperations ? "1000ms" : "0ms"}<br />
+            Admins: {adminsList.length} Accounts
+          </p>
+        </div>
+      </aside>
+
+      {/* ----------------- CORE PANELS HUB ----------------- */}
+      <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 md:py-2 overflow-x-hidden">
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div 
+              key="spinner_loader"
+              className="flex flex-col items-center justify-center py-24 gap-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <RefreshCw className="h-10 w-10 text-[#D4AF37] animate-spin" />
+              <p className="text-xs text-slate-400 font-semibold tracking-wide">Syncing server variables...</p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25 }}
+              className="space-y-6"
+            >
+              
+              {/* =====================================================
+                  METRIC PANEL: OVERVIEW TAB
+                  ===================================================== */}
+              {activeTab === "overview" && (
+                <div className="space-y-8 animate-fadeIn">
+                  {/* Top Welcome Title */}
+                  <div className="flex justify-between items-center gap-4">
+                    <div>
+                      <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Executive Dashboard</h1>
+                      <p className="text-xs text-slate-400">Shiv Saya Properties listing approvals, direct client requests, and operations.</p>
+                    </div>
+                    <div className="text-xs bg-slate-900 border border-white/5 py-1.5 px-3 rounded-lg text-slate-400 font-medium">
+                      Est. Commission: <span className="text-[#D4AF37] font-bold">1% Scale</span>
+                    </div>
+                  </div>
+
+                  {/* 6 Grid Metric Cards */}
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[
+                      { title: "Total Properties", value: properties.length.toString(), color: "border-l-blue-500", desc: "Indexed real estate" },
+                      { title: "Approved Listings", value: approvedListingsCount.toString(), color: "border-l-emerald-500", desc: "Public direct active" },
+                      { title: "Pending Approvals", value: pendingApprovalsCount.toString(), color: "border-l-amber-500", desc: "Awaiting physical check", warning: pendingApprovalsCount > 0 },
+                      { title: "Client Enquiries", value: enquiries.length.toString(), color: "border-l-purple-500", desc: "Awaiting resolution callback" },
+                      { title: "Registered Users", value: dbUsers.length.toString(), color: "border-l-rose-500", desc: "Simulated database logins" },
+                      { title: "Est. Revenue (1%)", value: formatIndianCurrency(estimatedRevenue), color: "border-l-[#D4AF37]", desc: "Scale value generated" }
+                    ].map((metric, i) => (
+                      <motion.div
+                        key={metric.title}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3, delay: i * 0.05 }}
+                        className={`bg-slate-900 border border-white/5 border-l-4 ${metric.color} rounded-2xl p-4 shadow-xl flex flex-col justify-between`}
+                      >
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{metric.title}</span>
+                        <div className="my-2.5 flex items-baseline gap-2">
+                          <span className="text-lg sm:text-2xl font-black text-white">{metric.value}</span>
+                          {metric.warning && (
+                            <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-ping"></span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-slate-500 font-medium leading-tight">{metric.desc}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Split sections: Left Pending items, Right Recent requests */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* LEFT PANEL: Pending Approvals Queue */}
+                    <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl flex flex-col">
+                      <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4.5 w-4.5 text-amber-500" />
+                          <h3 className="font-extrabold text-white text-sm">Awaiting Audited Approvals</h3>
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-bold bg-slate-950 px-2 py-0.5 rounded-md">
+                          {pendingApprovalsCount} Queue
+                        </span>
+                      </div>
+
+                      <div className="space-y-3.5 max-h-[340px] overflow-y-auto pr-1 scrollbar-thin">
+                        {properties.filter(p => p.status === "pending").length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
+                            <ShieldCheck className="h-10 w-10 text-emerald-500" />
+                            <p className="text-xs text-slate-400 font-semibold">All property records verified!</p>
+                            <p className="text-[10px] text-slate-500">Every direct submit has been physically audited.</p>
+                          </div>
+                        ) : (
+                          properties.filter(p => p.status === "pending").map((prop) => (
+                            <div 
+                              key={prop.id}
+                              className="p-3.5 bg-slate-950/40 rounded-xl border border-white/5 flex items-center justify-between gap-4.5 hover:border-white/10 transition-all"
+                            >
+                              <div className="min-w-0">
+                                <h4 className="font-bold text-white text-xs truncate leading-snug">{prop.title}</h4>
+                                <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1.5 font-semibold">
+                                  <MapPin className="h-3 w-3 text-[#D4AF37] shrink-0" /> {prop.location}
+                                </p>
+                                <p className="text-[10px] text-[#D4AF37] font-black mt-0.5">{formatIndianCurrency(prop.price)}</p>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                  onClick={() => handlePropertyApprovalToggle(prop.id, prop.status)}
+                                  className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-[10px] flex items-center gap-1 cursor-pointer transition-all active:scale-95"
+                                  title="Audit Approved & Publish"
+                                >
+                                  <Check className="h-3.5 w-3.5" /> Approve
+                                </button>
+                                <button
+                                  onClick={() => handlePropertyDelete(prop.id)}
+                                  className="p-2 rounded-lg bg-slate-800 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 text-slate-400 hover:text-red-400 cursor-pointer transition-all"
+                                  title="Dismiss Reject"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    {/* RIGHT PANEL: Recent Enquiries */}
+                    <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl flex flex-col">
+                      <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4.5 w-4.5 text-[#D4AF37]" />
+                          <h3 className="font-extrabold text-white text-sm">Recent Client Inquiries</h3>
+                        </div>
+                        <button 
+                          onClick={() => setActiveTab("enquiries")}
+                          className="text-[10px] text-[#D4AF37] font-bold flex items-center gap-0.5 cursor-pointer hover:underline"
+                        >
+                          View All <ExternalLink className="h-3 w-3" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-3 max-h-[340px] overflow-y-auto pr-1 scrollbar-thin">
+                        {enquiries.slice(0, 5).map((enq) => (
+                          <div 
+                            key={enq.id}
+                            className="p-3.5 bg-slate-950/40 rounded-xl border border-white/5 space-y-2 hover:border-[#D4AF37]/20 transition-all"
+                          >
+                            <div className="flex items-center justify-between gap-2.5">
+                              <div>
+                                <h4 className="font-extrabold text-white text-xs">{enq.name}</h4>
+                                <span className="text-[9px] text-slate-500 font-medium">{new Date(enq.dateStr).toLocaleString()}</span>
+                              </div>
+                              
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                enq.status === "New" 
+                                  ? "bg-red-500/15 text-red-400 border border-red-500/10 animate-pulse"
+                                  : enq.status === "Contacted"
+                                  ? "bg-amber-500/15 text-amber-400 border border-amber-500/10"
+                                  : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/10"
+                              }`}>
+                                {enq.status}
+                              </span>
+                            </div>
+
+                            <p className="text-[10px] text-[#D4AF37] font-bold truncate">Prop: {enq.propertyName}</p>
+                            <p className="text-[10px] text-slate-400 italic line-clamp-2">"{enq.message}"</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+
+              {/* =====================================================
+                  TAB 2: PROPERTIES MANAGEMENT PANEL
+                  ===================================================== */}
+              {activeTab === "properties" && (
+                <div className="space-y-6 animate-fadeIn">
+                  
+                  {/* Top bar controls */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h1 className="text-xl font-extrabold text-white tracking-tight">Real Estate Master Index ({filteredPropertiesings.length} records)</h1>
+                      <p className="text-xs text-slate-400">Search, filter, edit details manually, or process approvals in bulk.</p>
+                    </div>
+
+                    <button
+                      onClick={() => setIsAddModalOpen(true)}
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-lg active:scale-95 transition-all self-start sm:self-auto"
+                    >
+                      <Plus className="h-4 w-4 text-slate-950 stroke-[3]" /> Add Manual Property
+                    </button>
+                  </div>
+
+                  {/* Searching filtering row */}
+                  <div className="bg-slate-900 border border-white/5 rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-3.5 shadow-xl">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
+                      <input
+                        type="text"
+                        placeholder="Search listings by title, locality name..."
+                        value={propertySearch}
+                        onChange={(e) => setPropertySearch(e.target.value)}
+                        className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/40 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-600 outline-none transition-all"
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex bg-slate-950 p-1 rounded-xl border border-white/5">
+                        {["All", "Approved", "Pending", "Hidden"].map((fState) => (
+                          <button
+                            key={fState}
+                            onClick={() => setPropertyStatusFilter(fState)}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all ${
+                              propertyStatusFilter === fState
+                                ? "bg-slate-800 text-[#D4AF37]"
+                                : "text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            {fState}
+                          </button>
+                        ))}
+                      </div>
+
+                      <select
+                        value={propertySort}
+                        onChange={(e) => setPropertySort(e.target.value)}
+                        className="bg-slate-950 border border-white/5 rounded-xl text-[10px] font-bold text-slate-300 py-2.5 px-3.5 outline-none focus:border-[#D4AF37]/30 cursor-pointer"
+                      >
+                        <option value="default">Default Sort</option>
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
+                        <option value="newest">Posted: Newest</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* BULK ACTIONS BANNER */}
+                  {selectedProperties.length > 0 && (
+                    <motion.div 
+                      className="bg-slate-800/80 border border-[#D4AF37]/30 rounded-2xl px-5 py-3.5 flex items-center justify-between gap-4 shadow-xl"
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <CheckSquare className="h-4.5 w-4.5 text-[#D4AF37]" />
+                        <span className="text-xs text-white font-bold">{selectedProperties.length} properties selected</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleBulkApprove}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-[10px] cursor-pointer active:scale-95 transition-all"
+                        >
+                          Approve Batch
+                        </button>
+                        <button
+                          onClick={handleBulkHide}
+                          className="px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-900 text-slate-300 border border-white/10 hover:border-slate-700 font-bold text-[10px] cursor-pointer"
+                        >
+                          Hide Batch
+                        </button>
+                        <button
+                          onClick={handleBulkDelete}
+                          className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-[10px] cursor-pointer active:scale-95 transition-all flex items-center gap-1"
+                        >
+                          <Trash2 className="h-3 w-3" /> Erase Batch
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Database properties list table */}
+                  <div className="bg-slate-900 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-950 border-b border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <th className="py-4.5 px-4 w-12 text-center">
+                              <input
+                                type="checkbox"
+                                checked={selectedProperties.length === filteredPropertiesings.length && filteredPropertiesings.length > 0}
+                                onChange={handleSelectAllProps}
+                                className="rounded border-white/10 text-[#D4AF37] focus:ring-[#D4AF37]/30 h-4 w-4 bg-slate-950 cursor-pointer"
+                              />
+                            </th>
+                            <th className="py-4.5 px-4">Title & Locality</th>
+                            <th className="py-4.5 px-4 w-32">Price Scale</th>
+                            <th className="py-4.5 px-4 w-28 text-center">Audit Status</th>
+                            <th className="py-4.5 px-4 w-48 text-center">Panel Actions</th>
+                          </tr>
+                        </thead>
+
+                        <tbody className="divide-y divide-white/5 text-xs text-slate-300">
+                          {sortedListings.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="py-16 text-center text-slate-500 font-medium">
+                                No properties matching search criteria were found!
+                              </td>
+                            </tr>
+                          ) : (
+                            sortedListings.map((prop) => {
+                              const isChecked = selectedProperties.includes(prop.id);
+                              return (
+                                <tr key={prop.id} className={`hover:bg-slate-950/20 transition-all ${isChecked ? "bg-slate-800/10" : ""}`}>
+                                  {/* Checkbox column */}
+                                  <td className="py-4 px-4 text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={(e) => handleSelectProp(prop.id, e.target.checked)}
+                                      className="rounded border-white/10 text-[#D4AF37] focus:ring-[#D4AF37]/30 h-4 w-4 bg-slate-950 cursor-pointer"
+                                    />
+                                  </td>
+
+                                  {/* Title & locality column */}
+                                  <td className="py-4 px-4 min-w-0 font-sans">
+                                    <h4 className="font-extrabold text-white leading-normal truncate max-w-sm sm:max-w-md">{prop.title}</h4>
+                                    <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                      <MapPin className="h-3 w-3 text-[#D4AF37]" /> {prop.location}
+                                    </p>
+                                    <span className="inline-block mt-1 bg-slate-950/60 text-slate-400 text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">
+                                      {prop.bhk} | {prop.type} | {prop.postedBy || "Owner Direct"}
+                                    </span>
+                                  </td>
+
+                                  {/* Price column */}
+                                  <td className="py-4 px-4 font-bold text-[#D4AF37]">
+                                    {formatIndianCurrency(prop.price)}
+                                  </td>
+
+                                  {/* Status tag */}
+                                  <td className="py-4 px-4 text-center">
+                                    <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold border leading-none uppercase ${
+                                      prop.status === "approved"
+                                        ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20"
+                                        : prop.status === "pending"
+                                        ? "bg-amber-500/15 text-amber-400 border-amber-500/20 animate-pulse"
+                                        : "bg-slate-800 text-slate-400 border-white/5"
+                                    }`}>
+                                      {prop.status}
+                                    </span>
+                                  </td>
+
+                                  {/* Actions buttons */}
+                                  <td className="py-4 px-4">
+                                    <div className="flex items-center justify-center gap-2.5">
+                                      {/* Approve Toggle */}
+                                      {prop.status === "pending" ? (
+                                        <button
+                                          onClick={() => handlePropertyApprovalToggle(prop.id, prop.status)}
+                                          className="p-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-[9px] flex items-center gap-0.5 cursor-pointer transition-all"
+                                          title="Audit Approve"
+                                        >
+                                          <Check className="h-3 w-3" /> Approve
+                                        </button>
+                                      ) : (
+                                        <button
+                                          onClick={() => handlePropertyApprovalToggle(prop.id, prop.status)}
+                                          className="p-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 border border-white/5 text-slate-400 hover:text-[#D4AF37] text-[9px] flex items-center gap-0.5 cursor-pointer"
+                                          title="Revoke Verification"
+                                        >
+                                          <RefreshCw className="h-3 w-3" /> Revoke
+                                        </button>
+                                      )}
+
+                                      {/* Hide/Show Toggle */}
+                                      <button
+                                        onClick={() => handlePropertyHideToggle(prop)}
+                                        className="p-2 rounded-lg bg-slate-850 hover:bg-slate-800 border border-white/5 text-slate-400 hover:text-white"
+                                        title={prop.status === "hidden" ? "Restore Visibility" : "Hide Listing"}
+                                      >
+                                        {prop.status === "hidden" ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                                      </button>
+
+                                      {/* Edit */}
+                                      <button
+                                        onClick={() => {
+                                          setEditingProperty(prop);
+                                          setIsEditModalOpen(true);
+                                        }}
+                                        className="p-2 rounded-lg bg-slate-850 hover:bg-slate-800 border border-white/5 text-slate-400 hover:text-white cursor-pointer"
+                                        title="Modify Details"
+                                      >
+                                        <Edit className="h-3.5 w-3.5" />
+                                      </button>
+
+                                      {/* Delete */}
+                                      <button
+                                        onClick={() => handlePropertyDelete(prop.id)}
+                                        className="p-2 rounded-lg bg-slate-850 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 text-slate-400 hover:text-red-400 cursor-pointer"
+                                        title="Delete Listing"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+
+              {/* =====================================================
+                  TAB 3: ENQUIRIES PANEL
+                  ===================================================== */}
+              {activeTab === "enquiries" && (
+                <div className="space-y-6 animate-fadeIn">
+                  
+                  {/* Top bar description */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h1 className="text-xl font-extrabold text-white tracking-tight">Client Contact Hub ({filteredEnquiries.length} records)</h1>
+                      <p className="text-xs text-slate-400">Direct callbacks from interested buyers. Complete tasks, change statuses, or chat on WhatsApp.</p>
+                    </div>
+
+                    <button
+                      onClick={handleExportCSV}
+                      className="px-4 py-2.5 rounded-xl bg-slate-900 border border-white/5 hover:border-[#D4AF37]/30 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-lg active:scale-95 transition-all"
+                    >
+                      <Download className="h-4 w-4 text-[#D4AF37]" /> Export CSV Sheet
+                    </button>
+                  </div>
+
+                  {/* Search bar inside enquiries */}
+                  <div className="bg-slate-900 border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row gap-3.5 shadow-xl">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
+                      <input
+                        type="text"
+                        placeholder="Search enquiries by name, email, or property title..."
+                        value={enquirySearch}
+                        onChange={(e) => setEnquirySearch(e.target.value)}
+                        className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/40 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-650 outline-none transition-all"
+                      />
+                    </div>
+
+                    <div className="flex bg-slate-950 p-1 rounded-xl border border-white/5">
+                      {["All", "New", "Contacted", "Resolved"].map((enqFilterOpt) => (
+                        <button
+                          key={enqFilterOpt}
+                          onClick={() => setEnquiryFilter(enqFilterOpt)}
+                          className={`px-3 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all ${
+                            enquiryFilter === enqFilterOpt
+                              ? "bg-slate-800 text-[#D4AF37]"
+                              : "text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          {enqFilterOpt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Enquiries Grid table list */}
+                  <div className="bg-slate-900 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-950 border-b border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <th className="py-4 px-4 w-48">Client Details</th>
+                            <th className="py-4 px-4">Subject Property</th>
+                            <th className="py-4 px-4 w-48">Client Request</th>
+                            <th className="py-4 px-4 w-32 text-center">Status</th>
+                            <th className="py-4 px-4 w-40 text-center">Advisory Tools</th>
+                          </tr>
+                        </thead>
+
+                        <tbody className="divide-y divide-white/5 text-xs text-slate-300">
+                          {filteredEnquiries.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="py-16 text-center text-slate-500 font-medium">
+                                No client enquiries found matching keywords!
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredEnquiries.map((enq) => (
+                              <tr key={enq.id} className="hover:bg-slate-950/20 transition-all font-sans">
+                                
+                                {/* Client stats */}
+                                <td className="py-4 px-4 space-y-1">
+                                  <h4 className="font-extrabold text-white leading-tight">{enq.name}</h4>
+                                  <p className="text-[10px] text-[#D4AF37] font-semibold">{enq.phone}</p>
+                                  <p className="text-[10px] text-slate-500 select-all font-medium break-all">{enq.email}</p>
+                                  <p className="text-[9px] text-slate-600">Recd: {new Date(enq.dateStr).toLocaleDateString()}</p>
+                                </td>
+
+                                {/* Property connection */}
+                                <td className="py-4 px-4 font-bold text-slate-200">
+                                  {enq.propertyName}
+                                  <p className="text-[10px] text-slate-500 font-medium">ID: {enq.propertyId}</p>
+                                </td>
+
+                                {/* Enquiry message */}
+                                <td className="py-4 px-4 max-w-sm">
+                                  <p className="text-[11px] text-slate-450 leading-relaxed font-sans font-medium whitespace-pre-wrap">
+                                    "{enq.message}"
+                                  </p>
+                                </td>
+
+                                {/* Status tags selection */}
+                                <td className="py-4 px-4 text-center">
+                                  <select
+                                    value={enq.status}
+                                    onChange={(e) => handleUpdateEnquiryStatus(enq.id, e.target.value as any)}
+                                    className={`text-[9px] font-black uppercase rounded-lg border px-2 py-1 outline-none cursor-pointer focus:ring-1 ${
+                                      enq.status === "New" 
+                                        ? "bg-red-500/10 text-red-400 border-red-500/25 focus:ring-red-500"
+                                        : enq.status === "Contacted"
+                                        ? "bg-amber-500/10 text-amber-400 border-amber-500/25 focus:ring-amber-500"
+                                        : "bg-emerald-500/10 text-emerald-400 border-emerald-500/25 focus:ring-emerald-500"
+                                    }`}
+                                  >
+                                    <option value="New">New</option>
+                                    <option value="Contacted">Contacted</option>
+                                    <option value="Resolved">Resolved</option>
+                                  </select>
+                                </td>
+
+                                {/* Panel interactions */}
+                                <td className="py-4 px-4">
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    {/* Whatsapp Chat */}
+                                    <a
+                                      href={`https://wa.me/${enq.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hello Mr/Ms ${enq.name}, Ritik Khari here from Shiv Saya Properties. I received your enquiry about: ${enq.propertyName}. I would be glad to share layout details.`)}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-[#10B981] border border-[#10B981]/25 cursor-pointer"
+                                      title="WhatsApp Specialist Chat"
+                                    >
+                                      <Phone className="h-3.5 w-3.5" />
+                                    </a>
+
+                                    {/* Email directly */}
+                                    <a
+                                      href={`mailto:${enq.email}?subject=Response on your property enquiry - Shiv Saya Properties&body=Hello ${enq.name},%0D%0AThank you for reaching out regarding ${enq.propertyName}.`}
+                                      className="p-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/25"
+                                      title="Send Email response"
+                                    >
+                                      <MailIcon className="h-3.5 w-3.5" />
+                                    </a>
+
+                                    {/* Delete Enquiry */}
+                                    <button
+                                      onClick={() => handleDeleteEnquiry(enq.id)}
+                                      className="p-2 rounded-lg bg-slate-850 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 text-slate-400 hover:text-red-400 cursor-pointer"
+                                      title="Delete Enquiry Record"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+
+              {/* =====================================================
+                  TAB 4: USERS REGISTERED PANEL
+                  ===================================================== */}
+              {activeTab === "users" && (
+                <div className="space-y-6 animate-fadeIn">
+                  
+                  {/* Top info and searching */}
+                  <div>
+                    <h1 className="text-xl font-extrabold text-white tracking-tight">Simulated User Base ({filteredUsers.length} files)</h1>
+                    <p className="text-xs text-slate-400">Suspend offending client accounts or override custom registration privileges instantly.</p>
+                  </div>
+
+                  <div className="bg-slate-900 border border-white/5 rounded-2xl p-4 shadow-xl relative">
+                    <Search className="absolute left-7 top-7 h-4 w-4 text-slate-500" />
+                    <input
+                      type="text"
+                      placeholder="Search accounts catalog by first/last display name or registration email..."
+                      value={userSearch}
+                      onChange={(e) => setUserSearch(e.target.value)}
+                      className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/40 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-650 outline-none transition-all"
+                    />
+                  </div>
+
+                  {/* Users grid table */}
+                  <div className="bg-slate-900 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+                    <div className="overflow-x-auto font-sans">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-950 border-b border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <th className="py-4.5 px-4">Account User Name</th>
+                            <th className="py-4.5 px-4 w-48">Verified Email</th>
+                            <th className="py-4.5 px-4 w-44">Contact Record</th>
+                            <th className="py-4.5 px-4 w-28 text-center">Platform Status</th>
+                            <th className="py-4.5 px-4 w-36 text-center">Status Action</th>
+                          </tr>
+                        </thead>
+
+                        <tbody className="divide-y divide-white/5 text-xs text-slate-300">
+                          {filteredUsers.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="py-12 text-center text-slate-500">
+                                No registered user accounts match search filter.
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredUsers.map((usr) => (
+                              <tr key={usr.uid} className="hover:bg-slate-950/20 transition-all">
+                                
+                                <td className="py-4 px-4 font-extrabold text-white flex items-center gap-3">
+                                  <div className="h-8 w-8 rounded-full bg-slate-800 text-[#D4AF37] font-black text-xs flex items-center justify-center uppercase border border-white/5">
+                                    {usr.displayName.charAt(0)}
+                                  </div>
+                                  <div>
+                                    {usr.displayName}
+                                    <span className="block text-[8px] text-slate-500 font-mono">UID: {usr.uid}</span>
+                                  </div>
+                                </td>
+
+                                <td className="py-4 px-4 select-all text-slate-300 font-medium">
+                                  {usr.email}
+                                </td>
+
+                                <td className="py-4 px-4 text-slate-400">
+                                  {usr.phone || "---"}
+                                </td>
+
+                                <td className="py-4 px-4 text-center">
+                                  <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase leading-none border ${
+                                    usr.banned === true
+                                      ? "bg-red-500/10 text-red-400 border-red-500/20"
+                                      : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 animate-none"
+                                  }`}>
+                                    {usr.banned === true ? "Suspended" : "Active"}
+                                  </span>
+                                </td>
+
+                                {/* Suspend/Ban button */}
+                                <td className="py-4 px-4 text-center">
+                                  {usr.banned === true ? (
+                                    <button
+                                      onClick={() => handleToggleBanUser(usr.uid, true)}
+                                      className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/25 hover:text-white text-emerald-400 border border-emerald-500/25 cursor-pointer font-bold text-[10px]"
+                                    >
+                                      Reactivate
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleToggleBanUser(usr.uid, false)}
+                                      className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/25 hover:text-white text-red-450 border border-red-500/25 cursor-pointer font-bold text-[10px]"
+                                    >
+                                      Suspend
+                                    </button>
+                                  )}
+                                </td>
+
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+
+              {/* =====================================================
+                  TAB 5: METRIC ANALYTICS GRAPHICS
+                  ===================================================== */}
+              {activeTab === "analytics" && (
+                <div className="space-y-6 animate-fadeIn text-left">
+                  
+                  <div>
+                    <h1 className="text-xl font-extrabold text-white tracking-tight">Aesthetic Real Estate Analytics</h1>
+                    <p className="text-xs text-slate-400">Performance logs, listing breakdowns, and estimations calculated live.</p>
+                  </div>
+
+                  {/* Double Columns charts */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    {/* Visual Breakdown of items */}
+                    <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
+                      <h3 className="font-extrabold text-white text-xs uppercase tracking-wider">Indexed Listing Types</h3>
+                      
+                      <div className="space-y-4 pt-3.5">
+                        {[
+                          { name: "3 BHK Builder Floors", count: properties.filter(p => String(p.bhk || "").includes("3 BHK") || String(p.bhk || "").includes("3")).length, pct: 45, color: "bg-[#D4AF37]" },
+                          { name: "Luxury Heritage Villas", count: properties.filter(p => String(p.type || "").toLowerCase().includes("villa")).length, pct: 20, color: "bg-teal-500" },
+                          { name: "Commercial Office / Land Plots", count: properties.filter(p => String(p.type || "").toLowerCase().includes("plot") || String(p.type || "").toLowerCase().includes("office") || String(p.type || "").toLowerCase().includes("commercial")).length, pct: 15, color: "bg-blue-500" },
+                          { name: "Standard 1 / 2 BHK Flats", count: properties.filter(p => String(p.bhk || "").includes("1 BHK") || String(p.bhk || "").includes("2 BHK") || String(p.bhk || "").includes("1") || String(p.bhk || "").includes("2")).length, pct: 20, color: "bg-purple-500" }
+                        ].map(stat => (
+                          <div key={stat.name} className="space-y-1.5 font-sans">
+                            <div className="flex justify-between text-xs font-semibold">
+                              <span className="text-slate-300">{stat.name}</span>
+                              <span className="text-white font-bold">{stat.count} properties</span>
+                            </div>
+                            <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden">
+                              <div className={`${stat.color} h-1.5 rounded-full`} style={{ width: `${Math.max(5, (stat.count / Math.max(1, properties.length)) * 100)}%` }}></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Enquiry callback metrics */}
+                    <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
+                      <h3 className="font-extrabold text-white text-xs uppercase tracking-wider">Callback Conversation Funnel</h3>
+                      
+                      <div className="grid grid-cols-3 gap-3 pt-4">
+                        {[
+                          { title: "New Callback", count: enquiries.filter(e => e.status === "New").length, pct: "30%", color: "border-red-500/20 text-red-400 bg-red-500/5" },
+                          { title: "Contacted Agent", count: enquiries.filter(e => e.status === "Contacted").length, pct: "50%", color: "border-amber-500/20 text-amber-400 bg-amber-500/5" },
+                          { title: "Successful Deal", count: enquiries.filter(e => e.status === "Resolved").length, pct: "20%", color: "border-emerald-500/20 text-emerald-400 bg-emerald-500/5" }
+                        ].map(f => (
+                          <div key={f.title} className={`p-4 border rounded-xl text-center flex flex-col justify-center ${f.color}`}>
+                            <span className="text-[17.5px] font-black">{f.count}</span>
+                            <span className="text-[10px] mt-1 font-bold select-none leading-tight">{f.title}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="p-3.5 bg-slate-950/40 rounded-xl border border-white/5 mt-4 text-[11px] leading-relaxed text-slate-400">
+                        Top performance advisory analytics estimate a conversion velocity of <span className="text-[#D4AF37] font-bold">4.2 Callback visits/week</span> under current verified RERA parameters.
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
+
+
+              {/* =====================================================
+                  TAB 6: HUB PARAMETERS SETTINGS
+                  ===================================================== */}
+              {activeTab === "settings" && (
+                <div className="space-y-6 animate-fadeIn md:text-left text-xs text-slate-300">
+                  
+                  <div>
+                    <h1 className="text-xl font-extrabold text-white tracking-tight">Hub General Settings</h1>
+                    <p className="text-xs text-slate-400">Modify global credentials list, toggle simulated variables, or reset database snapshots.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    {/* SECTION 1: EDIT CONFIG */}
+                    <form onSubmit={handleSaveSettings} className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
+                      <div className="flex items-center gap-2 pb-2.5 border-b border-white/5">
+                        <Sliders className="h-4.5 w-4.5 text-[#D4AF37]" />
+                        <h3 className="font-extrabold text-white text-sm">Site Business Information</h3>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Business Name</label>
+                          <input
+                            type="text"
+                            value={settings.businessName}
+                            onChange={(e) => setSettings({ ...settings, businessName: e.target.value })}
+                            className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/50 rounded-xl px-3 py-2 text-xs text-white"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">RERA Number</label>
+                          <input
+                            type="text"
+                            value={settings.reraNumber}
+                            onChange={(e) => setSettings({ ...settings, reraNumber: e.target.value })}
+                            className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/50 rounded-xl px-3 py-2 text-xs text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Consultant Lead</label>
+                          <input
+                            type="text"
+                            value={settings.consultantName}
+                            onChange={(e) => setSettings({ ...settings, consultantName: e.target.value })}
+                            className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/50 rounded-xl px-3 py-2 text-xs text-white"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">WhatsApp Target</label>
+                          <input
+                            type="text"
+                            value={settings.whatsappNumber}
+                            onChange={(e) => setSettings({ ...settings, whatsappNumber: e.target.value })}
+                            className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/50 rounded-xl px-3 py-2 text-xs text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Official Email</label>
+                          <input
+                            type="email"
+                            value={settings.businessEmail}
+                            onChange={(e) => setSettings({ ...settings, businessEmail: e.target.value })}
+                            className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/50 rounded-xl px-3 py-2 text-xs text-white"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Office Phone</label>
+                          <input
+                            type="text"
+                            value={settings.businessPhone}
+                            onChange={(e) => setSettings({ ...settings, businessPhone: e.target.value })}
+                            className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/50 rounded-xl px-3 py-2 text-xs text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Office Headquarters Physical Address</label>
+                        <input
+                          type="text"
+                          value={settings.businessAddress}
+                          onChange={(e) => setSettings({ ...settings, businessAddress: e.target.value })}
+                          className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/50 rounded-xl px-3 py-2 text-xs text-white"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full mt-2.5 py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 font-black cursor-pointer shadow-lg active:scale-98 hover:brightness-110 transition-all font-sans"
+                      >
+                        Apply Dynamic Parameters Settings
+                      </button>
+                    </form>
+
+                    {/* RIGHT COLUMN SETTINGS: ADMIN ACCESS & TOGGLES */}
+                    <div className="space-y-6">
+                      
+                      {/* SECTION 2: ADMIN ACCESS EMAILS */}
+                      <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                          <ShieldCheck className="h-4.5 w-4.5 text-[#D4AF37]" />
+                          <h3 className="font-extrabold text-white text-sm">Admin Access list</h3>
+                        </div>
+
+                        <form onSubmit={handleAddAdminEmail} className="flex gap-2">
+                          <input
+                            type="email"
+                            placeholder="Add new admin email (e.g. ritik@shivsaya...)"
+                            value={newAdminEmail}
+                            onChange={(e) => setNewAdminEmail(e.target.value)}
+                            className="flex-grow bg-slate-950 border border-white/5 focus:border-[#D4AF37]/30 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 outline-none"
+                            required
+                          />
+                          <button
+                            type="submit"
+                            className="bg-slate-800 hover:bg-slate-700 hover:text-white border border-white/5 hover:border-[#D4AF37]/20 text-slate-200 px-3.5 rounded-xl font-bold text-xs"
+                          >
+                            Add
+                          </button>
+                        </form>
+
+                        <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
+                          {adminsList.map((adm) => (
+                            <div key={adm} className="flex items-center justify-between p-2 rounded-xl bg-slate-950/40 border border-white/5 text-[11px] font-mono select-all">
+                              <span>{adm}</span>
+                              <button
+                                onClick={() => handleRemoveAdminEmail(adm)}
+                                className="text-slate-500 hover:text-red-400 p-1 rounded transition-colors cursor-pointer"
+                                title="Strip admin privileges"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* SECTION 3: SYSTEM CONTROLS/TOGGLES */}
+                      <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                          <Power className="h-4.5 w-4.5 text-[#D4AF37]" />
+                          <h3 className="font-extrabold text-white text-sm">System Controls</h3>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          {[
+                            { key: "offlineMaintenance", label: "Maintenance", desc: "Block frontend routing" },
+                            { key: "slowOperations", label: "Slow Ops (1s)", desc: "Simulate throttle latency" },
+                            { key: "showWhatsappFloating", label: "WhatsApp Btn", desc: "Floating help widget" },
+                            { key: "autoApproveListings", label: "Auto Approve", desc: "Skip admin audit checks" }
+                          ].map(ctl => {
+                            const isChecked = (controls as any)[ctl.key];
+                            return (
+                              <div key={ctl.key} className="p-3 bg-slate-955/40 border border-white/5 rounded-xl flex items-center justify-between gap-2">
+                                <div>
+                                  <span className="font-extrabold text-white block text-[10.5px] leading-snug">{ctl.label}</span>
+                                  <span className="text-[8.5px] text-slate-500 mt-0.5 block leading-none font-medium">{ctl.desc}</span>
+                                </div>
+                                
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleControl(ctl.key as any)}
+                                  className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:ring-offset-1 focus:ring-offset-slate-900 ${
+                                    isChecked ? "bg-emerald-500" : "bg-slate-800"
+                                  }`}
+                                >
+                                  <span
+                                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-slate-950 shadow ring-0 transition duration-200 ease-in-out ${
+                                      isChecked ? "translate-x-5" : "translate-x-0"
+                                    }`}
+                                  />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* SECTION 4: DESTRUCTIVE CLEAN ACTIONS */}
+                        <div className="pt-2 border-t border-white/5">
+                          <button
+                            onClick={handleFactoryReset}
+                            className="bg-red-950 hover:bg-red-900 text-red-100 border border-red-500/15 leading-none py-3 px-4 rounded-xl text-center font-bold font-mono tracking-wide text-[10.5px] w-full block transition-colors cursor-pointer"
+                          >
+                            Factory default Purge Storage
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      {/* ========================================================
+          ADD MANUAL PROPERTY MODAL
+          ======================================================== */}
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <div className="fixed inset-0 z-50 bg-[#070b13]/85 backdrop-blur-sm overflow-y-auto px-4 py-8 flex items-center justify-center">
+            
+            <motion.div
+              className="bg-slate-900 border border-white/5 w-full max-w-2xl rounded-2xl p-6 relative shadow-2xl font-sans"
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            >
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white border border-white/5 transition-colors cursor-pointer"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+
+              <h3 className="text-base font-extrabold text-[#D4AF37] uppercase tracking-wide border-b border-white/5 pb-3.5 mb-5 flex items-center gap-1.5">
+                <Plus className="h-4.5 w-4.5" /> Direct manual property addition
+              </h3>
+
+              <form onSubmit={handleAddNewManualProperty} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-300">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Property Title</label>
+                  <input
+                    type="text"
+                    name="title"
+                    placeholder="e.g. Luxury Penthouse duplex Rajnagar"
+                    required
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Price in Rupees (Raw Integer)</label>
+                  <input
+                    type="number"
+                    name="price"
+                    placeholder="e.g. 7500000 (75 Lakhs)"
+                    required
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Locality / Area Name</label>
+                  <input
+                    type="text"
+                    name="location"
+                    placeholder="e.g. Rajnagar Extension, Ghaziabad"
+                    required
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Asset Type</label>
+                  <select
+                    name="type"
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white cursor-pointer"
+                  >
+                    <option value="Builder Floor">Builder Floor</option>
+                    <option value="Apartment">Apartment</option>
+                    <option value="Villas">Villas</option>
+                    <option value="Commercial Plots">Commercial Plots</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">BHK configuration</label>
+                  <select
+                    name="bhk"
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white cursor-pointer"
+                  >
+                    <option value="3 BHK">3 BHK</option>
+                    <option value="4 BHK">4 BHK</option>
+                    <option value="2 BHK">2 BHK</option>
+                    <option value="1 BHK">1 BHK</option>
+                    <option value="N/A Plots">N/A Plots</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Area size (Number)</label>
+                  <input
+                    type="number"
+                    name="area"
+                    placeholder="e.g. 1560 SQ FT"
+                    defaultValue={1500}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Area Unit</label>
+                  <input
+                    type="text"
+                    name="areaUnit"
+                    defaultValue="Sq.Ft."
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Image URL</label>
+                  <input
+                    type="url"
+                    name="imageUrl"
+                    placeholder="e.g. https://images.unsplash.com/photo-..."
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white font-mono text-[10.5px]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 md:col-span-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase font-bold text-slate-400">RERA Approved Status</label>
+                    <select
+                      name="reraApproved"
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white cursor-pointer"
+                    >
+                      <option value="true">YES - Approved</option>
+                      <option value="false">NO - Pending</option>
+                    </select>
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase font-bold text-slate-400">Is Premium Badge</label>
+                    <select
+                      name="isPremium"
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white cursor-pointer"
+                    >
+                      <option value="false">Standard Listing</option>
+                      <option value="true">Premium Listing Placement</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 md:col-span-2">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Property Description</label>
+                  <textarea
+                    name="description"
+                    rows={3.5}
+                    placeholder="Enter exhaustive structural information, near RRTS landmarks, and direct price guarantees..."
+                    required
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white resize-none"
+                  ></textarea>
+                </div>
+
+                <div className="md:col-span-2 pt-4 border-t border-white/5 flex gap-4">
+                  <button
+                    type="submit"
+                    className="flex-grow py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 font-black text-xs cursor-pointer shadow-lg hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <Check className="h-4 w-4 text-slate-950 stroke-[3]" /> Publish Audited Asset Listing
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-350 border border-white/5"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ========================================================
+          EDIT PROPERTY SPECIFICATIONS SLIDE DRAWER MODAL
+          ======================================================== */}
+      <AnimatePresence>
+        {isEditModalOpen && editingProperty && (
+          <div className="fixed inset-0 z-50 bg-[#070b13]/85 backdrop-blur-sm overflow-y-auto px-4 py-8 flex items-center justify-center">
+            
+            <motion.div
+              className="bg-slate-900 border border-white/5 w-full max-w-2xl rounded-2xl p-6 relative shadow-2xl font-sans"
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            >
+              <button
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditingProperty(null);
+                }}
+                className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white border border-white/5 transition-colors cursor-pointer"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+
+              <h3 className="text-base font-extrabold text-[#D4AF37] uppercase tracking-wide border-b border-white/5 pb-3 mb-5 flex items-center gap-1.5">
+                <Edit className="h-4.5 w-4.5" /> Edit Real Estate Credentials
+              </h3>
+
+              <form onSubmit={handleUpdateEditProperty} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-300">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Property Title</label>
+                  <input
+                    type="text"
+                    name="title"
+                    defaultValue={editingProperty.title}
+                    required
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Price in Rupees</label>
+                  <input
+                    type="number"
+                    name="price"
+                    defaultValue={editingProperty.price}
+                    required
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Locality Address</label>
+                  <input
+                    type="text"
+                    name="location"
+                    defaultValue={editingProperty.location}
+                    required
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Category Type</label>
+                  <select
+                    name="type"
+                    defaultValue={editingProperty.type}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white cursor-pointer"
+                  >
+                    <option value="Builder Floor">Builder Floor</option>
+                    <option value="Apartment">Apartment</option>
+                    <option value="Villas">Villas</option>
+                    <option value="Commercial Plots">Commercial Plots</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">BHK configuration</label>
+                  <select
+                    name="bhk"
+                    defaultValue={editingProperty.bhk}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white cursor-pointer"
+                  >
+                    <option value="3 BHK">3 BHK</option>
+                    <option value="4 BHK">4 BHK</option>
+                    <option value="2 BHK">2 BHK</option>
+                    <option value="1 BHK">1 BHK</option>
+                    <option value="N/A Plots">N/A Plots</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Area size (Number)</label>
+                  <input
+                    type="number"
+                    name="area"
+                    defaultValue={editingProperty.area}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Area Unit</label>
+                  <input
+                    type="text"
+                    name="areaUnit"
+                    defaultValue={editingProperty.areaUnit}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Override Main Hero Image URL</label>
+                  <input
+                    type="url"
+                    name="imageUrl"
+                    placeholder="Keep empty to preserve existing unsplash imagery"
+                    className="w-full bg-slate-950 border border-[#D4AF37]/20 rounded-xl px-3.5 py-2.5 text-white font-mono text-[10px]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 md:col-span-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase font-bold text-slate-400">RERA Audit status</label>
+                    <select
+                      name="reraApproved"
+                      defaultValue={editingProperty.reraApproved ? "true" : "false"}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white cursor-pointer"
+                    >
+                      <option value="true">Approved</option>
+                      <option value="false">Pending Verification</option>
+                    </select>
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase font-bold text-slate-400">Is Premium Badge</label>
+                    <select
+                      name="isPremium"
+                      defaultValue={editingProperty.isPremium ? "true" : "false"}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white cursor-pointer"
+                    >
+                      <option value="false">Standard Listing</option>
+                      <option value="true">Premium Feature placement</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 md:col-span-2">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Listing Description</label>
+                  <textarea
+                    name="description"
+                    rows={4}
+                    defaultValue={editingProperty.description}
+                    required
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white resize-none"
+                  ></textarea>
+                </div>
+
+                <div className="md:col-span-2 pt-4 border-t border-white/5 flex gap-4">
+                  <button
+                    type="submit"
+                    className="flex-grow py-3 rounded-xl bg-[#D4AF37] text-slate-950 font-black text-xs cursor-pointer shadow-lg hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <Check className="h-4 w-4 text-slate-950 stroke-[3]" /> Commit audited modifications
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditModalOpen(false);
+                      setEditingProperty(null);
+                    }}
+                    className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-350 border border-white/5"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ========================================================
+          GLOBAL DOUBLE CONFIRM DIALOG SYSTEM PORTAL (GEL PANEL)
+          ======================================================== */}
+      <AnimatePresence>
+        {confirmDialog.isOpen && (
+          <div className="fixed inset-0 z-50 bg-[#06080d]/90 backdrop-blur-md flex items-center justify-center px-4">
+            <motion.div
+              className={`border w-full max-w-sm rounded-2xl p-5 shadow-2xl relative font-sans ${
+                confirmDialog.isDanger 
+                  ? "bg-red-950/20 border-red-500/30" 
+                  : "bg-slate-900 border-white/5"
+              }`}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                {confirmDialog.isDanger ? (
+                  <AlertCircle className="h-5 w-5 text-red-400" />
+                ) : (
+                  <CheckSquare className="h-5 w-5 text-[#D4AF37]" />
+                )}
+                <h4 className="font-extrabold text-[#D4AF37] text-xs uppercase tracking-wider">{confirmDialog.title}</h4>
+              </div>
+
+              <p className="text-slate-300 text-xs leading-relaxed mb-6 font-medium">
+                {confirmDialog.message}
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={confirmDialog.onConfirm}
+                  className={`flex-grow py-2.5 rounded-xl text-slate-950 font-black text-xs cursor-pointer transition-all ${
+                    confirmDialog.isDanger
+                      ? "bg-red-500 hover:bg-red-650 hover:text-white text-slate-950"
+                      : "bg-[#D4AF37] hover:brightness-110"
+                  }`}
+                >
+                  Confirm Execution
+                </button>
+                <button
+                  onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+                  className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-400 font-bold text-xs select-none cursor-pointer"
+                >
+                  Decline
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+    </div>
+  );
+}

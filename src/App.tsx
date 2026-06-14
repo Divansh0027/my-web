@@ -13,10 +13,11 @@ import SavedView from "./components/SavedView";
 import ListPropertyView from "./components/ListPropertyView";
 import ProfileView from "./components/ProfileView";
 import Notification from "./components/Notification";
-import { subscribeProperties, getFavorites, toggleFavorite, subscribeAuth, addProperty } from "./firebase";
+import { subscribeProperties, getFavorites, toggleFavorite, subscribeAuth, addProperty, isAdminUser, updatePropertyInDb, deletePropertyFromDb } from "./firebase";
 import { Property } from "./types";
 import { SAMPLE_PROPERTIES } from "./data/sampleData";
 import LoginModal from "./components/LoginModal";
+import AdminView from "./components/AdminView";
 
 export default function App() {
   // Routing & View Managers
@@ -26,6 +27,7 @@ export default function App() {
   // Authenticated Profile User & Savior list
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [savedPropertyIds, setSavedPropertyIds] = useState<string[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   // Auth state modal triggers
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -68,10 +70,13 @@ export default function App() {
       if (user) {
         const favs = await getFavorites(user.uid);
         setSavedPropertyIds(favs);
+        const adminCheck = isAdminUser(user.email);
+        setIsAdmin(adminCheck);
       } else {
         // Hydrate from LocalStorage if guest
         const localFavsStr = localStorage.getItem("ssp_local_favorites");
         setSavedPropertyIds(localFavsStr ? JSON.parse(localFavsStr) : []);
+        setIsAdmin(false);
       }
     });
 
@@ -130,9 +135,76 @@ export default function App() {
     }
   };
 
+  // Toggle Property status between "approved" and "pending"
+  const handleToggleApprovalInApp = async (id: string) => {
+    const matched = properties.find(p => p.id === id);
+    if (!matched) return;
+    const nextStatus = matched.status === "approved" ? "pending" : "approved";
+    const updated = { ...matched, status: nextStatus };
+    const success = await updatePropertyInDb(updated);
+    if (success) {
+      setProperties(prev => prev.map(p => p.id === id ? updated : p));
+      triggerToast(`Listing status updated to ${nextStatus}!`, "success");
+    } else {
+      triggerToast("Failed to modify verification status.", "info");
+    }
+  };
+
+  // Delete a property listing
+  const handleDeletePropertyInApp = async (id: string) => {
+    const success = await deletePropertyFromDb(id);
+    if (success) {
+      setProperties(prev => prev.filter(p => p.id !== id));
+      triggerToast("Real estate listing permanently removed.", "success");
+    } else {
+      triggerToast("Errored on deletion request.", "info");
+    }
+  };
+
+  // Modify property details
+  const handleUpdatePropertyInApp = async (updated: Property) => {
+    const success = await updatePropertyInDb(updated);
+    if (success) {
+      setProperties(prev => prev.map(p => p.id === updated.id ? updated : p));
+      triggerToast("Property credentials updated with live index.", "success");
+    } else {
+      triggerToast("Modification was not accepted by sync server.", "info");
+    }
+  };
+
+  const handleAddPropertyInApp = async (newProp: Property) => {
+    const isFromAdmin = currentView === "admin";
+    const completedProp: Property = {
+      postedDate: new Date().toISOString().split("T")[0],
+      postedBy: isFromAdmin ? "Admin Hub" : "Owner",
+      ...newProp,
+    };
+    if (!completedProp.id) {
+      completedProp.id = `prop-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    }
+    if (!completedProp.status) {
+      completedProp.status = "pending";
+    }
+
+    const success = await addProperty(completedProp);
+    if (success) {
+      setProperties(prev => [completedProp, ...prev]);
+      if (!isFromAdmin) {
+        setUserProperties(prev => [completedProp, ...prev]);
+        triggerToast("Your property has been successfully listed and is pending review!", "success");
+      } else {
+        triggerToast("Direct admin asset database listing created!", "success");
+      }
+    } else {
+      triggerToast("Errored on registry request. Check connection.", "info");
+    }
+  };
+
   const handleAuthSuccess = (user: any, welcomeMsg: string) => {
     setCurrentUser(user);
     triggerToast(welcomeMsg, "success");
+    const adminCheck = isAdminUser(user?.email);
+    setIsAdmin(adminCheck);
     if (redirectView) {
       setCurrentView(redirectView);
       setRedirectView(null);
@@ -141,6 +213,11 @@ export default function App() {
 
   // Orchestrate active routing changes (with dynamic Auth Guards)
   const handleNavigation = (view: string, targetPropertyId?: string) => {
+    if (view === "admin" && !isAdmin) {
+      triggerToast("Access Denied: Administrative credentials required.", "info");
+      return;
+    }
+
     const isProtected = view === "list_property" || view === "profile";
     if (isProtected && !currentUser) {
       setRedirectView(view);
@@ -205,6 +282,7 @@ export default function App() {
         onNavigate={handleNavigation} 
         savedCount={savedPropertyIds.length} 
         onOpenAuth={() => setIsLoginModalOpen(true)}
+        isAdmin={isAdmin}
       />
 
       {/* SECURE LIGHTWEIGHT AUTH OVERLAY LOGIN PORTAL */}
@@ -258,7 +336,7 @@ export default function App() {
 
         {currentView === "list_property" && (
           <ListPropertyView 
-            onAddProperty={handleAddProperty} 
+            onAddProperty={handleAddPropertyInApp} 
             onShowNotification={triggerToast}
             onNavigate={handleNavigation}
           />
@@ -272,6 +350,19 @@ export default function App() {
             allProperties={properties}
             savedPropertyIds={savedPropertyIds}
             onToggleSaved={handleToggleSaved}
+          />
+        )}
+
+        {currentView === "admin" && isAdmin && (
+          <AdminView 
+            currentView={currentView}
+            onNavigate={handleNavigation}
+            properties={properties}
+            onToggleApproval={handleToggleApprovalInApp}
+            onDeleteProperty={handleDeletePropertyInApp}
+            onUpdateProperty={handleUpdatePropertyInApp}
+            onAddProperty={handleAddPropertyInApp}
+            onShowNotification={triggerToast}
           />
         )}
       </div>

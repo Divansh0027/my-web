@@ -19,6 +19,7 @@ import {
   Heart 
 } from "lucide-react";
 import { Property, ListingFilters } from "../types";
+import { BUSINESS_CONFIG } from "../config";
 
 interface ListingsViewProps {
   properties: Property[];
@@ -151,7 +152,8 @@ export default function ListingsView({
           // If BHK is null (e.g. plot or commercial shop), it must not show unless user has unfiltered
           return false;
         }
-        const bhkString = prop.bhk >= 4 ? "4+" : String(prop.bhk);
+        const bhkNum = Number(prop.bhk);
+        const bhkString = bhkNum >= 4 ? "4+" : String(prop.bhk);
         if (!selectedBhks.includes(bhkString)) {
           return false;
         }
@@ -535,7 +537,7 @@ export default function ListingsView({
                           </button>
                           
                           <a
-                            href={`https://wa.me/919911690027?text=Hi!%20I'm%20interested%20in%20property%20listing:%20${encodeURIComponent(prop.title)}.`}
+                            href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.propertyEnquiry(prop.title))}`}
                             target="_blank"
                             rel="noreferrer"
                             className="h-10 w-10 shrink-0 bg-[#10B981]/25 hover:bg-[#10B981]/30 border border-[#10B981]/30 rounded-xl text-[#10B981] flex items-center justify-center transition-all cursor-pointer"

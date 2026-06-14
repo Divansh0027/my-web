@@ -320,12 +320,45 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
   }
 };
 
+export let ADMIN_EMAILS = ["admin@shivsayaproperties.com"];
+
+// Load from localStorage if present
+try {
+  const storedAdmins = localStorage.getItem("ssp_admin_emails");
+  if (storedAdmins) {
+    const parsed = JSON.parse(storedAdmins);
+    if (Array.isArray(parsed)) {
+      const merged = Array.from(new Set(["admin@shivsayaproperties.com", ...parsed]));
+      ADMIN_EMAILS = merged;
+    }
+  }
+} catch (e) {
+  console.warn("Failed to load admin emails", e);
+}
+
+export const isAdminUser = (email: string | null | undefined): boolean => {
+  if (!email) return false;
+  return ADMIN_EMAILS.some(adminEmail => adminEmail.toLowerCase() === email.toLowerCase());
+};
+
 export const loginWithGoogle = async (): Promise<ClientUser | null> => {
   if (!isPlaceholder && authInstance) {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(authInstance, provider);
       if (result.user) {
+        // If banned check is requested, let's verify if user record has banned: true
+        try {
+          const docRef = doc(dbInstance, "users", result.user.uid);
+          const uDoc = await getDoc(docRef);
+          if (uDoc.exists() && uDoc.data()?.banned === true) {
+            await signOut(authInstance);
+            throw new Error("Your account has been suspended. Contact support@shivsayaproperties.com");
+          }
+        } catch (dbErr) {
+          console.warn("Failed banned check for Google user:", dbErr);
+        }
+
         simulatedUser = null;
         return {
           uid: result.user.uid,
@@ -369,6 +402,16 @@ export const loginWithEmailPassword = async (email: string, password: string): P
   if (!isPlaceholder && authInstance) {
     try {
       const result = await signInWithEmailAndPassword(authInstance, email, password);
+      // Check if banned
+      try {
+        const uDoc = await getDoc(doc(dbInstance, "users", result.user.uid));
+        if (uDoc.exists() && uDoc.data()?.banned === true) {
+          await signOut(authInstance);
+          throw new Error("Your account has been suspended. Contact support@shivsayaproperties.com");
+        }
+      } catch (err) {
+        console.warn("Banned check failed on Firebase:", err);
+      }
       return {
         uid: result.user.uid,
         email: result.user.email || "",
@@ -388,9 +431,14 @@ export const loginWithEmailPassword = async (email: string, password: string): P
   if (!matchedUser) {
     throw new Error("auth/user-not-found - Account does not exist. Please register first.");
   }
-  if (matchedUser.password !== password) {
-    throw new Error("auth/wrong-password - Incorrect password provided.");
+  
+  if (matchedUser.banned === true) {
+    throw new Error("Your account has been suspended. Contact support@shivsayaproperties.com");
   }
+
+  // Passwords are never stored. Simulated auth only tracks user identity.
+  // We simply allow any password for simulated accounts since we no longer verify passwords in simulation.
+  // Real auth uses Firebase Authentication.
 
   const clientUser: ClientUser = {
     uid: matchedUser.uid,
@@ -440,12 +488,13 @@ export const signUpWithEmailPassword = async (name: string, email: string, phone
     throw new Error("auth/email-already-in-use - This email address is already linked to an account.");
   }
 
+  // Passwords are never stored.
+  // Simulated auth only tracks user identity.
   const newUser = {
     uid: `simulated-uid-${Date.now()}`,
     email,
     displayName: name,
     phone,
-    password,
     createdAt: new Date().toISOString()
   };
 
@@ -582,3 +631,32 @@ export const subscribeProperties = (callback: (props: Property[]) => void): (() 
     return () => {};
   }
 };
+
+export const updatePropertyInDb = async (property: Property): Promise<boolean> => {
+  if (isPlaceholder) {
+    return true;
+  }
+  try {
+    const docRef = doc(dbInstance, "properties", property.id);
+    await setDoc(docRef, property, { merge: true });
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, `properties/${property.id}`);
+    return false;
+  }
+};
+
+export const deletePropertyFromDb = async (id: string): Promise<boolean> => {
+  if (isPlaceholder) {
+    return true;
+  }
+  try {
+    const docRef = doc(dbInstance, "properties", id);
+    await deleteDoc(docRef);
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `properties/${id}`);
+    return false;
+  }
+};
+

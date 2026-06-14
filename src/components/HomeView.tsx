@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { Property, Testimonial } from "../types";
 import { SERVICES, TESTIMONIALS, COVERED_AREAS } from "../data/sampleData";
+import { BUSINESS_CONFIG } from "../config";
 
 interface HomeViewProps {
   properties: Property[];
@@ -169,7 +170,7 @@ export default function HomeView({
               Explore Properties
             </button>
             <a
-              href="https://wa.me/919911690027?text=Hi!%20I'd%20love%20to%20schedule%20a%20free%20consultation%20with%20Ritik%20Khari."
+              href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.consultation)}`}
               target="_blank"
               rel="noreferrer"
               className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-[#10B981] hover:bg-emerald-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all"
@@ -452,7 +453,7 @@ export default function HomeView({
                       </button>
                       
                       <a
-                        href={`https://wa.me/919911690027?text=Hi!%20I'd%2520love%2520more%2520details%2520about%2520the%2520property:%2520${encodeURIComponent(prop.title)}.`}
+                        href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.propertyEnquiry(prop.title))}`}
                         target="_blank"
                         rel="noreferrer"
                         className="h-11 w-11 shrink-0 rounded-xl bg-[#10B981]/20 hover:bg-[#10B981]/30 text-[#10B981] border border-[#10B981]/30 flex items-center justify-center transition-all"
@@ -710,7 +711,7 @@ export default function HomeView({
               Explore Properties Catalog
             </button>
             <a
-              href="https://wa.me/919911690027?text=Hi!%20I%20am%20ready%20to%20invest.%20I'd%20love%20to%20chat%20live%20with%20your%20expert."
+              href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.investment)}`}
               target="_blank"
               rel="noreferrer"
               className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#10B981] hover:bg-emerald-600 text-white font-bold text-sm flex items-center justify-center gap-2.5 shadow-md transition-all text-center"

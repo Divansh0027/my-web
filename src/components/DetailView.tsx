@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { Property, Enquiry } from "../types";
 import { submitEnquiry } from "../firebase";
+import { BUSINESS_CONFIG } from "../config";
 
 interface DetailViewProps {
   property: Property;
@@ -482,16 +483,16 @@ export default function DetailView({
               <div className="flex items-center gap-4.5 border-b border-white/5 pb-4">
                 <img 
                   src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" 
-                  alt="Ritik Khari" 
+                  alt={BUSINESS_CONFIG.consultantName} 
                   className="h-14 w-14 rounded-full object-cover border border-[#D4AF37]/30"
                 />
                 <div>
                   <div className="flex items-center gap-1">
-                    <h4 className="font-extrabold text-white text-sm">Ritik Khari</h4>
+                    <h4 className="font-extrabold text-white text-sm">{BUSINESS_CONFIG.consultantName}</h4>
                     <BadgeCheck className="h-4.5 w-4.5 text-emerald-400 shrink-0" />
                   </div>
                   <p className="text-xs text-[#D4AF37] font-semibold mt-0.5">Real Estate Consultant</p>
-                  <p className="text-[10px] text-slate-500 font-medium">Shiv Saya Properties</p>
+                  <p className="text-[10px] text-slate-500 font-medium">{BUSINESS_CONFIG.businessName}</p>
                 </div>
               </div>
 
@@ -573,7 +574,7 @@ export default function DetailView({
               {/* Direct Alternative channels */}
               <div className="flex gap-3 border-t border-white/5 pt-5">
                 <a
-                  href={`https://wa.me/919911690027?text=Hi!%20I'd%20love%20more%20details%20about%20the%20property:%20${encodeURIComponent(property.title)}.`}
+                  href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.propertyEnquiry(property.title))}`}
                   target="_blank"
                   rel="noreferrer"
                   className="flex-1 py-3 bg-[#10B981] hover:bg-emerald-600 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow"
@@ -583,7 +584,7 @@ export default function DetailView({
                 </a>
 
                 <a
-                  href="tel:+919911690027"
+                  href={`tel:${BUSINESS_CONFIG.businessPhone}`}
                   className="flex-1 py-3 border border-white/10 hover:bg-white/5 rounded-xl text-slate-300 font-bold text-xs flex items-center justify-center gap-2 transition-all"
                 >
                   Call Directly

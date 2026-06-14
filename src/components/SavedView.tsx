@@ -6,6 +6,7 @@
 import { motion } from "motion/react";
 import { Heart, MapPin, BedDouble, Maximize, Trash2, ArrowRight } from "lucide-react";
 import { Property } from "../types";
+import { BUSINESS_CONFIG } from "../config";
 
 interface SavedViewProps {
   properties: Property[];
@@ -128,7 +129,7 @@ export default function SavedView({
                     </button>
                     
                     <a
-                      href={`https://wa.me/919911690027?text=Hi,%20I%20have%20wishlisted%2520"${encodeURIComponent(prop.title)}"%2520and%2520would%2520like%2520to%2520discuss%2520it.`}
+                      href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(`Hi, I have wishlisted "${prop.title}" and would like to discuss it.`)}`}
                       target="_blank"
                       rel="noreferrer"
                       className="h-10 w-11 bg-[#10B981]/20 hover:bg-[#10B981]/35 text-[#10B981] border border-[#10B981]/20 rounded-xl flex items-center justify-center cursor-pointer"

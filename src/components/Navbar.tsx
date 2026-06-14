@@ -5,18 +5,20 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Menu, X, PhoneCall, User as UserIcon, Heart, LogOut, ChevronDown, Clipboard } from "lucide-react";
+import { Menu, X, PhoneCall, User as UserIcon, Heart, LogOut, ChevronDown, Clipboard, Shield } from "lucide-react";
 import { logoutUser, subscribeAuth } from "../firebase";
 import Logo from "./Logo";
+import { BUSINESS_CONFIG } from "../config";
 
 interface NavbarProps {
   currentView: string;
   onNavigate: (view: string, selectedPropertyId?: string) => void;
   savedCount: number;
   onOpenAuth: () => void;
+  isAdmin?: boolean;
 }
 
-export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth }: NavbarProps) {
+export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth, isAdmin = false }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -131,6 +133,18 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
                 </button>
               );
             })}
+
+            {isAdmin && (
+              <button
+                onClick={() => handleLinkClick("admin")}
+                className={`flex items-center gap-1.5 text-sm font-bold text-[#D4AF37] hover:brightness-110 transition-all py-1 ${
+                  currentView === "admin" ? "border-b-2 border-[#D4AF37] pb-0.5" : ""
+                }`}
+              >
+                <Shield className="h-4 w-4 text-[#D4AF37]" />
+                Admin Panel
+              </button>
+            )}
           </div>
 
           {/* Desktop Actions */}
@@ -151,7 +165,7 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
 
             {/* WhatsApp CTA with Pulse */}
             <a
-              href="https://wa.me/919911690027?text=Hi%20Shiv%20Saya%20Properties,%20I%20am%20interested%20in%20buying/renting%20a%20property."
+              href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.general)}`}
               target="_blank"
               rel="noreferrer"
               className="flex items-center justify-center h-10 w-10 rounded-full bg-[#10B981]/20 hover:bg-[#10B981]/30 text-[#10B981] transition-all relative group"
@@ -374,6 +388,16 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
                       {link.name}
                     </button>
                   ))}
+
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleLinkClick("admin")}
+                      className="text-left py-2 text-base font-bold text-[#D4AF37] flex items-center gap-2 border-b border-white/5"
+                    >
+                      <Shield className="h-5 w-5 text-[#D4AF37]" />
+                      Admin Panel
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -386,7 +410,7 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
                   List Your Property
                 </button>
                 <a
-                  href="https://wa.me/919911690027?text=Hi%20Shiv%20Saya%20Properties,%20I%20am%20interested%20in%20buying/renting%20a%20property."
+                  href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.general)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="w-full py-3 rounded-xl bg-[#10B981] text-white text-sm font-bold flex items-center justify-center gap-2"

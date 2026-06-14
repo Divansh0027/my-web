@@ -12,6 +12,7 @@ import {
 import { Property } from "../types";
 import { subscribeAuth } from "../firebase";
 import confetti from "canvas-confetti";
+import { BUSINESS_CONFIG } from "../config";
 
 interface ListPropertyViewProps {
   onAddProperty: (newProp: Property) => void;
@@ -860,7 +861,7 @@ export default function ListPropertyView({
                           className="mt-0.5 rounded border-white/10 text-[#D4AF37] focus:ring-[#D4AF37]/30 h-4.5 w-4.5 bg-slate-950"
                         />
                         <span className="text-xs text-slate-350 font-semibold leading-relaxed">
-                          I accept the physically audited declaration, and I authorize Ritik Khari's evaluation consultants to contact me directly using verified contact records.
+                          I accept the physically audited declaration, and I authorize {BUSINESS_CONFIG.consultantName}'s evaluation consultants to contact me directly using verified contact records.
                         </span>
                       </label>
 
@@ -871,7 +872,7 @@ export default function ListPropertyView({
                           id="step4-sig-input"
                           type="text"
                           required
-                          placeholder="e.g. Ritik Khari"
+                          placeholder={`e.g. ${BUSINESS_CONFIG.consultantName}`}
                           value={certifyingName}
                           onChange={(e) => setCertifyingName(e.target.value)}
                           className="w-full bg-slate-950 border border-white/10 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-650 outline-none"

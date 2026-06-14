@@ -12,12 +12,12 @@ export interface Property {
   location: string;
   locality: string; // e.g. "Dwarka Sector 10" or "Noida Sector 18"
   city: "Gurugram" | "Noida" | "Greater Noida West" | "South Delhi" | "Dwarka" | "Aerocity" | "Faridabad" | "Rohini" | "Pitampura" | "Vasant Kunj" | "Saket" | string;
-  type: "Flat" | "Villa" | "Plot" | "Builder Floor" | "Commercial";
-  category: "Buy" | "Rent" | "Commercial" | "Plots";
-  bhk: number | null; // e.g. 3, or null for commercial/plot
+  type: "Flat" | "Villa" | "Plot" | "Builder Floor" | "Commercial" | string;
+  category: "Buy" | "Rent" | "Commercial" | "Plots" | string;
+  bhk: number | string | null; // e.g. 3, or null for commercial/plot
   area: number; // in sqft or sqyd
-  areaUnit: "sqft" | "sqyd";
-  floor: string; // e.g. "5th" or "Ground Floor" or "1st"
+  areaUnit: "sqft" | "sqyd" | string;
+  floor: string | number; // e.g. "5th" or "Ground Floor" or "1st"
   facing?: string; // e.g. "North-East"
   ageOfProperty?: string; // e.g. "2 Years" or "New Launch"
   furnishing?: "Unfurnished" | "Semi-Furnished" | "Fully Furnished" | string;
@@ -27,9 +27,20 @@ export interface Property {
   featured: boolean;
   newLaunch: boolean;
   verified: boolean;
-  status: "Ready to Move" | "Under Construction" | "New Launch";
+  status: "Ready to Move" | "Under Construction" | "New Launch" | "approved" | "pending" | "hidden" | string;
   postedDate: string;
-  postedBy: "Owner" | "Builder" | "Agent";
+  postedBy: "Owner" | "Builder" | "Agent" | string;
+  bathrooms?: number;
+  totalFloors?: number;
+  possession?: string;
+  reraApproved?: boolean;
+  isPremium?: boolean;
+  transactionType?: "Buy" | "Rent";
+  createdAt?: string;
+  postedByUid?: string;
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
 }
 
 export interface Testimonial {
@@ -68,3 +79,28 @@ export interface ListingFilters {
   statuses: string[];
   postedBy: string[];
 }
+
+export type AdminTab = "overview" | "properties" | "enquiries" | "users" | "analytics" | "settings";
+
+export interface EnquiryRecord {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  propertyId: string;
+  propertyName: string;
+  message: string;
+  dateStr: string;
+  status: "New" | "Contacted" | "Resolved";
+}
+
+export interface AdminSettings {
+  businessName: string;
+  whatsappNumber: string;
+  businessEmail: string;
+  reraNumber: string;
+  businessAddress: string;
+  consultantName: string;
+  businessPhone: string;
+}
+

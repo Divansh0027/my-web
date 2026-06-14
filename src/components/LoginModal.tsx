@@ -7,6 +7,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Eye, EyeOff, Mail, Lock, User, Phone, CheckCircle, AlertCircle } from "lucide-react";
 import { loginWithGoogle, loginWithEmailPassword, signUpWithEmailPassword, sendPasswordReset } from "../firebase";
+import { BUSINESS_CONFIG } from "../config";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -383,7 +384,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
                             id="signup-name-input"
                             type="text"
                             required
-                            placeholder="e.g. Ritik Khari"
+                            placeholder={`e.g. ${BUSINESS_CONFIG.consultantName}`}
                             value={signupName}
                             onChange={(e) => setSignupName(e.target.value)}
                             className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-3 text-xs text-white placeholder-slate-650 outline-none focus:border-[#D4AF37]/50 ${
