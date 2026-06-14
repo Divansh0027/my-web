@@ -7,16 +7,16 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Check, ClipboardList, ShieldAlert, Award, FileText, 
-  ArrowRight, ArrowLeft, Heart, Image as ImageIcon, Plus, Trash2, CheckCircle2, AlertCircle, Sparkles, RefreshCw
+  ArrowRight, ArrowLeft, Heart, Image as ImageIcon, Plus, Trash2, CheckCircle2, AlertCircle, Sparkles, RefreshCw, Upload
 } from "lucide-react";
 import { Property } from "../types";
-import { subscribeAuth } from "../firebase";
+import { subscribeAuth, uploadPropertyImage, isStorageConnected } from "../firebase";
 import confetti from "canvas-confetti";
 import { BUSINESS_CONFIG } from "../config";
 
 interface ListPropertyViewProps {
   onAddProperty: (newProp: Property) => void;
-  onShowNotification: (msg: string, type: "success" | "info") => void;
+  onShowNotification: (msg: string, type: "success" | "info" | "error") => void;
   onNavigate: (view: string) => void;
 }
 
@@ -58,6 +58,12 @@ export default function ListPropertyView({
 
   // Selected Amenities list state
   const [amenities, setAmenities] = useState<string[]>(["Parking", "Water Supply"]);
+
+  // Real Storage States
+  const [imageFiles, setImageFiles] = useState<{ file: File; previewUrl: string }[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+  const [youtubeUrl, setYoutubeUrl] = useState("");
 
   // Photos State: Support custom URL addition paired with presets
   const [customPhotoUrl, setCustomPhotoUrl] = useState("");
@@ -287,7 +293,39 @@ export default function ListPropertyView({
     }());
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFilesAdded = (files: FileList | null) => {
+    if (!files) return;
+    const currentCount = imageFiles.length;
+    const incomingFiles = Array.from(files);
+    
+    const oversizedFile = incomingFiles.find(f => f.size > 5 * 1024 * 1024);
+    if (oversizedFile) {
+      onShowNotification(`File "${oversizedFile.name}" exceeds the 5MB size limit.`, "error");
+      return;
+    }
+    
+    if (currentCount + incomingFiles.length > 10) {
+      onShowNotification("Maximum 10 photos allowed for real estate uploads.", "error");
+      return;
+    }
+    
+    const newImageFiles = incomingFiles.map(file => ({
+      file,
+      previewUrl: URL.createObjectURL(file)
+    }));
+    setImageFiles(prev => [...prev, ...newImageFiles]);
+  };
+
+  const handleRemoveImageFile = (index: number) => {
+    setImageFiles(prev => {
+      const updated = [...prev];
+      URL.revokeObjectURL(updated[index].previewUrl);
+      updated.splice(index, 1);
+      return updated;
+    });
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const s1Err = validateStep1();
@@ -309,6 +347,73 @@ export default function ListPropertyView({
       return;
     }
 
+    setIsUploading(true);
+    const uploadedUrls: string[] = [];
+    const liveStorage = isStorageConnected();
+
+    try {
+      if (imageFiles.length > 0) {
+        if (liveStorage) {
+          onShowNotification("Uploading property images to Google Cloud Storage...", "success");
+          for (let i = 0; i < imageFiles.length; i++) {
+             setUploadProgress({ current: i + 1, total: imageFiles.length });
+             const imgFile = imageFiles[i];
+             try {
+               const downloadUrl = await uploadPropertyImage(
+                 currentUser?.uid || "guest", 
+                 imgFile.file, 
+                 imgFile.file.name
+               );
+               uploadedUrls.push(downloadUrl);
+             } catch (err: any) {
+               console.warn(`Single file upload failed for ${imgFile.file.name}, using base64`, err);
+               // Base64 single file fallback
+               const base64Str = await new Promise<string>((resolve) => {
+                 const reader = new FileReader();
+                 reader.onload = () => resolve(reader.result as string);
+                 reader.readAsDataURL(imgFile.file);
+               });
+               uploadedUrls.push(base64Str);
+             }
+          }
+        } else {
+          // Local fallback: convert files to Base64
+          onShowNotification("Images saved locally. Connect Firebase Storage for cloud hosting.", "info");
+          for (let i = 0; i < imageFiles.length; i++) {
+             setUploadProgress({ current: i + 1, total: imageFiles.length });
+             const imgFile = imageFiles[i];
+             const base64Str = await new Promise<string>((resolve, reject) => {
+               const reader = new FileReader();
+               reader.onload = () => resolve(reader.result as string);
+               reader.onerror = e => reject(e);
+               reader.readAsDataURL(imgFile.file);
+             });
+             uploadedUrls.push(base64Str);
+          }
+        }
+      }
+    } catch (uploadError: any) {
+      console.error("Image upload failed, falling back to Base64", uploadError);
+      onShowNotification(`Cloud upload failed. Processing local fallback...`, "error");
+      
+      // Fallback to base64
+      try {
+        for (let i = uploadedUrls.length; i < imageFiles.length; i++) {
+           const imgFile = imageFiles[i];
+           const base64Str = await new Promise<string>((resolve) => {
+             const reader = new FileReader();
+             reader.onload = () => resolve(reader.result as string);
+             reader.readAsDataURL(imgFile.file);
+           });
+           uploadedUrls.push(base64Str);
+        }
+      } catch (err) {
+        // continue
+      }
+    } finally {
+      setIsUploading(false);
+    }
+
     const priceNum = priceUnit === "Lakhs" 
       ? Number(price) * 100000 
       : Number(price) * 10000000;
@@ -319,7 +424,7 @@ export default function ListPropertyView({
 
     // Compile images list combining presets with custom ones
     const finalImages = [
-      ...customPhotos,
+      ...uploadedUrls,
       ...(presetPhotos[type] || presetPhotos.Flat)
     ];
 
@@ -342,6 +447,8 @@ export default function ListPropertyView({
       ageOfProperty: "New Launch",
       furnishing: type === "Plot" ? "Unfurnished" : furnishing,
       images: finalImages,
+      imageUrls: uploadedUrls,
+      videoUrl: youtubeUrl.trim() || undefined,
       amenities,
       verified: false, // Undergoes audit review
       featured: false,
@@ -371,6 +478,31 @@ export default function ListPropertyView({
 
   return (
     <div className="font-sans text-slate-200 bg-[#0F172A] pt-24 pb-20 min-h-screen">
+      {isUploading && (
+        <div id="upload-overlay" className="fixed inset-0 z-50 bg-[#0F172A]/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
+          <div className="bg-slate-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full space-y-6 shadow-2xl">
+            <RefreshCw className="h-10 w-10 text-[#D4AF37] animate-spin mx-auto animate-pulse" />
+            <div className="space-y-2">
+              <h3 className="text-white font-black text-lg">Uploading Property Media</h3>
+              <p className="text-slate-400 text-xs font-medium">Please wait while we sync physical asset images to secure cluster storage.</p>
+            </div>
+            
+            {/* Real progress indicators */}
+            <div className="space-y-2.5">
+              <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <span>Progress Status</span>
+                <span className="text-[#D4AF37]">{uploadProgress.current} / {uploadProgress.total} Files</span>
+              </div>
+              <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-white/5">
+                <div 
+                  className="bg-[#D4AF37] h-full rounded-full transition-all duration-350"
+                  style={{ width: `${uploadProgress.total > 0 ? (uploadProgress.current / uploadProgress.total) * 100 : 0}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* HEADER SECTION */}
       <div className="bg-slate-900 border-b border-white/5 py-10 px-4 sm:px-6 lg:px-8 mb-8 relative overflow-hidden">
@@ -761,44 +893,102 @@ export default function ListPropertyView({
                       </div>
                     </div>
 
-                    {/* Add Custom URL block */}
-                    <div className="space-y-2 pt-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Include Custom Photo URLs</label>
-                      <div className="flex gap-2">
-                        <input
-                          id="step3-photo-url-input"
-                          type="url"
-                          placeholder="Introduce fully qualified image link (HTTPS)"
-                          value={customPhotoUrl}
-                          onChange={(e) => setCustomPhotoUrl(e.target.value)}
-                          className="flex-1 bg-slate-950 border border-white/10 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-650 outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleAddCustomPhoto}
-                          className="px-4 py-3 bg-[#D4AF37] hover:brightness-110 active:scale-98 text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer"
-                        >
-                          <Plus className="h-4 w-4" /> Add Link
-                        </button>
+                    {/* Add Custom Local Upload block */}
+                    <div className="space-y-3.5 pt-2">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Include Custom Photos</label>
+                        <span className="text-[9px] bg-slate-800 border border-white/10 text-slate-400 font-bold px-2.5 py-0.5 rounded-full uppercase">
+                          {imageFiles.length}/10 uploaded
+                        </span>
                       </div>
 
-                      {customPhotos.length > 0 && (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2.5">
-                          {customPhotos.map((url, i) => (
-                            <div key={i} className="relative h-20 rounded-xl overflow-hidden bg-slate-950 border border-white/10 group">
-                              <img src={url} alt="Custom uploaded" className="h-full w-full object-cover" />
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveCustomPhoto(i)}
-                                className="absolute top-1 right-1 h-6 w-6 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center rounded-full shadow-md cursor-pointer"
-                                title="Delete photo"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </button>
-                            </div>
-                          ))}
+                      {/* DRAG AND DROP ZONE */}
+                      <div 
+                        id="media-upload-zone"
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          handleFilesAdded(e.dataTransfer.files);
+                        }}
+                        onClick={() => document.getElementById("property-image-file-input")?.click()}
+                        className="border border-dashed border-white/10 hover:border-[#D4AF37]/50 bg-slate-1000 rounded-2xl py-6 px-4 text-center cursor-pointer transition-all hover:bg-slate-950/80 group"
+                      >
+                        <input 
+                          id="property-image-file-input"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          multiple
+                          onChange={(e) => handleFilesAdded(e.target.files)}
+                          className="hidden"
+                        />
+                        <Upload className="h-7 w-7 text-slate-400 group-hover:text-[#D4AF37] mx-auto mb-2.5 transition-colors" />
+                        <h4 className="text-white text-xs font-bold group-hover:text-[#D4AF37] transition-colors mb-1">Click to upload or drag and drop</h4>
+                        <p className="text-[9px] text-slate-400 leading-normal">
+                          JPG, PNG, WebP up to 5MB each. Maximum 10 photos.
+                        </p>
+                      </div>
+
+                      {/* LIMIT WARNING OVERFLOW */}
+                      {imageFiles.length > 10 && (
+                        <div className="flex items-center gap-2 text-red-500 bg-red-500/5 border border-red-500/10 p-3.5 rounded-xl text-[10px] font-bold">
+                          <AlertCircle className="h-4 w-4 shrink-0" />
+                          Maximum 10 photos allowed.
                         </div>
                       )}
+
+                      {/* FILE PREVIEW GRID - 3 COLUMNS */}
+                      {imageFiles.length > 0 && (
+                        <div id="media-preview-grid" className="grid grid-cols-2 md:grid-cols-3 gap-2.5 pt-2">
+                          {imageFiles.map((img, i) => {
+                            const formattedSize = img.file.size > 1024 * 1024 
+                              ? `${(img.file.size / (1024 * 1024)).toFixed(1)} MB`
+                              : `${(img.file.size / 1024).toFixed(0)} KB`;
+                            const shortName = img.file.name.length > 20 
+                              ? img.file.name.slice(0, 14) + "..." + img.file.name.slice(-4)
+                              : img.file.name;
+
+                            return (
+                              <div key={i} className="relative bg-slate-950 border border-white/5 rounded-xl overflow-hidden group p-2 flex flex-col justify-between">
+                                <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-slate-900 border border-white/5">
+                                  <img src={img.previewUrl} alt={img.file.name} className="h-full w-full object-cover" />
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveImageFile(i);
+                                    }}
+                                    className="absolute top-1 right-1 h-5.5 w-5.5 bg-red-600 hover:bg-red-700 hover:scale-105 active:scale-95 text-white flex items-center justify-center rounded-full shadow-md transition-all cursor-pointer"
+                                    title="Delete photo"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                                </div>
+                                <div className="mt-2 px-0.5 text-left">
+                                  <p className="text-[10px] font-bold text-white truncate" title={img.file.name}>
+                                    {shortName}
+                                  </p>
+                                  <p className="text-[8px] text-slate-400 mt-0.5">
+                                    {formattedSize}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* YouTube Video URL block */}
+                    <div className="space-y-1.5 pt-2">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Optional YouTube Video tour URL</label>
+                      <input
+                        id="step3-video-url-input"
+                        type="url"
+                        placeholder="e.g. https://www.youtube.com/watch?v=xxxxxx"
+                        value={youtubeUrl}
+                        onChange={(e) => setYoutubeUrl(e.target.value)}
+                        className="w-full bg-slate-950 border border-white/10 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-650 outline-none"
+                      />
                     </div>
 
                     {/* Amenities checkboxes */}

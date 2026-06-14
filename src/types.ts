@@ -42,6 +42,8 @@ export interface Property {
   userEmail?: string;
   userName?: string;
   rejectionReason?: string;
+  videoUrl?: string;
+  imageUrls?: string[];
 }
 
 export interface Testimonial {
@@ -62,6 +64,8 @@ export interface Enquiry {
   propertyName: string;
   dateStr?: string;
   type: "enquiry" | "visit";
+  userId?: string;
+  userEmail?: string;
 }
 
 export interface SearchFilters {
@@ -81,7 +85,7 @@ export interface ListingFilters {
   postedBy: string[];
 }
 
-export type AdminTab = "overview" | "properties" | "enquiries" | "users" | "analytics" | "settings";
+export type AdminTab = "overview" | "properties" | "enquiries" | "users" | "analytics" | "settings" | "checklist";
 
 export interface EnquiryRecord {
   id: string;

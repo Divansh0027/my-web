@@ -31,9 +31,23 @@ import {
   getDocFromServer,
   onSnapshot
 } from "firebase/firestore";
-import firebaseConfig from "../firebase-applet-config.json";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import firebaseConfigJson from "../firebase-applet-config.json";
 import { Property, Enquiry } from "./types";
 import { SAMPLE_PROPERTIES } from "./data/sampleData";
+
+const envApiKey = (import.meta as any).env.VITE_FIREBASE_API_KEY;
+
+const firebaseConfig = {
+  apiKey: envApiKey && envApiKey.trim() !== "" ? envApiKey : firebaseConfigJson.apiKey,
+  projectId: (import.meta as any).env.VITE_FIREBASE_PROJECT_ID || firebaseConfigJson.projectId,
+  authDomain: (import.meta as any).env.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfigJson.authDomain,
+  storageBucket: (import.meta as any).env.VITE_FIREBASE_STORAGE_BUCKET || firebaseConfigJson.storageBucket,
+  messagingSenderId: (import.meta as any).env.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseConfigJson.messagingSenderId,
+  appId: (import.meta as any).env.VITE_FIREBASE_APP_ID || firebaseConfigJson.appId,
+  firestoreDatabaseId: (import.meta as any).env.VITE_FIREBASE_DATABASE_ID || firebaseConfigJson.firestoreDatabaseId || (firebaseConfigJson as any).databaseId,
+  measurementId: firebaseConfigJson.measurementId || ""
+};
 
 // Detect if we are using the placeholder setup
 let isPlaceholder = !firebaseConfig.apiKey || firebaseConfig.apiKey.includes("placeholder");
@@ -41,6 +55,7 @@ let isPlaceholder = !firebaseConfig.apiKey || firebaseConfig.apiKey.includes("pl
 let app;
 let authInstance: any;
 let dbInstance: any;
+let storageInstance: any;
 
 if (!isPlaceholder) {
   try {
@@ -54,6 +69,7 @@ if (!isPlaceholder) {
       dbInstance = getFirestore(app, firebaseConfig.firestoreDatabaseId);
     }
     authInstance = getAuth(app);
+    storageInstance = getStorage(app);
   } catch (error) {
     console.warn("Failed to initialize remote Firebase. Falling back to local state.", error);
     isPlaceholder = true;
@@ -196,7 +212,7 @@ export const getPropertyById = async (id: string): Promise<Property | null> => {
   }
 };
 
-export const submitEnquiry = async (enquiry: Enquiry): Promise<boolean> => {
+export const submitEnquiry = async (enquiry: Enquiry): Promise<{ success: boolean; savedLocally: boolean }> => {
   const completeEnquiry = {
     ...enquiry,
     id: enquiry.id || `enq-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -204,19 +220,26 @@ export const submitEnquiry = async (enquiry: Enquiry): Promise<boolean> => {
   };
 
   if (isPlaceholder) {
-    const localEnquiriesStr = localStorage.getItem(LOCAL_STORAGE_ENQUIRIES_KEY);
+    const localEnquiriesStr = localStorage.getItem("local_enquiries");
     const enquiries = localEnquiriesStr ? JSON.parse(localEnquiriesStr) : [];
     enquiries.push(completeEnquiry);
-    localStorage.setItem(LOCAL_STORAGE_ENQUIRIES_KEY, JSON.stringify(enquiries));
-    return true;
+    localStorage.setItem("local_enquiries", JSON.stringify(enquiries));
+    return { success: true, savedLocally: true };
   }
 
   try {
     await setDoc(doc(dbInstance, "enquiries", completeEnquiry.id), completeEnquiry);
-    return true;
+    return { success: true, savedLocally: false };
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, `enquiries/${completeEnquiry.id}`);
-    return false;
+    
+    // Save to local_enquiries key on failure
+    const localEnquiriesStr = localStorage.getItem("local_enquiries");
+    const enquiries = localEnquiriesStr ? JSON.parse(localEnquiriesStr) : [];
+    enquiries.push(completeEnquiry);
+    localStorage.setItem("local_enquiries", JSON.stringify(enquiries));
+    
+    return { success: true, savedLocally: true };
   }
 };
 
@@ -659,4 +682,20 @@ export const deletePropertyFromDb = async (id: string): Promise<boolean> => {
     return false;
   }
 };
+
+export const isStorageConnected = (): boolean => {
+  return !isPlaceholder && !!storageInstance;
+};
+
+export const uploadPropertyImage = async (userId: string, file: File, fileName: string): Promise<string> => {
+  if (isPlaceholder || !storageInstance) {
+    throw new Error("Storage is not activated or placeholder configuration detected");
+  }
+  const timestamp = Date.now();
+  const cleanName = fileName.replace(/[^a-zA-Z0-9.]/g, "_");
+  const storageRef = ref(storageInstance, `properties/${userId}/${timestamp}_${cleanName}`);
+  const snapshot = await uploadBytes(storageRef, file);
+  return await getDownloadURL(snapshot.ref);
+};
+
 

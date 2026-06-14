@@ -43,7 +43,7 @@ export default function App() {
 
   // Toast alert
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [toastType, setToastType] = useState<"success" | "info">("success");
+  const [toastType, setToastType] = useState<"success" | "info" | "error">("success");
 
   // Track user listings dynamically on properties changes or auth state changes
   useEffect(() => {
@@ -132,7 +132,7 @@ export default function App() {
       setUserProperties(prev => [completedProp, ...prev]);
       triggerToast("Your property has been successfully listed and is pending review!", "success");
     } else {
-      triggerToast("Listing failed. Verify network connection and try again.", "info");
+      triggerToast("Listing failed. Verify network connection and try again.", "error");
     }
   };
 
@@ -147,7 +147,7 @@ export default function App() {
       setProperties(prev => prev.map(p => p.id === id ? updated : p));
       triggerToast(`Listing status updated to ${nextStatus}!`, "success");
     } else {
-      triggerToast("Failed to modify verification status.", "info");
+      triggerToast("Failed to modify verification status.", "error");
     }
   };
 
@@ -158,7 +158,7 @@ export default function App() {
       setProperties(prev => prev.filter(p => p.id !== id));
       triggerToast("Real estate listing permanently removed.", "success");
     } else {
-      triggerToast("Errored on deletion request.", "info");
+      triggerToast("Errored on deletion request.", "error");
     }
   };
 
@@ -169,7 +169,7 @@ export default function App() {
       setProperties(prev => prev.map(p => p.id === updated.id ? updated : p));
       triggerToast("Property credentials updated with live index.", "success");
     } else {
-      triggerToast("Modification was not accepted by sync server.", "info");
+      triggerToast("Modification was not accepted by sync server.", "error");
     }
   };
 
@@ -197,7 +197,7 @@ export default function App() {
         triggerToast("Direct admin asset database listing created!", "success");
       }
     } else {
-      triggerToast("Errored on registry request. Check connection.", "info");
+      triggerToast("Errored on registry request. Check connection.", "error");
     }
   };
 
@@ -249,7 +249,7 @@ export default function App() {
   };
 
   // Launch clean dynamic visual confirmation toast alert
-  const triggerToast = (msg: string, type: "success" | "info" = "success") => {
+  const triggerToast = (msg: string, type: "success" | "info" | "error" = "success") => {
     setToastMessage(msg);
     setToastType(type);
     
@@ -324,7 +324,7 @@ export default function App() {
       <div className="flex-grow">
         {currentView === "home" && (
           <HomeView 
-            properties={properties} 
+            properties={properties.filter(p => !p.status || (p.status !== "pending" && p.status !== "rejected"))} 
             onNavigate={handleNavigation} 
             onSearch={handleSearchTrigger}
             savedProperties={savedPropertyIds}
@@ -334,7 +334,7 @@ export default function App() {
 
         {currentView === "properties" && !selectedProperty && (
           <ListingsView 
-            properties={properties} 
+            properties={properties.filter(p => !p.status || (p.status !== "pending" && p.status !== "rejected"))} 
             initialFilters={activeSearchFilters}
             onNavigate={handleNavigation}
             savedProperties={savedPropertyIds}
@@ -345,7 +345,7 @@ export default function App() {
         {currentView === "properties" && selectedProperty && (
           <DetailView 
             property={selectedProperty} 
-            allProperties={properties}
+            allProperties={properties.filter(p => !p.status || (p.status !== "pending" && p.status !== "rejected"))}
             onNavigate={handleNavigation}
             savedProperties={savedPropertyIds}
             onToggleSaved={handleToggleSaved}
@@ -355,7 +355,7 @@ export default function App() {
 
         {currentView === "saved" && (
           <SavedView 
-            properties={properties} 
+            properties={properties.filter(p => !p.status || (p.status !== "pending" && p.status !== "rejected"))} 
             savedProperties={savedPropertyIds} 
             onToggleSaved={handleToggleSaved}
             onNavigate={handleNavigation}
@@ -378,19 +378,7 @@ export default function App() {
             allProperties={properties}
             savedPropertyIds={savedPropertyIds}
             onToggleSaved={handleToggleSaved}
-          />
-        )}
-
-        {currentView === "admin" && isAdmin && (
-          <AdminView 
-            currentView={currentView}
-            onNavigate={handleNavigation}
-            properties={properties}
-            onToggleApproval={handleToggleApprovalInApp}
             onDeleteProperty={handleDeletePropertyInApp}
-            onUpdateProperty={handleUpdatePropertyInApp}
-            onAddProperty={handleAddPropertyInApp}
-            onShowNotification={triggerToast}
           />
         )}
       </div>

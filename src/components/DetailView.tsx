@@ -29,7 +29,7 @@ import {
   Maximize
 } from "lucide-react";
 import { Property, Enquiry } from "../types";
-import { submitEnquiry } from "../firebase";
+import { submitEnquiry, subscribeAuth } from "../firebase";
 import { BUSINESS_CONFIG } from "../config";
 
 interface DetailViewProps {
@@ -38,7 +38,7 @@ interface DetailViewProps {
   onNavigate: (view: string, selectedPropertyId?: string) => void;
   savedProperties: string[];
   onToggleSaved: (id: string) => void;
-  onShowNotification: (msg: string, type: "success" | "info") => void;
+  onShowNotification: (msg: string, type: "success" | "info" | "error") => void;
 }
 
 export default function DetailView({ 
@@ -53,6 +53,16 @@ export default function DetailView({
   // Gallery
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+  // Authenticated User State
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    const unsub = subscribeAuth((user) => {
+      setCurrentUser(user);
+    });
+    return () => unsub();
+  }, []);
 
   // Form Inputs
   const [senderName, setSenderName] = useState("");
@@ -94,6 +104,11 @@ export default function DetailView({
   // Handle Enquiry submission
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser) {
+      onShowNotification("Please sign in to submit enquiries.", "error");
+      return;
+    }
+
     if (!senderName || !senderPhone) {
       onShowNotification("Please fill out your Name and Phone number.", "info");
       return;
@@ -101,31 +116,38 @@ export default function DetailView({
 
     setIsSubmitting(true);
     
+    // Auto populate userId / userEmail if user is logged in
     const enqObj: Enquiry = {
       name: senderName,
       phone: senderPhone,
       message: senderMessage,
       propertyId: property.id,
       propertyName: property.title,
-      type: visitType
+      type: visitType,
+      userId: currentUser?.uid || "guest-user",
+      userEmail: currentUser?.email || "guest@guest.com"
     };
 
-    const success = await submitEnquiry(enqObj);
+    const result = await submitEnquiry(enqObj);
     setIsSubmitting(false);
 
-    if (success) {
-      onShowNotification(
-        visitType === "visit" 
-          ? "Site visit scheduled successfully! Our partner will call you in 30 minutes." 
-          : "Enquiry submitted successfully! PDF brochure sent.", 
-        "success"
-      );
+    if (result && result.success) {
+      if (result.savedLocally) {
+        onShowNotification("Enquiry submitted successfully! (Saved locally, sync pending)", "success");
+      } else {
+        onShowNotification(
+          visitType === "visit" 
+            ? "Site visit scheduled successfully! Our partner will call you in 30 minutes." 
+            : "Enquiry submitted successfully! PDF brochure sent.", 
+          "success"
+        );
+      }
       // Reset inputs
       setSenderName("");
       setSenderPhone("");
       setSenderMessage(`Hi, I am interested in "${property.title}". Please send me the brochure and available payment plans.`);
     } else {
-      onShowNotification("Failed to submit enquiry. Checking database...", "info");
+      onShowNotification("Failed to submit enquiry. Checking database...", "error");
     }
   };
 

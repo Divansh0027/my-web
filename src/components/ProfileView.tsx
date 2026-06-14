@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   UserCheck, Shield, Clipboard, Calendar, Trash2, Mail, 
-  Phone, Heart, Edit3, Save, MapPin, Key, Sparkles, LogOut, CheckCircle2, Building 
+  Phone, Heart, Edit3, Save, MapPin, Key, Sparkles, LogOut, CheckCircle2, Building, ShieldAlert, Settings
 } from "lucide-react";
 import { subscribeAuth, updateUserProfileDetails } from "../firebase";
 import { Enquiry, Property } from "../types";
@@ -14,10 +14,11 @@ import { Enquiry, Property } from "../types";
 interface ProfileViewProps {
   onNavigate: (view: string, selectedPropertyId?: string) => void;
   userProperties: Property[];
-  onShowNotification: (msg: string, type: "success" | "info") => void;
+  onShowNotification: (msg: string, type: "success" | "info" | "error") => void;
   allProperties: Property[];
   savedPropertyIds: string[];
   onToggleSaved: (id: string) => void;
+  onDeleteProperty?: (id: string) => Promise<void>;
 }
 
 export default function ProfileView({ 
@@ -26,11 +27,12 @@ export default function ProfileView({
   onShowNotification,
   allProperties,
   savedPropertyIds,
-  onToggleSaved
+  onToggleSaved,
+  onDeleteProperty
 }: ProfileViewProps) {
   const [user, setUser] = useState<any>(null);
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
-  const [activeTab, setActiveTab] = useState<"listings" | "favorites" | "enquiries">("listings");
+  const [activeTab, setActiveTab] = useState<"listings" | "favorites" | "enquiries" | "settings">("listings");
   
   // Profile Editable state
   const [isEditing, setIsEditing] = useState(false);
@@ -217,39 +219,50 @@ export default function ProfileView({
         </div>
 
         {/* SECTION 2: VIEW NAV TABS SYSTEM */}
-        <div className="flex border-b border-white/5 bg-slate-900/30 p-1 rounded-xl">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 border-b border-white/5 bg-slate-900/30 p-1.5 rounded-xl">
           <button
             onClick={() => setActiveTab("listings")}
-            className={`flex-1 py-3 text-xs font-bold font-sans rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`py-2.5 px-1.5 text-[11px] font-bold font-sans rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "listings"
                 ? "bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 shadow"
-                : "text-slate-400 hover:text-white"
+                : "text-slate-400 hover:text-white hover:bg-slate-850"
             }`}
           >
-            <Clipboard className="h-4 w-4" />
+            <Clipboard className="h-3.5 w-3.5" />
             My Listings ({userProperties.length})
           </button>
           <button
             onClick={() => setActiveTab("favorites")}
-            className={`flex-1 py-3 text-xs font-bold font-sans rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`py-2.5 px-1.5 text-[11px] font-bold font-sans rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "favorites"
                 ? "bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 shadow"
-                : "text-slate-400 hover:text-white"
+                : "text-slate-400 hover:text-white hover:bg-slate-850"
             }`}
           >
-            <Heart className="h-4 w-4" />
+            <Heart className="h-3.5 w-3.5" />
             Saved Shortlists ({favoriteProperties.length})
           </button>
           <button
             onClick={() => setActiveTab("enquiries")}
-            className={`flex-1 py-3 text-xs font-bold font-sans rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`py-2.5 px-1.5 text-[11px] font-bold font-sans rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "enquiries"
                 ? "bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 shadow"
-                : "text-slate-400 hover:text-white"
+                : "text-slate-400 hover:text-white hover:bg-slate-850"
             }`}
           >
-            <Calendar className="h-4 w-4" />
-            Active Scheduled tours ({enquiries.length})
+            <Calendar className="h-3.5 w-3.5" />
+            Scheduled tours ({enquiries.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`py-2.5 px-1.5 text-[11px] font-bold font-sans rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              activeTab === "settings"
+                ? "bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 shadow"
+                : "text-slate-400 hover:text-white hover:bg-slate-850"
+            }`}
+          >
+            <Key className="h-3.5 w-3.5" />
+            Account Settings
           </button>
         </div>
 
@@ -269,6 +282,7 @@ export default function ProfileView({
                   No properties registered under this account yet.
                 </p>
                 <button
+                  type="button"
                   onClick={() => onNavigate("list_property")}
                   className="px-4 py-2 bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 text-xs font-bold rounded-lg hover:brightness-110 active:scale-98 cursor-pointer"
                 >
@@ -279,27 +293,77 @@ export default function ProfileView({
               <div className="space-y-4">
                 {userProperties.map((prop) => {
                   const isVerified = prop.verified;
-                  const isPending = !isVerified && (prop.status as any) === "pending";
+                  const isRejected = prop.status === "rejected";
+                  const isPending = !isVerified && !isRejected;
+                  const isLive = isVerified || prop.status === "live";
                   
+                  const handleDeleteClick = async (e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    if (window.confirm(`Are you sure you want to permanently remove "${prop.title}" listing? This action is irreversible.`)) {
+                      if (onDeleteProperty) {
+                        try {
+                          await onDeleteProperty(prop.id);
+                        } catch (err: any) {
+                          onShowNotification(`Could not delete: ${err.message || "Network Error"}`, "error");
+                        }
+                      } else {
+                        onShowNotification("Deletion handler not registered.", "info");
+                      }
+                    }
+                  };
+
                   return (
                     <div 
                       key={prop.id} 
-                      className="p-4 bg-slate-950 border border-white/5 rounded-xl hover:border-[#D4AF37]/20 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                      className="p-4.5 bg-slate-950 border border-white/5 rounded-2xl hover:border-[#D4AF37]/20 transition-all flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4"
                     >
-                      <div className="cursor-pointer" onClick={() => onNavigate("properties", prop.id)}>
-                        <h4 className="font-bold text-white text-xs hover:text-[#D4AF37] transition-all leading-snug">{prop.title}</h4>
-                        <p className="text-[10px] text-slate-450 mt-1 font-semibold flex items-center gap-1.5">
-                          <MapPin className="h-3 w-3 text-slate-500" />
+                      <div className="cursor-pointer flex-1 space-y-1" onClick={() => onNavigate("properties", prop.id)}>
+                        <h4 className="font-extrabold text-white text-xs hover:text-[#D4AF37] transition-all leading-snug">{prop.title}</h4>
+                        <p className="text-[10px] text-slate-400 font-semibold flex items-center gap-1.5 pt-0.5">
+                          <MapPin className="h-3 w-3 text-slate-500 shrink-0" />
                           {prop.locality}, {prop.city}
                         </p>
-                        <p className="text-[10px] text-[#D4AF37] mt-1 font-bold">{prop.priceString || `₹${(prop.price/100000).toFixed(0)} Lakhs`}</p>
+                        <p className="text-[10px] text-[#D4AF37] font-black">{prop.priceString || `₹${(prop.price/100000).toFixed(0)} Lakhs`}</p>
                       </div>
+ 
+                      <div className="flex flex-wrap items-center justify-between md:justify-end gap-3 border-t border-white/5 md:border-none pt-3.5 md:pt-0">
+                        <div className="flex flex-col items-start md:items-end gap-1.5">
+                          {isLive && (
+                            <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-wider rounded-full border border-emerald-500/20 flex items-center gap-1.5">
+                              <span className="h-1.5 w-1.5 bg-emerald-400 rounded-full"></span>
+                              Live approved
+                            </span>
+                          )}
+                          {isPending && (
+                            <span className="px-3 py-1 bg-[#D4AF37]/10 text-[#D4AF37] text-[9px] font-black uppercase tracking-wider rounded-full border border-[#D4AF37]/20 flex items-center gap-1.5 animate-pulse">
+                              <span className="h-1.5 w-1.5 bg-[#D4AF37] rounded-full"></span>
+                              Audit: Pending review
+                            </span>
+                          )}
+                          {isRejected && (
+                            <div className="flex flex-col items-start md:items-end gap-1">
+                              <span className="px-3 py-1 bg-red-500/10 text-red-500 text-[9px] font-black uppercase tracking-wider rounded-full border border-red-500/20 flex items-center gap-1.5">
+                                <ShieldAlert className="h-3.5 w-3.5" />
+                                Audit: Rejected
+                              </span>
+                              {prop.rejectionReason && (
+                                <p className="text-[9px] text-red-400 max-w-xs text-left md:text-right italic font-medium">
+                                  Reason: {prop.rejectionReason}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
 
-                      <div className="flex gap-2 items-center">
-                        <span className="px-3 py-1 bg-[#D4AF37]/10 text-[#D4AF37] text-[9px] font-black uppercase tracking-wider rounded-full border border-[#D4AF37]/20 flex items-center gap-1.5 animate-pulse">
-                          <span className="h-1.5 w-1.5 bg-[#D4AF37] rounded-full"></span>
-                          Audit: PENDING REVIEW
-                        </span>
+                        {/* DELETE TRASH ACTION */}
+                        <button
+                          type="button"
+                          onClick={handleDeleteClick}
+                          className="p-2.5 bg-slate-900 border border-white/5 hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 text-slate-400 rounded-xl transition-all cursor-pointer"
+                          title="Delete Listing permanently"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
                     </div>
                   );
@@ -421,6 +485,117 @@ export default function ProfileView({
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Tab D: ACCOUNT SETTINGS SYSTEM */}
+        {activeTab === "settings" && (
+          <div className="bg-slate-900 border border-white/5 rounded-3xl p-6 sm:p-8 space-y-8">
+            <div>
+              <h3 className="text-white font-extrabold text-sm border-b border-white/5 pb-2.5 flex items-center gap-2">
+                <Settings className="h-4.5 w-4.5 text-[#D4AF37]" />
+                Account Settings & Preferences
+              </h3>
+              <p className="text-slate-400 text-xs mt-2 font-medium leading-relaxed">
+                Configure your display behavior, toggle system telemetry indicators, and verify legal brokerage credentials.
+              </p>
+            </div>
+
+            {/* Sub-section 1: Platform Credentials */}
+            <div className="space-y-3">
+              <h4 className="text-white text-xs font-bold uppercase tracking-wider text-slate-350">Brokerage Verification Details</h4>
+              <div className="p-4 bg-slate-950 border border-white/5 rounded-2xl flex flex-col sm:flex-row items-center gap-4 justify-between">
+                <div className="space-y-1 text-center sm:text-left">
+                  <div className="text-xs font-bold text-white flex items-center justify-center sm:justify-start gap-1.5">
+                    <Shield className="h-4 w-4 text-[#D4AF37]" />
+                    Shiv Saya Properties RERA License
+                  </div>
+                  <p className="text-[10px] text-slate-400 leading-relaxed font-semibold">
+                    Authorized Real Estate Brokerage License No. RERA-HR-REA-2026-X9
+                  </p>
+                </div>
+                <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-wider rounded border border-emerald-500/20 shrink-0">
+                  ✓ Verified Brokerage
+                </span>
+              </div>
+            </div>
+
+            {/* Sub-section 2: Cached Storage Management */}
+            <div className="space-y-3">
+              <h4 className="text-white text-xs font-bold uppercase tracking-wider text-slate-350">Browser Storage & Cache Control</h4>
+              <div className="p-4 bg-slate-950 border border-white/5 rounded-2xl space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div>
+                    <h5 className="text-[11px] font-extrabold text-white">Clear Shortlisted Bookmarks</h5>
+                    <p className="text-[9px] text-slate-400 leading-relaxed mt-0.5 font-semibold">
+                      This will reset your interest flags for any customized real estate listings.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm("Do you want to clear your bookmarked shortlist?")) {
+                        localStorage.removeItem("ssp_saved_properties");
+                        onShowNotification("Bookmarked shortlists have been successfully cleared.", "success");
+                        setTimeout(() => window.location.reload(), 1200);
+                      }
+                    }}
+                    className="px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-505 text-[10px] font-bold rounded-lg cursor-pointer transition-all shrink-0"
+                  >
+                    Reset Bookmarks
+                  </button>
+                </div>
+
+                <div className="h-px bg-white/5"></div>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div>
+                    <h5 className="text-[11px] font-extrabold text-white">Reset Account Cache Record</h5>
+                    <p className="text-[9px] text-slate-400 leading-relaxed mt-0.5 font-semibold">
+                      Forced log out of this secure real estate terminal and delete temporary session preferences.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm("Are you sure you want to completely sign out and flush all local caches?")) {
+                        localStorage.clear();
+                        onShowNotification("All local user caches have been securely invalidated.", "success");
+                        setTimeout(() => window.location.reload(), 1200);
+                      }
+                    }}
+                    className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-white/5 text-[10px] font-bold rounded-lg cursor-pointer transition-all shrink-0"
+                  >
+                    Flush Sessions
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Sub-section 3: Preferences */}
+            <div className="space-y-3">
+              <h4 className="text-white text-xs font-bold uppercase tracking-wider text-slate-350">Display Settings</h4>
+              <div className="p-4 bg-slate-950 border border-white/5 rounded-2xl flex items-center justify-between gap-3">
+                <div>
+                  <h5 className="text-[11px] font-extrabold text-white">Enable Golden Accent Animations</h5>
+                  <p className="text-[9px] text-slate-410 leading-relaxed mt-0.5 font-semibold">
+                    Toggle active sparkling effect animations on gold accents.
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    defaultChecked 
+                    onChange={(e) => {
+                      localStorage.setItem("ssp_animations_enabled", e.target.checked ? "true" : "false");
+                      onShowNotification(`Effects animations ${e.target.checked ? "enabled" : "muted"}.`, "success");
+                    }}
+                  />
+                  <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37] peer-checked:after:bg-slate-950"></div>
+                </label>
+              </div>
+            </div>
           </div>
         )}
 

@@ -1,0 +1,41 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper to check if user is admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'admin@shivsayaproperties.com';
+    }
+
+    // Property images
+    match /properties/{userId}/{imageId} {
+      allow read: if true; // anyone can view images
+      
+      // Only authenticated users can upload to their own folder, max 5MB, specific mime types
+      allow create, update: if request.auth != null 
+        && request.auth.uid == userId
+        && request.resource.size <= 5 * 1024 * 1024
+        && (request.resource.contentType == 'image/jpeg' 
+            || request.resource.contentType == 'image/png' 
+            || request.resource.contentType == 'image/webp');
+            
+      // Only the owner of the folder or admin can delete
+      allow delete: if request.auth != null 
+        && (request.auth.uid == userId || isAdmin());
+    }
+
+    // Brochures path
+    match /brochures/{userId}/{fileId} {
+      allow read: if true;
+      
+      // Upload: max 10mb, type PDF
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf';
+        
+      allow delete: if request.auth != null
+        && (request.auth.uid == userId || isAdmin());
+    }
+  }
+}
