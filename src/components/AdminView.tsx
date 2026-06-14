@@ -10,7 +10,8 @@ import {
   Plus, Search, Filter, Trash2, Edit, Shield, Ban, UserCheck, 
   Download, RefreshCw, Check, X, Phone, Mail as MailIcon, 
   ExternalLink, Eye, EyeOff, CheckSquare, Square, MoreVertical,
-  Sliders, AlertTriangle, ShieldCheck, Power, HelpCircle, AlertCircle, MapPin
+  Sliders, AlertTriangle, ShieldCheck, Power, HelpCircle, AlertCircle, MapPin,
+  Database
 } from "lucide-react";
 import { Property, EnquiryRecord, AdminTab, AdminSettings } from "../types";
 import { BUSINESS_CONFIG } from "../config";
@@ -80,6 +81,11 @@ export default function AdminView({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+
+  // Reject Property modals
+  const [rejectingProperty, setRejectingProperty] = useState<Property | null>(null);
+  const [rejectReason, setRejectReason] = useState<string>("Incomplete information");
+  const [rejectNotes, setRejectNotes] = useState<string>("");
 
   // Enquiry states
   const [enquirySearch, setEnquirySearch] = useState("");
@@ -308,6 +314,59 @@ export default function AdminView({
     }
   };
 
+  const handleConfirmReject = () => {
+    if (!rejectingProperty) return;
+    const finalReason = rejectReason + (rejectNotes ? `: ${rejectNotes}` : "");
+    const updated = {
+      ...rejectingProperty,
+      status: "rejected",
+      rejectionReason: finalReason
+    };
+    executeOperation(() => {
+      onUpdateProperty(updated);
+      setRejectingProperty(null);
+      setRejectReason("Incomplete information");
+      setRejectNotes("");
+    }, "Property rejected.");
+  };
+
+  const handleExportPropertiesJSON = () => {
+    try {
+      const dataStr = JSON.stringify(properties, null, 2);
+      const blob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `ssp-properties-${new Date().toISOString().split('T')[0]}.json`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      onShowNotification("Properties exported as JSON successfully!", "success");
+    } catch (e) {
+      console.error("Properties export failure", e);
+      onShowNotification("Failed to export properties.", "info");
+    }
+  };
+
+  const handleClearTestData = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Clear Test Data",
+      message: "This will remove all simulated test users and enquiries. Real Firebase data is unaffected. Proceed?",
+      isDanger: true,
+      onConfirm: () => {
+        executeOperation(() => {
+          localStorage.removeItem("ssp_simulated_db_users");
+          localStorage.removeItem("ssp_simulated_enquiries");
+          setDbUsers([]);
+          setEnquiries([]);
+        }, "Test data cleared successfully.");
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
   // ----------------------------------------------------
   // USER / BAN ACTIONS
   // ----------------------------------------------------
@@ -334,10 +393,10 @@ export default function AdminView({
           if (!currentBanState && userObj.email) {
             properties.forEach(prop => {
               if (prop.postedBy?.toLowerCase() === userObj.email.toLowerCase()) {
-                if (prop.status !== "hidden") {
+                if (prop.status !== "rejected") {
                   onUpdateProperty({
                     ...prop,
-                    status: "hidden"
+                    status: "rejected"
                   });
                 }
               }
@@ -447,13 +506,18 @@ export default function AdminView({
   };
 
   const handlePropertyHideToggle = (prop: Property) => {
-    const nextStatus = prop.status === "hidden" ? "approved" : "hidden";
-    executeOperation(() => {
-      onUpdateProperty({
-        ...prop,
-        status: nextStatus
-      });
-    }, `Listing is now ${nextStatus === "hidden" ? "invisible to standard clients" : "approved and public active"}`);
+    if (prop.status === "rejected") {
+      executeOperation(() => {
+        onUpdateProperty({
+          ...prop,
+          status: "live"
+        });
+      }, "Listing is now live and public active");
+    } else {
+      setRejectingProperty(prop);
+      setRejectReason("Incomplete information");
+      setRejectNotes("");
+    }
   };
 
   const handlePropertyDelete = (id: string) => {
@@ -498,7 +562,7 @@ export default function AdminView({
     executeOperation(() => {
       selectedProperties.forEach(id => {
         const found = properties.find(p => p.id === id);
-        if (found && found.status !== "approved") {
+        if (found && found.status !== "live") {
           onToggleApproval(id);
         }
       });
@@ -511,12 +575,12 @@ export default function AdminView({
     executeOperation(() => {
       selectedProperties.forEach(id => {
         const found = properties.find(p => p.id === id);
-        if (found && found.status !== "hidden") {
-          onUpdateProperty({ ...found, status: "hidden" });
+        if (found && found.status !== "rejected") {
+          onUpdateProperty({ ...found, status: "rejected" });
         }
       });
       setSelectedProperties([]);
-    }, `Successfully hid ${selectedProperties.length} selected listings`);
+    }, `Successfully rejected ${selectedProperties.length} selected listings`);
   };
 
   const handleBulkDelete = () => {
@@ -585,7 +649,7 @@ export default function AdminView({
       postedBy: settings.businessEmail,
       postedByUid: "admin-system",
       createdAt: new Date().toISOString(),
-      status: controls.autoApproveListings ? "approved" : "pending",
+      status: controls.autoApproveListings ? "live" : "pending",
       images: [imageUrl],
       amenities: ["Water Storage", "Security Ward", "Spacious Balcony"],
       isPremium: data.get("isPremium") === "true",
@@ -679,12 +743,12 @@ export default function AdminView({
   });
 
   // 4. Stat counting variables
-  const approvedListingsCount = properties.filter(p => p.status === "approved").length;
+  const approvedListingsCount = properties.filter(p => p.status === "live").length;
   const pendingApprovalsCount = properties.filter(p => p.status === "pending").length;
   
   // FLAT RATE of 1% commission on all approved "Buy" (sale) properties for "Estimated Revenue"
   const totalApprovedSalesValue = properties
-    .filter(p => p.status === "approved" && (!p.transactionType || p.transactionType === "Buy"))
+    .filter(p => p.status === "live" && (!p.transactionType || p.transactionType === "Buy"))
     .reduce((sum, p) => sum + p.price, 0);
   const estimatedRevenue = Math.round(totalApprovedSalesValue * 0.01);
 
@@ -873,11 +937,11 @@ export default function AdminView({
                                   <Check className="h-3.5 w-3.5" /> Approve
                                 </button>
                                 <button
-                                  onClick={() => handlePropertyDelete(prop.id)}
+                                  onClick={() => handlePropertyHideToggle(prop)}
                                   className="p-2 rounded-lg bg-slate-800 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 text-slate-400 hover:text-red-400 cursor-pointer transition-all"
-                                  title="Dismiss Reject"
+                                  title="Reject Listing"
                                 >
-                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <X className="h-3.5 w-3.5" />
                                 </button>
                               </div>
                             </div>
@@ -971,7 +1035,7 @@ export default function AdminView({
 
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="flex bg-slate-950 p-1 rounded-xl border border-white/5">
-                        {["All", "Approved", "Pending", "Hidden"].map((fState) => (
+                        {["All", "Live", "Pending", "Rejected", "Featured"].map((fState) => (
                           <button
                             key={fState}
                             onClick={() => setPropertyStatusFilter(fState)}
@@ -1096,10 +1160,12 @@ export default function AdminView({
                                   {/* Status tag */}
                                   <td className="py-4 px-4 text-center">
                                     <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold border leading-none uppercase ${
-                                      prop.status === "approved"
+                                      prop.status === "live"
                                         ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20"
                                         : prop.status === "pending"
                                         ? "bg-amber-500/15 text-amber-400 border-amber-500/20 animate-pulse"
+                                        : prop.status === "rejected"
+                                        ? "bg-red-500/15 text-red-400 border-red-500/20"
                                         : "bg-slate-800 text-slate-400 border-white/5"
                                     }`}>
                                       {prop.status}
@@ -1128,13 +1194,17 @@ export default function AdminView({
                                         </button>
                                       )}
 
-                                      {/* Hide/Show Toggle */}
+                                      {/* Reject Toggle */}
                                       <button
                                         onClick={() => handlePropertyHideToggle(prop)}
-                                        className="p-2 rounded-lg bg-slate-850 hover:bg-slate-800 border border-white/5 text-slate-400 hover:text-white"
-                                        title={prop.status === "hidden" ? "Restore Visibility" : "Hide Listing"}
+                                        className={`p-2 rounded-lg bg-slate-850 border border-white/5 transition-colors cursor-pointer ${
+                                          prop.status === "rejected"
+                                            ? "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/20"
+                                            : "text-slate-400 hover:text-red-400 hover:bg-red-950/20"
+                                        }`}
+                                        title={prop.status === "rejected" ? "Restore Visibility" : "Reject Listing"}
                                       >
-                                        {prop.status === "hidden" ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                                        {prop.status === "rejected" ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                                       </button>
 
                                       {/* Edit */}
@@ -1701,6 +1771,40 @@ export default function AdminView({
                         </div>
                       </div>
 
+                      {/* DATA MANAGEMENT SECTION */}
+                      <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                          <Database className="h-4.5 w-4.5 text-[#D4AF37]" />
+                          <h3 className="font-extrabold text-white text-sm">Data Management</h3>
+                        </div>
+
+                        <div className="space-y-2.5">
+                          <button
+                            type="button"
+                            onClick={handleExportPropertiesJSON}
+                            className="w-full py-2.5 rounded-xl bg-slate-950 hover:bg-slate-850 border border-white/5 text-slate-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                          >
+                            <Download className="h-4 w-4 text-[#D4AF37]" /> Export All Properties (JSON)
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleExportCSV}
+                            className="w-full py-2.5 rounded-xl bg-slate-950 hover:bg-slate-850 border border-white/5 text-slate-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                          >
+                            <Download className="h-4 w-4 text-[#D4AF37]" /> Export All Enquiries as CSV
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleClearTestData}
+                            className="w-full py-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/40 border border-red-500/10 hover:border-red-500/30 text-red-400 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                          >
+                            <Database className="h-3.5 w-3.5 text-red-400 animate-pulse" /> Clear Test Data
+                          </button>
+                        </div>
+                      </div>
+
                     </div>
                   </div>
 
@@ -1879,6 +1983,77 @@ export default function AdminView({
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ========================================================
+          REJECT PROPERTY LISTING MODAL
+          ======================================================== */}
+      <AnimatePresence>
+        {rejectingProperty && (
+          <div className="fixed inset-0 z-50 bg-[#070b13]/85 backdrop-blur-sm overflow-y-auto px-4 py-8 flex items-center justify-center">
+            <motion.div
+              className="bg-slate-900 border border-white/5 w-full max-w-md rounded-2xl p-6 relative shadow-2xl font-sans"
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            >
+              <button
+                onClick={() => setRejectingProperty(null)}
+                className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white border border-white/5 transition-colors cursor-pointer"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+
+              <h3 className="text-sm font-extrabold text-red-400 uppercase tracking-wide border-b border-white/5 pb-3 mb-5 flex items-center gap-1.5 font-sans">
+                <AlertTriangle className="h-4.5 w-4.5 text-red-550" /> Reject Property Listing
+              </h3>
+
+              <div className="space-y-4 text-xs text-slate-300 font-sans">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Reason for rejection (Required)</label>
+                  <select
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    className="w-full bg-slate-950 border border-white/5 focus:border-red-500/40 rounded-xl px-3 py-2.5 text-xs text-white outline-none cursor-pointer"
+                  >
+                    <option value="Incomplete information">Incomplete information</option>
+                    <option value="Incorrect pricing">Incorrect pricing</option>
+                    <option value="Duplicate listing">Duplicate listing</option>
+                    <option value="Inappropriate content">Inappropriate content</option>
+                    <option value="Images missing">Images missing</option>
+                    <option value="Other - specify below">Other - specify below</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Additional notes for submitter (Optional)</label>
+                  <textarea
+                    rows={4}
+                    value={rejectNotes}
+                    onChange={(e) => setRejectNotes(e.target.value)}
+                    placeholder="Enter message for the property owner..."
+                    className="w-full bg-slate-950 border border-white/5 focus:border-red-500/40 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-600 outline-none resize-none"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => setRejectingProperty(null)}
+                    className="flex-grow py-2.5 rounded-xl border border-white/10 hover:bg-slate-800 text-slate-300 font-bold text-xs select-none cursor-pointer transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmReject}
+                    className="flex-grow py-2.5 rounded-xl bg-red-500 hover:bg-red-650 text-white font-black text-xs cursor-pointer transition-colors font-sans"
+                  >
+                    Confirm Reject
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}

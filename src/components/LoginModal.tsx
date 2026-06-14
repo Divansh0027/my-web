@@ -190,6 +190,8 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
       let friendlyMessage = err.message || "Failed to sign up. Please try again.";
       if (friendlyMessage.includes("auth/email-already-in-use") || friendlyMessage.includes("email-already-in-use")) {
         friendlyMessage = "This email is already registered. Try logging in instead.";
+      } else if (friendlyMessage.includes("auth/operation-not-allowed") || friendlyMessage.includes("operation-not-allowed")) {
+        friendlyMessage = "Email/Password sign up is not enabled in your Firebase console. Please go to your Firebase Console > Authentication > Sign-in method tab, and enable 'Email/Password'.";
       }
       setAuthError(friendlyMessage);
     } finally {

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomeView from "./components/HomeView";
@@ -23,6 +23,7 @@ export default function App() {
   // Routing & View Managers
   const [currentView, setCurrentView] = useState<string>("home");
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Authenticated Profile User & Savior list
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -135,11 +136,11 @@ export default function App() {
     }
   };
 
-  // Toggle Property status between "approved" and "pending"
+  // Toggle Property status between "live" and "pending"
   const handleToggleApprovalInApp = async (id: string) => {
     const matched = properties.find(p => p.id === id);
     if (!matched) return;
-    const nextStatus = matched.status === "approved" ? "pending" : "approved";
+    const nextStatus = matched.status === "live" ? "pending" : "live";
     const updated = { ...matched, status: nextStatus };
     const success = await updatePropertyInDb(updated);
     if (success) {
@@ -252,9 +253,13 @@ export default function App() {
     setToastMessage(msg);
     setToastType(type);
     
-    // Auto-clear
-    const timer = setTimeout(() => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    
+    toastTimerRef.current = setTimeout(() => {
       setToastMessage(null);
+      toastTimerRef.current = null;
     }, 4000);
   };
 
@@ -265,6 +270,29 @@ export default function App() {
   };
 
   const selectedProperty = getSelectedProperty();
+
+  if (currentView === "admin" && isAdmin) {
+    return (
+      <div className="bg-[#0F172A] min-h-screen text-slate-100 font-sans flex flex-col justify-between">
+        {/* GLOBAL TOAST FLOATING BANNER */}
+        <Notification 
+          message={toastMessage} 
+          type={toastType} 
+          onClose={() => setToastMessage(null)} 
+        />
+        <AdminView 
+          currentView={currentView}
+          onNavigate={handleNavigation}
+          properties={properties}
+          onToggleApproval={handleToggleApprovalInApp}
+          onDeleteProperty={handleDeletePropertyInApp}
+          onUpdateProperty={handleUpdatePropertyInApp}
+          onAddProperty={handleAddPropertyInApp}
+          onShowNotification={triggerToast}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#0F172A] min-h-screen text-slate-100 font-sans flex flex-col justify-between">
@@ -371,77 +399,79 @@ export default function App() {
       <Footer onNavigate={handleNavigation} />
 
       {/* ================= TOUCH MOBILE BOTTOM TAB BAR ACTIONS ================= */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-45 bg-[#0F172A]/90 backdrop-blur-md border-t border-white/5 py-2.5 px-4 flex items-center justify-around text-center shadow-2xl select-none">
-        
-        {/* Tab 1: Home */}
-        <button
-          onClick={() => handleNavigation("home")}
-          className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
-            currentView === "home" ? "text-[#D4AF37]" : "text-slate-400"
-          }`}
-        >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-          </svg>
-          <span className="text-[10px] font-bold">Home</span>
-        </button>
+      {currentView !== "admin" && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-45 bg-[#0F172A]/90 backdrop-blur-md border-t border-white/5 py-2.5 px-4 flex items-center justify-around text-center shadow-2xl select-none">
+          
+          {/* Tab 1: Home */}
+          <button
+            onClick={() => handleNavigation("home")}
+            className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
+              currentView === "home" ? "text-[#D4AF37]" : "text-slate-400"
+            }`}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span className="text-[10px] font-bold">Home</span>
+          </button>
 
-        {/* Tab 2: Properties */}
-        <button
-          onClick={() => handleNavigation("properties")}
-          className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
-            currentView === "properties" ? "text-[#D4AF37]" : "text-slate-400"
-          }`}
-        >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-          </svg>
-          <span className="text-[10px] font-bold">Listings</span>
-        </button>
+          {/* Tab 2: Properties */}
+          <button
+            onClick={() => handleNavigation("properties")}
+            className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
+              currentView === "properties" ? "text-[#D4AF37]" : "text-slate-400"
+            }`}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <span className="text-[10px] font-bold">Listings</span>
+          </button>
 
-        {/* Tab 3: Post */}
-        <button
-          onClick={() => handleNavigation("list_property")}
-          className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
-            currentView === "list_property" ? "text-[#D4AF37]" : "text-slate-400"
-          }`}
-        >
-          <div className="h-4.5 w-4.5 bg-gradient-to-br from-[#D4AF37] to-[#B5942B] rounded flex items-center justify-center text-slate-950">
-            <span className="text-sm font-black leading-none">+</span>
-          </div>
-          <span className="text-[10px] font-bold">Post</span>
-        </button>
+          {/* Tab 3: Post */}
+          <button
+            onClick={() => handleNavigation("list_property")}
+            className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
+              currentView === "list_property" ? "text-[#D4AF37]" : "text-slate-400"
+            }`}
+          >
+            <div className="h-4.5 w-4.5 bg-gradient-to-br from-[#D4AF37] to-[#B5942B] rounded flex items-center justify-center text-slate-950">
+              <span className="text-sm font-black leading-none">+</span>
+            </div>
+            <span className="text-[10px] font-bold">Post</span>
+          </button>
 
-        {/* Tab 4: Saved */}
-        <button
-          onClick={() => handleNavigation("saved")}
-          className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-[42px] relative ${
-            currentView === "saved" ? "text-[#D4AF37]" : "text-slate-400"
-          }`}
-        >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
-          {savedPropertyIds.length > 0 && (
-            <span className="absolute top-[2px] right-2 h-2.5 w-2.5 bg-emerald-500 rounded-full"></span>
-          )}
-          <span className="text-[10px] font-bold">Saved</span>
-        </button>
+          {/* Tab 4: Saved */}
+          <button
+            onClick={() => handleNavigation("saved")}
+            className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-[42px] relative ${
+              currentView === "saved" ? "text-[#D4AF37]" : "text-slate-400"
+            }`}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            {savedPropertyIds.length > 0 && (
+              <span className="absolute top-[2px] right-2 h-2.5 w-2.5 bg-emerald-500 rounded-full"></span>
+            )}
+            <span className="text-[10px] font-bold">Saved</span>
+          </button>
 
-        {/* Tab 5: Profile */}
-        <button
-          onClick={() => handleNavigation("profile")}
-          className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
-            currentView === "profile" ? "text-[#D4AF37]" : "text-slate-400"
-          }`}
-        >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          <span className="text-[10px] font-bold">Profile</span>
-        </button>
+          {/* Tab 5: Profile */}
+          <button
+            onClick={() => handleNavigation("profile")}
+            className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
+              currentView === "profile" ? "text-[#D4AF37]" : "text-slate-400"
+            }`}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span className="text-[10px] font-bold">Profile</span>
+          </button>
 
-      </div>
+        </div>
+      )}
 
     </div>
   );
