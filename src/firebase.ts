@@ -220,10 +220,10 @@ export const submitEnquiry = async (enquiry: Enquiry): Promise<{ success: boolea
   };
 
   if (isPlaceholder) {
-    const localEnquiriesStr = localStorage.getItem("local_enquiries");
+    const localEnquiriesStr = localStorage.getItem("ssp_local_enquiries");
     const enquiries = localEnquiriesStr ? JSON.parse(localEnquiriesStr) : [];
     enquiries.push(completeEnquiry);
-    localStorage.setItem("local_enquiries", JSON.stringify(enquiries));
+    localStorage.setItem("ssp_local_enquiries", JSON.stringify(enquiries));
     return { success: true, savedLocally: true };
   }
 
@@ -234,10 +234,10 @@ export const submitEnquiry = async (enquiry: Enquiry): Promise<{ success: boolea
     handleFirestoreError(error, OperationType.WRITE, `enquiries/${completeEnquiry.id}`);
     
     // Save to local_enquiries key on failure
-    const localEnquiriesStr = localStorage.getItem("local_enquiries");
+    const localEnquiriesStr = localStorage.getItem("ssp_local_enquiries");
     const enquiries = localEnquiriesStr ? JSON.parse(localEnquiriesStr) : [];
     enquiries.push(completeEnquiry);
-    localStorage.setItem("local_enquiries", JSON.stringify(enquiries));
+    localStorage.setItem("ssp_local_enquiries", JSON.stringify(enquiries));
     
     return { success: true, savedLocally: true };
   }
