@@ -173,16 +173,17 @@ export default function ListingsView({
   // Sort calculations
   const getSortedFilteredListings = () => {
     const list = getFilteredListings();
+    const listToSort = [...list];
     if (sortBy === "low-high") {
-      return list.sort((a, b) => a.price - b.price);
+      return listToSort.sort((a, b) => a.price - b.price);
     } else if (sortBy === "high-low") {
-      return list.sort((a, b) => b.price - a.price);
+      return listToSort.sort((a, b) => b.price - a.price);
     } else if (sortBy === "popular") {
       // Featured takes high prevalence
-      return list.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+      return listToSort.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
     }
     // Default latest (based on sample list index)
-    return list;
+    return listToSort;
   };
 
   const sortedListings = getSortedFilteredListings();

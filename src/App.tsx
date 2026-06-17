@@ -74,6 +74,18 @@ export default function App() {
     }
   }, [properties, currentUser]);
 
+  const [adminsList, setAdminsList] = useState<string[]>([]);
+
+  // Synchronize admin status reactively when user or admins list changes (H7 Fix)
+  useEffect(() => {
+    if (currentUser && currentUser.email) {
+      const isUserAdmin = adminsList.some(email => email.toLowerCase() === currentUser.email.toLowerCase());
+      setIsAdmin(isUserAdmin);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [currentUser, adminsList]);
+
   // Load properties and auth state
   useEffect(() => {
     // Scroll to top on root mount
@@ -91,10 +103,23 @@ export default function App() {
 
     // Stream remote settings dynamically (Issue 11)
     const unsubscribeSettings = subscribeRemoteSettings((settings) => {
-      if (settings) {
-        // Hydrate config parameters at runtime
+      if (settings && typeof settings === "object") {
+        // Hydrate config parameters at runtime securely (C7 Fix)
         try {
-          Object.assign(BUSINESS_CONFIG, settings);
+          const allowedKeys = [
+            "whatsappNumber", 
+            "businessName", 
+            "consultantName", 
+            "businessEmail", 
+            "businessPhone", 
+            "businessAddress", 
+            "reraNumber"
+          ];
+          allowedKeys.forEach(key => {
+            if (settings[key] !== undefined && typeof settings[key] === "string") {
+              (BUSINESS_CONFIG as any)[key] = settings[key];
+            }
+          });
         } catch (_) {}
       }
     });
@@ -105,23 +130,17 @@ export default function App() {
       if (user) {
         const favs = await getFavorites(user.uid);
         setSavedPropertyIds(favs);
-        const adminCheck = isAdminUser(user.email);
-        setIsAdmin(adminCheck);
       } else {
         // Hydrate from LocalStorage if guest
         const localFavsStr = localStorage.getItem("ssp_local_favorites");
         setSavedPropertyIds(localFavsStr ? JSON.parse(localFavsStr) : []);
-        setIsAdmin(false);
       }
       setIsAppReady(true);
     });
 
     // Stream dynamic admins list to update authorization state on snapshot (Issue 3)
     const unsubscribeAdmins = subscribeRemoteAdmins((admins) => {
-      if (currentUser) {
-        const adminCheck = admins.some(email => email.toLowerCase() === currentUser.email.toLowerCase());
-        setIsAdmin(adminCheck);
-      }
+      setAdminsList(admins);
     });
 
     return () => {
@@ -131,7 +150,7 @@ export default function App() {
       unsubscribeAuth();
       unsubscribeAdmins();
     };
-  }, [currentUser]);
+  }, []);
 
   // Update favorites lists
   const handleToggleSaved = async (id: string) => {

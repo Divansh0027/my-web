@@ -195,6 +195,24 @@ export const getProperties = async (): Promise<Property[]> => {
           console.warn(`Failed to seed custom property ${prop.id}. This is expected if client writes are forbidden:`, seedErr);
         }
       }
+      
+      // Also seed initial admins dynamically if empty to support role check
+      try {
+        const adminsColl = collection(dbInstance, "admins");
+        const adminsSnap = await getDocs(adminsColl);
+        if (adminsSnap.empty) {
+          const defaultAdmins = ["admin@shivsayaproperties.com", "divansh0027@gmail.com"];
+          for (const email of defaultAdmins) {
+            await setDoc(doc(dbInstance, "admins", email.toLowerCase()), {
+              email: email.toLowerCase(),
+              addedAt: new Date().toISOString()
+            });
+          }
+        }
+      } catch (adminSeedErr) {
+        console.warn("Failed to seed default admins:", adminSeedErr);
+      }
+
       return SAMPLE_PROPERTIES;
     }
     const list: Property[] = [];
@@ -367,9 +385,6 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
     
     return () => {
       unsubscribe();
-      allUnsubscribers.forEach(unsub => {
-        try { unsub(); } catch (_) {}
-      });
       authListeners.delete(listener);
     };
   } else {
@@ -382,10 +397,18 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
   }
 };
 
-// Global array to collect all snapshot listeners during runtime
-const allUnsubscribers: (() => void)[] = [];
+export let ADMIN_EMAILS: string[] = [];
 
-export let ADMIN_EMAILS = ["admin@shivsayaproperties.com", "divansh0027@gmail.com"];
+try {
+  const storedAdmins = localStorage.getItem("ssp_admin_emails");
+  if (storedAdmins) {
+    ADMIN_EMAILS = JSON.parse(storedAdmins);
+  } else if (isPlaceholder) {
+    ADMIN_EMAILS = ["admin@shivsayaproperties.com", "divansh0027@gmail.com"];
+  }
+} catch (e) {
+  console.warn("Failed to load admin emails", e);
+}
 
 export const isAdminUser = (email: string | null | undefined): boolean => {
   if (!email) return false;
@@ -394,16 +417,14 @@ export const isAdminUser = (email: string | null | undefined): boolean => {
 
 // Real-time Database Config synchronizers (Issue 3, 8 & 11)
 export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (() => void) => {
-  const rootAdmins = ["admin@shivsayaproperties.com", "divansh0027@gmail.com"];
-  
   const getMergedAdmins = () => {
     try {
       const stored = localStorage.getItem("ssp_admin_emails");
       if (stored) {
-        return Array.from(new Set([...rootAdmins, ...JSON.parse(stored)]));
+        return JSON.parse(stored);
       }
     } catch (_) {}
-    return rootAdmins;
+    return isPlaceholder ? ["admin@shivsayaproperties.com", "divansh0027@gmail.com"] : [];
   };
 
   const fallback = getMergedAdmins();
@@ -416,7 +437,7 @@ export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (()
 
   try {
     const unsub = onSnapshot(collection(dbInstance, "admins"), (snapshot) => {
-      const list: string[] = [...rootAdmins];
+      const list: string[] = [];
       snapshot.forEach((docSnap) => {
         list.push(docSnap.id.toLowerCase());
       });
@@ -428,7 +449,6 @@ export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (()
       console.warn("Error subscribing remote admins, using local fallback", err);
       callback(fallback);
     });
-    allUnsubscribers.push(unsub);
     return unsub;
   } catch (err) {
     callback(fallback);
@@ -508,7 +528,6 @@ export const subscribeRemoteControls = (callback: (controls: any) => void): (() 
       console.warn("Error subscribing remote controls, using local fallback", err);
       callback(fallback);
     });
-    allUnsubscribers.push(unsub);
     return unsub;
   } catch (err) {
     callback(fallback);
@@ -554,7 +573,6 @@ export const subscribeRemoteSettings = (callback: (settings: any) => void): (() 
       console.warn("Error subscribing remote settings, using local fallback", err);
       if (fallback) callback(fallback);
     });
-    allUnsubscribers.push(unsub);
     return unsub;
   } catch (err) {
     if (fallback) callback(fallback);

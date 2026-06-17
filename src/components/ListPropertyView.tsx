@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Check, ClipboardList, ShieldAlert, Award, FileText, 
@@ -61,6 +61,20 @@ export default function ListPropertyView({
 
   // Real Storage States
   const [imageFiles, setImageFiles] = useState<{ file: File; previewUrl: string }[]>([]);
+  const imageFilesRef = useRef(imageFiles);
+  useEffect(() => {
+    imageFilesRef.current = imageFiles;
+  }, [imageFiles]);
+
+  useEffect(() => {
+    return () => {
+      imageFilesRef.current.forEach(item => {
+        try {
+          URL.revokeObjectURL(item.previewUrl);
+        } catch (_) {}
+      });
+    };
+  }, []);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [youtubeUrl, setYoutubeUrl] = useState("");
