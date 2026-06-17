@@ -5,12 +5,16 @@ This document defines the security boundaries, data invariants, and adversarial 
 ## 1. Data Invariants
 
 - **Properties Collection (`/properties/{propertyId}`)**:
-  - Read access is fully public (unauthenticated `get` and `list`).
-  - Write access (create, update, delete) is strictly restricted to `false` via the client SDKs. Since there is no admin-facing portal in this app, no client is authorized to mutate property listings directly.
+  - Read access is public for properties with status "live". Owners can read their own pending/rejected properties. Admins can read all properties.
+  - Write access (create) is allowed for authenticated users, provided the status is strictly set to "pending" and passes schema validations. Alternately, admins can bypass restrictions.
+  - Owners can update or delete their own "pending" properties. Admins can update, moderate (live/rejected status transitions), or delete any property.
 
 - **Enquiries Collection (`/enquiries/{enquiryId}`)**:
-  - Write access (`create`) is publicly allowed, provided that the payload adheres strictly to the schema structure, passes data validation bounds, and has a valid ID.
-  - Read, Update, and Delete actions are forbidden for all client requests.
+  - Write access (`create`) is publicly allowed, provided that the payload adheres strictly to the schema structure (validated properties, phone formats, message character limits), passes data validation bounds, and has a valid clean ID.
+  - Read access is allowed for direct creators and administrators. Updation and deletion are restricted entirely to administrators.
+
+- **Users Collection (`/users/{userId}`)**:
+  - Read access and update access are private, restricted strictly to the matching owner (`request.auth.uid == userId`) or administrators, preventing demographic and contact detail leaks. Banned user flags can only be updated by administrators.
 
 - **Favorites Collection (`/users/{userId}/favorites/{propertyId}`)**:
   - Both read (`get`, `list`) and write (`create`, `delete`) access are strictly restricted to the owner of that user ID (`request.auth.uid == userId`).

@@ -13,7 +13,19 @@ import SavedView from "./components/SavedView";
 import ListPropertyView from "./components/ListPropertyView";
 import ProfileView from "./components/ProfileView";
 import Notification from "./components/Notification";
-import { subscribeProperties, getFavorites, toggleFavorite, subscribeAuth, addProperty, isAdminUser, updatePropertyInDb, deletePropertyFromDb } from "./firebase";
+import { 
+  subscribeProperties, 
+  getFavorites, 
+  toggleFavorite, 
+  subscribeAuth, 
+  addProperty, 
+  isAdminUser, 
+  updatePropertyInDb, 
+  deletePropertyFromDb,
+  subscribeRemoteAdmins,
+  subscribeRemoteControls,
+  subscribeRemoteSettings
+} from "./firebase";
 import { Property } from "./types";
 import { SAMPLE_PROPERTIES } from "./data/sampleData";
 import LoginModal from "./components/LoginModal";
@@ -72,6 +84,21 @@ export default function App() {
       setProperties(dbProps);
     });
 
+    // Stream operational controls / maintenance blocks live from Firestore (Issue 8)
+    const unsubscribeControls = subscribeRemoteControls((controls) => {
+      setMaintenanceMode(!!(controls.maintenanceMode || controls.offlineMaintenance));
+    });
+
+    // Stream remote settings dynamically (Issue 11)
+    const unsubscribeSettings = subscribeRemoteSettings((settings) => {
+      if (settings) {
+        // Hydrate config parameters at runtime
+        try {
+          Object.assign(BUSINESS_CONFIG, settings);
+        } catch (_) {}
+      }
+    });
+
     // Stream authenticated user
     const unsubscribeAuth = subscribeAuth(async (user) => {
       setCurrentUser(user);
@@ -89,44 +116,22 @@ export default function App() {
       setIsAppReady(true);
     });
 
+    // Stream dynamic admins list to update authorization state on snapshot (Issue 3)
+    const unsubscribeAdmins = subscribeRemoteAdmins((admins) => {
+      if (currentUser) {
+        const adminCheck = admins.some(email => email.toLowerCase() === currentUser.email.toLowerCase());
+        setIsAdmin(adminCheck);
+      }
+    });
+
     return () => {
       unsubscribeProperties();
+      unsubscribeControls();
+      unsubscribeSettings();
       unsubscribeAuth();
+      unsubscribeAdmins();
     };
-  }, []);
-
-  // Monitor offline maintenance mode status
-  useEffect(() => {
-    const checkMaintenance = () => {
-      try {
-        const controlsStr = localStorage.getItem("ssp_controls");
-        if (controlsStr) {
-          const controlsObj = JSON.parse(controlsStr);
-          setMaintenanceMode(!!(controlsObj.maintenanceMode || controlsObj.offlineMaintenance));
-        } else {
-          setMaintenanceMode(false);
-        }
-      } catch (e) {
-        console.warn("Failed checking maintenance in App", e);
-      }
-    };
-
-    checkMaintenance();
-
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === "ssp_controls" || e.key === null) {
-        checkMaintenance();
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    const interval = setInterval(checkMaintenance, 1500);
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      clearInterval(interval);
-    };
-  }, []);
+  }, [currentUser]);
 
   // Update favorites lists
   const handleToggleSaved = async (id: string) => {
@@ -224,7 +229,11 @@ export default function App() {
     if (!completedProp.id) {
       completedProp.id = `prop-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     }
-    if (!completedProp.status) {
+    
+    // Force status: pending for non-admins (Issue 10)
+    if (!isFromAdmin) {
+      completedProp.status = "pending";
+    } else if (!completedProp.status) {
       completedProp.status = "pending";
     }
 

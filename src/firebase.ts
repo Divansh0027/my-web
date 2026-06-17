@@ -32,11 +32,15 @@ import {
   onSnapshot
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import firebaseConfigJson from "../firebase-applet-config.json";
+// Optional compilation safeguard using Vite's eager glob to prevent build breaks when JSON doesn't exist
+const configFiles = (import.meta as any).glob("../firebase-applet-config.json", { eager: true }) as Record<string, any>;
+const firebaseConfigJson = configFiles["../firebase-applet-config.json"]?.default || {};
+
 import { Property, Enquiry } from "./types";
 import { SAMPLE_PROPERTIES } from "./data/sampleData";
 
 const envApiKey = (import.meta as any).env.VITE_FIREBASE_API_KEY;
+const isProd = (import.meta as any).env.PROD;
 
 const firebaseConfig = {
   apiKey: envApiKey && envApiKey.trim() !== "" ? envApiKey : firebaseConfigJson.apiKey,
@@ -48,6 +52,16 @@ const firebaseConfig = {
   firestoreDatabaseId: (import.meta as any).env.VITE_FIREBASE_DATABASE_ID || firebaseConfigJson.firestoreDatabaseId || (firebaseConfigJson as any).databaseId,
   measurementId: firebaseConfigJson.measurementId || ""
 };
+
+// Fail loudly in production if crucial keys are missing
+if (isProd) {
+  const missingKeys = [];
+  if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("placeholder")) missingKeys.push("VITE_FIREBASE_API_KEY");
+  if (!firebaseConfig.projectId || firebaseConfig.projectId.includes("placeholder")) missingKeys.push("VITE_FIREBASE_PROJECT_ID");
+  if (missingKeys.length > 0) {
+    throw new Error(`Production Build/Deployment Error: Missing required Firebase environment variables/config: ${missingKeys.join(", ")}`);
+  }
+}
 
 // Detect if we are using the placeholder setup
 let isPlaceholder = !firebaseConfig.apiKey || firebaseConfig.apiKey.includes("placeholder");
@@ -231,13 +245,16 @@ export const submitEnquiry = async (enquiry: Enquiry): Promise<{ success: boolea
     await setDoc(doc(dbInstance, "enquiries", completeEnquiry.id), completeEnquiry);
     return { success: true, savedLocally: false };
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `enquiries/${completeEnquiry.id}`);
+    console.warn("Firestore submitEnquiry failed, falling back to local storage:", error);
     
-    // Save to local_enquiries key on failure
-    const localEnquiriesStr = localStorage.getItem("ssp_local_enquiries");
-    const enquiries = localEnquiriesStr ? JSON.parse(localEnquiriesStr) : [];
-    enquiries.push(completeEnquiry);
-    localStorage.setItem("ssp_local_enquiries", JSON.stringify(enquiries));
+    try {
+      const localEnquiriesStr = localStorage.getItem("ssp_local_enquiries");
+      const enquiries = localEnquiriesStr ? JSON.parse(localEnquiriesStr) : [];
+      enquiries.push(completeEnquiry);
+      localStorage.setItem("ssp_local_enquiries", JSON.stringify(enquiries));
+    } catch (localStoreErr) {
+      console.warn("Local storage fallback insertion failed", localStoreErr);
+    }
     
     return { success: true, savedLocally: true };
   }
@@ -300,8 +317,27 @@ export const getFavorites = async (userId: string): Promise<string[]> => {
 
 // Subscribe to auth state changes
 export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
-  const handleUserChange = (fireUser: any) => {
+  const handleUserChange = async (fireUser: any) => {
     if (fireUser) {
+      // Background verification of banned status
+      let isBanned = false;
+      try {
+        const uDoc = await getDoc(doc(dbInstance, "users", fireUser.uid));
+        if (uDoc.exists() && uDoc.data()?.banned === true) {
+          isBanned = true;
+        }
+      } catch (err) {
+        console.warn("Banned check failed on auth subscription change", err);
+      }
+
+      if (isBanned) {
+        if (authInstance) await signOut(authInstance);
+        simulatedUser = null;
+        localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+        callback(null);
+        return;
+      }
+
       simulatedUser = null;
       localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
       callback({
@@ -331,6 +367,9 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
     
     return () => {
       unsubscribe();
+      allUnsubscribers.forEach(unsub => {
+        try { unsub(); } catch (_) {}
+      });
       authListeners.delete(listener);
     };
   } else {
@@ -343,25 +382,196 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
   }
 };
 
-export let ADMIN_EMAILS = ["admin@shivsayaproperties.com"];
+// Global array to collect all snapshot listeners during runtime
+const allUnsubscribers: (() => void)[] = [];
 
-// Load from localStorage if present
-try {
-  const storedAdmins = localStorage.getItem("ssp_admin_emails");
-  if (storedAdmins) {
-    const parsed = JSON.parse(storedAdmins);
-    if (Array.isArray(parsed)) {
-      const merged = Array.from(new Set(["admin@shivsayaproperties.com", ...parsed]));
-      ADMIN_EMAILS = merged;
-    }
-  }
-} catch (e) {
-  console.warn("Failed to load admin emails", e);
-}
+export let ADMIN_EMAILS = ["admin@shivsayaproperties.com", "divansh0027@gmail.com"];
 
 export const isAdminUser = (email: string | null | undefined): boolean => {
   if (!email) return false;
   return ADMIN_EMAILS.some(adminEmail => adminEmail.toLowerCase() === email.toLowerCase());
+};
+
+// Real-time Database Config synchronizers (Issue 3, 8 & 11)
+export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (() => void) => {
+  const rootAdmins = ["admin@shivsayaproperties.com", "divansh0027@gmail.com"];
+  
+  const getMergedAdmins = () => {
+    try {
+      const stored = localStorage.getItem("ssp_admin_emails");
+      if (stored) {
+        return Array.from(new Set([...rootAdmins, ...JSON.parse(stored)]));
+      }
+    } catch (_) {}
+    return rootAdmins;
+  };
+
+  const fallback = getMergedAdmins();
+  ADMIN_EMAILS = fallback;
+  
+  if (isPlaceholder || !dbInstance) {
+    callback(fallback);
+    return () => {};
+  }
+
+  try {
+    const unsub = onSnapshot(collection(dbInstance, "admins"), (snapshot) => {
+      const list: string[] = [...rootAdmins];
+      snapshot.forEach((docSnap) => {
+        list.push(docSnap.id.toLowerCase());
+      });
+      const uniqueAdmins = Array.from(new Set(list));
+      ADMIN_EMAILS = uniqueAdmins;
+      callback(uniqueAdmins);
+      localStorage.setItem("ssp_admin_emails", JSON.stringify(uniqueAdmins));
+    }, (err) => {
+      console.warn("Error subscribing remote admins, using local fallback", err);
+      callback(fallback);
+    });
+    allUnsubscribers.push(unsub);
+    return unsub;
+  } catch (err) {
+    callback(fallback);
+    return () => {};
+  }
+};
+
+export const addRemoteAdmin = async (email: string): Promise<boolean> => {
+  const cleanEmail = email.trim().toLowerCase();
+  
+  try {
+    const stored = localStorage.getItem("ssp_admin_emails");
+    const list = stored ? JSON.parse(stored) : [];
+    if (!list.includes(cleanEmail)) {
+      list.push(cleanEmail);
+      localStorage.setItem("ssp_admin_emails", JSON.stringify(list));
+    }
+  } catch (_) {}
+
+  if (isPlaceholder || !dbInstance) return true;
+  
+  try {
+    await setDoc(doc(dbInstance, "admins", cleanEmail), {
+      email: cleanEmail,
+      addedAt: new Date().toISOString()
+    });
+    return true;
+  } catch (err) {
+    console.warn("Failed adding remote admin", err);
+    return false;
+  }
+};
+
+export const removeRemoteAdmin = async (email: string): Promise<boolean> => {
+  const cleanEmail = email.trim().toLowerCase();
+  
+  try {
+    const stored = localStorage.getItem("ssp_admin_emails");
+    if (stored) {
+      const list = JSON.parse(stored).filter((e: string) => e !== cleanEmail);
+      localStorage.setItem("ssp_admin_emails", JSON.stringify(list));
+    }
+  } catch (_) {}
+
+  if (isPlaceholder || !dbInstance) return true;
+  
+  try {
+    await deleteDoc(doc(dbInstance, "admins", cleanEmail));
+    return true;
+  } catch (err) {
+    console.warn("Failed removing remote admin", err);
+    return false;
+  }
+};
+
+// System Controls Sync (Issue 8)
+export const subscribeRemoteControls = (callback: (controls: any) => void): (() => void) => {
+  const localVal = localStorage.getItem("ssp_controls");
+  const fallback = localVal ? JSON.parse(localVal) : { maintenanceMode: false, offlineMaintenance: false, slowMode: false };
+  
+  if (isPlaceholder || !dbInstance) {
+    callback(fallback);
+    return () => {};
+  }
+  
+  try {
+    const unsub = onSnapshot(doc(dbInstance, "controls", "site_controls"), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        callback(data);
+        localStorage.setItem("ssp_controls", JSON.stringify(data));
+      } else {
+        setDoc(doc(dbInstance, "controls", "site_controls"), fallback).catch(e => console.warn("Controls seed error", e));
+        callback(fallback);
+      }
+    }, (err) => {
+      console.warn("Error subscribing remote controls, using local fallback", err);
+      callback(fallback);
+    });
+    allUnsubscribers.push(unsub);
+    return unsub;
+  } catch (err) {
+    callback(fallback);
+    return () => {};
+  }
+};
+
+export const updateRemoteControls = async (controls: any): Promise<boolean> => {
+  localStorage.setItem("ssp_controls", JSON.stringify(controls));
+  if (isPlaceholder || !dbInstance) return true;
+  try {
+    await setDoc(doc(dbInstance, "controls", "site_controls"), controls, { merge: true });
+    return true;
+  } catch (err) {
+    console.warn("Failed updating remote controls", err);
+    return false;
+  }
+};
+
+// Business Settings Sync (Issue 11)
+export const subscribeRemoteSettings = (callback: (settings: any) => void): (() => void) => {
+  const localVal = localStorage.getItem("ssp_settings");
+  const fallback = localVal ? JSON.parse(localVal) : null;
+  
+  if (isPlaceholder || !dbInstance) {
+    if (fallback) callback(fallback);
+    return () => {};
+  }
+  
+  try {
+    const unsub = onSnapshot(doc(dbInstance, "settings", "business_settings"), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        callback(data);
+        localStorage.setItem("ssp_settings", JSON.stringify(data));
+      } else {
+        if (fallback) {
+          setDoc(doc(dbInstance, "settings", "business_settings"), fallback).catch(e => console.warn("Settings seed error", e));
+          callback(fallback);
+        }
+      }
+    }, (err) => {
+      console.warn("Error subscribing remote settings, using local fallback", err);
+      if (fallback) callback(fallback);
+    });
+    allUnsubscribers.push(unsub);
+    return unsub;
+  } catch (err) {
+    if (fallback) callback(fallback);
+    return () => {};
+  }
+};
+
+export const updateRemoteSettings = async (settings: any): Promise<boolean> => {
+  localStorage.setItem("ssp_settings", JSON.stringify(settings));
+  if (isPlaceholder || !dbInstance) return true;
+  try {
+    await setDoc(doc(dbInstance, "settings", "business_settings"), settings, { merge: true });
+    return true;
+  } catch (err) {
+    console.warn("Failed updating remote settings", err);
+    return false;
+  }
 };
 
 export const loginWithGoogle = async (): Promise<ClientUser | null> => {
@@ -370,16 +580,24 @@ export const loginWithGoogle = async (): Promise<ClientUser | null> => {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(authInstance, provider);
       if (result.user) {
-        // If banned check is requested, let's verify if user record has banned: true
+        let isBanned = false;
+        let banMsg = "Your account has been suspended. Contact support@shivsayaproperties.com.";
         try {
           const docRef = doc(dbInstance, "users", result.user.uid);
           const uDoc = await getDoc(docRef);
           if (uDoc.exists() && uDoc.data()?.banned === true) {
-            await signOut(authInstance);
-            throw new Error("Your account has been suspended. Contact support@shivsayaproperties.com");
+            isBanned = true;
+            if (uDoc.data()?.bannedMessage) {
+              banMsg = uDoc.data().bannedMessage;
+            }
           }
         } catch (dbErr) {
           console.warn("Failed banned check for Google user:", dbErr);
+        }
+
+        if (isBanned) {
+          await signOut(authInstance);
+          throw new Error(banMsg);
         }
 
         simulatedUser = null;
@@ -391,6 +609,9 @@ export const loginWithGoogle = async (): Promise<ClientUser | null> => {
         };
       }
     } catch (error) {
+      if (error instanceof Error && error.message.includes("suspended")) {
+        throw error;
+      }
       console.warn("Google Authenticator screen failed, starting simulated login.", error);
     }
   }
@@ -423,28 +644,32 @@ const saveSimulatedDbUser = (user: any) => {
 
 export const loginWithEmailPassword = async (email: string, password: string): Promise<ClientUser> => {
   if (!isPlaceholder && authInstance) {
+    const result = await signInWithEmailAndPassword(authInstance, email, password);
+    let isBanned = false;
+    let banMsg = "Your account has been suspended. Contact support@shivsayaproperties.com.";
     try {
-      const result = await signInWithEmailAndPassword(authInstance, email, password);
-      // Check if banned
-      try {
-        const uDoc = await getDoc(doc(dbInstance, "users", result.user.uid));
-        if (uDoc.exists() && uDoc.data()?.banned === true) {
-          await signOut(authInstance);
-          throw new Error("Your account has been suspended. Contact support@shivsayaproperties.com");
+      const uDoc = await getDoc(doc(dbInstance, "users", result.user.uid));
+      if (uDoc.exists() && uDoc.data()?.banned === true) {
+        isBanned = true;
+        if (uDoc.data()?.bannedMessage) {
+          banMsg = uDoc.data().bannedMessage;
         }
-      } catch (err) {
-        console.warn("Banned check failed on Firebase:", err);
       }
-      return {
-        uid: result.user.uid,
-        email: result.user.email || "",
-        displayName: result.user.displayName || result.user.email?.split("@")[0] || "User",
-        photoURL: result.user.photoURL || undefined
-      };
-    } catch (error) {
-      console.error("Login error:", error);
-      throw error;
+    } catch (err) {
+      console.warn("Banned check failed on Firebase:", err);
     }
+
+    if (isBanned) {
+      await signOut(authInstance);
+      throw new Error(banMsg);
+    }
+
+    return {
+      uid: result.user.uid,
+      email: result.user.email || "",
+      displayName: result.user.displayName || result.user.email?.split("@")[0] || "User",
+      photoURL: result.user.photoURL || undefined
+    };
   }
 
   // Simulated login check

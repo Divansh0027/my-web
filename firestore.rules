@@ -1,5 +1,5 @@
 // Production rules for Shiv Saya Properties
-// Last updated: Phase 3
+// Last updated: Phase 3 (Secured)
 
 rules_version = '2';
 service cloud.firestore {
@@ -16,10 +16,13 @@ service cloud.firestore {
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
     
-    // Admin check in rules
-    // Production rules for Shiv Saya Properties
+    // Admin check in rules: Support both static master admin and dynamically registered admins
     function isAdmin() { 
-      return isSignedIn() && request.auth.token.email == 'admin@shivsayaproperties.com'; 
+      return isSignedIn() && (
+        request.auth.token.email == 'admin@shivsayaproperties.com' ||
+        request.auth.token.email == 'divansh0027@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.token.email))
+      );
     }
 
     // Validation helper for Property
@@ -35,32 +38,38 @@ service cloud.firestore {
         && data.category is string && data.category.size() > 0 && data.category.size() <= 100;
     }
 
-    // Users collection:
-    // - Anyone can read a user document (for displaying names)
-    // - Only the authenticated user can write their own document
-    // - Only admin emails can update banned field
+    // Validation helper for Enquiry
+    function isValidEnquiry(data) {
+      return data.keys().hasAll(['name', 'phone', 'propertyId', 'propertyName', 'type'])
+        && data.keys().size() <= 10
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 200
+        && data.phone is string && data.phone.size() > 0 && data.phone.size() <= 30
+        && data.propertyId is string && data.propertyId.size() > 0 && data.propertyId.size() <= 128
+        && data.propertyName is string && data.propertyName.size() > 0 && data.propertyName.size() <= 300
+        && (data.type == 'enquiry' || data.type == 'visit')
+        // Optional message string sizing validation (Case 11: Too Long Message in Enquiry)
+        && (!data.keys().contains('message') || (data.message is string && data.message.size() <= 1000))
+        // Optional user fields validation
+        && (!data.keys().contains('userId') || (data.userId is string && data.userId.size() <= 128))
+        && (!data.keys().contains('userEmail') || (data.userEmail is string && data.userEmail.size() <= 200));
+    }
+
+    // Users collection (Issue 4: Restrict profile reads)
     match /users/{userId} {
-      allow read: if true;
+      allow read: if (isSignedIn() && request.auth.uid == userId) || isAdmin();
       allow create: if isSignedIn() && request.auth.uid == userId;
       allow update: if (isSignedIn() && request.auth.uid == userId && (!incoming().keys().contains('banned') || incoming().banned == existing().banned)) || isAdmin();
       allow delete: if isAdmin();
 
-      // Saved properties collection nested matching
+      // Saved properties collection nested matching (Issue 12: Typing and hijacking)
       match /favorites/{propertyId} {
         allow read, write: if isSignedIn() && request.auth.uid == userId;
       }
     }
 
-    // Properties collection:
-    // - Anyone can read properties where status is "live"
-    // - Authenticated users can read their own pending/rejected
-    // - Authenticated users can create new properties with status forced to "pending" always
-    // - Users can update ONLY their own properties that are still in "pending" status
-    // - Only admins can update status field to "live" or "rejected"
-    // - Only admins can delete any property
-    // - Owners can delete their own pending properties
+    // Properties collection
     match /properties/{propertyId} {
-      allow read: if (resource.data.status == 'live') || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.userEmail == request.auth.token.email));
+      allow read: if (resource.data.status == 'live') || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.userEmail == request.auth.token.email)) || isAdmin();
       
       allow create: if (isSignedIn() && incoming().status == 'pending' && (incoming().userId == request.auth.uid || incoming().userEmail == request.auth.token.email) && isValidProperty(incoming())) || isAdmin();
       
@@ -80,15 +89,27 @@ service cloud.firestore {
       );
     }
 
-    // Enquiries collection:
-    // - Authenticated users can create enquiries
-    // - Only admins can read all enquiries
-    // - Users can read their own enquiries
-    // - Only admins can update or delete enquiries
+    // Enquiries collection (Issue 5: Schema check and validation rules)
     match /enquiries/{enquiryId} {
-      allow create: if isSignedIn();
+      allow create: if isValidId(enquiryId) && isValidEnquiry(incoming());
       allow read: if isAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.userEmail == request.auth.token.email));
       allow update, delete: if isAdmin();
+    }
+
+    // Dynamic system configurations (Issue 8 & 11)
+    match /controls/{controlId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // List of Dynamically authorized Admins (Issue 3)
+    match /admins/{adminEmail} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

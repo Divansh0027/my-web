@@ -15,7 +15,13 @@ import {
 } from "lucide-react";
 import { Property, EnquiryRecord, AdminTab, AdminSettings } from "../types";
 import { BUSINESS_CONFIG } from "../config";
-import { ADMIN_EMAILS } from "../firebase";
+import { 
+  ADMIN_EMAILS, 
+  addRemoteAdmin, 
+  removeRemoteAdmin, 
+  updateRemoteControls, 
+  updateRemoteSettings 
+} from "../firebase";
 
 interface AdminViewProps {
   currentView: string;
@@ -415,8 +421,8 @@ export default function AdminView({
   // ----------------------------------------------------
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
-    executeOperation(() => {
-      localStorage.setItem("ssp_settings", JSON.stringify(settings));
+    executeOperation(async () => {
+      await updateRemoteSettings(settings);
       // Reload page immediately to re-bootstrap CONFIG values
       onShowNotification("Core settings updated! Reloading parameters...", "success");
       setTimeout(() => {
@@ -425,13 +431,13 @@ export default function AdminView({
     });
   };
 
-  const handleToggleControl = (controlKey: keyof typeof controls) => {
+  const handleToggleControl = async (controlKey: keyof typeof controls) => {
     const newCont = {
       ...controls,
       [controlKey]: !controls[controlKey]
     };
     setControls(newCont);
-    localStorage.setItem("ssp_controls", JSON.stringify(newCont));
+    await updateRemoteControls(newCont);
     onShowNotification(`${String(controlKey).replace(/([A-Z])/g, ' $1')} updated!`, "success");
   };
 
@@ -445,10 +451,10 @@ export default function AdminView({
       return;
     }
 
-    executeOperation(() => {
+    executeOperation(async () => {
       const newList = [...adminsList, cleanEmail];
       setAdminsList(newList);
-      localStorage.setItem("ssp_admin_emails", JSON.stringify(newList));
+      await addRemoteAdmin(cleanEmail);
       setNewAdminEmail("");
     }, "New administrator access address provisioned");
   };
@@ -465,10 +471,10 @@ export default function AdminView({
       message: `Are you sure you want to strip admin privileges from ${emailToRemove}? They will be demoted to standard user state instantly.`,
       isDanger: true,
       onConfirm: () => {
-        executeOperation(() => {
+        executeOperation(async () => {
           const newList = adminsList.filter(e => e.toLowerCase() !== emailToRemove.toLowerCase());
           setAdminsList(newList);
-          localStorage.setItem("ssp_admin_emails", JSON.stringify(newList));
+          await removeRemoteAdmin(emailToRemove);
         }, "Administrator access revoked successfully");
         setConfirmDialog(prev => ({ ...prev, isOpen: false }));
       }

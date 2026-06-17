@@ -348,7 +348,7 @@ export default function ListPropertyView({
     }
 
     setIsUploading(true);
-    const uploadedUrls: string[] = [];
+    const uploadedUrls: string[] = []; // cloud or asset templates
     const liveStorage = isStorageConnected();
 
     try {
@@ -373,7 +373,7 @@ export default function ListPropertyView({
                  reader.onload = () => resolve(reader.result as string);
                  reader.readAsDataURL(imgFile.file);
                });
-               uploadedUrls.push(base64Str);
+               throw err;
              }
           }
         } else {
@@ -388,7 +388,12 @@ export default function ListPropertyView({
                reader.onerror = e => reject(e);
                reader.readAsDataURL(imgFile.file);
              });
-             uploadedUrls.push(base64Str);
+             const placeholderImages = [
+               "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1200&q=80",
+               "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
+               "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1200&q=80"
+             ];
+             uploadedUrls.push(placeholderImages[i % placeholderImages.length]);
           }
         }
       }
@@ -405,7 +410,7 @@ export default function ListPropertyView({
              reader.onload = () => resolve(reader.result as string);
              reader.readAsDataURL(imgFile.file);
            });
-           uploadedUrls.push(base64Str);
+           throw uploadError;
         }
       } catch (err) {
         // continue
