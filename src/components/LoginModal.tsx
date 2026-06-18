@@ -140,7 +140,11 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
         onClose();
       }
     } catch (err: any) {
-      setAuthError(err.message || "Failed to log in with Google.");
+      let friendlyMessage = err.message || "Failed to log in with Google.";
+      if (friendlyMessage.includes("auth/operation-not-allowed") || friendlyMessage.includes("operation-not-allowed")) {
+        friendlyMessage = "Google Sign-In is not enabled in your Firebase project yet. Please go to your Firebase Console > Authentication > Sign-in method, click 'Add new provider', choose 'Google', and enable it.";
+      }
+      setAuthError(friendlyMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -164,6 +168,8 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
         friendlyMessage = "Incorrect password. Please verify and try again.";
       } else if (friendlyMessage.includes("auth/invalid-credential")) {
         friendlyMessage = "Invalid credentials. Please verify your email and password.";
+      } else if (friendlyMessage.includes("auth/operation-not-allowed") || friendlyMessage.includes("operation-not-allowed")) {
+        friendlyMessage = "Email/Password sign-in is not enabled in your Firebase console. Please go to your Firebase Console > Authentication > Sign-in method tab, and enable the 'Email/Password' provider.";
       }
       setAuthError(friendlyMessage);
     } finally {
@@ -191,7 +197,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
       if (friendlyMessage.includes("auth/email-already-in-use") || friendlyMessage.includes("email-already-in-use")) {
         friendlyMessage = "This email is already registered. Try logging in instead.";
       } else if (friendlyMessage.includes("auth/operation-not-allowed") || friendlyMessage.includes("operation-not-allowed")) {
-        friendlyMessage = "Email/Password sign up is not enabled in your Firebase console. Please go to your Firebase Console > Authentication > Sign-in method tab, and enable 'Email/Password'.";
+        friendlyMessage = "Email/Password sign up is not enabled in your Firebase console. Please go to your Firebase Console > Authentication > Sign-in method tab, click 'Add new provider', choose 'Email/Password', and enable it.";
       }
       setAuthError(friendlyMessage);
     } finally {

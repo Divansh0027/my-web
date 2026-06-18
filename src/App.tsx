@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomeView from "./components/HomeView";
@@ -57,6 +57,11 @@ export default function App() {
   const [properties, setProperties] = useState<Property[]>(SAMPLE_PROPERTIES);
   const [userProperties, setUserProperties] = useState<Property[]>([]); // Locally created ones
 
+  // Derived visible properties securely memoized (H12 Fix)
+  const visibleProperties = useMemo(() => {
+    return properties.filter(p => !p.status || (p.status !== "pending" && p.status !== "rejected"));
+  }, [properties]);
+
   // Search parameters bridge (Home Hero -> Listings Sidebar)
   const [activeSearchFilters, setActiveSearchFilters] = useState<{ location: string; type: string; budgetMax: number; bhk: string } | null>(null);
 
@@ -67,7 +72,7 @@ export default function App() {
   // Track user listings dynamically on properties changes or auth state changes
   useEffect(() => {
     if (currentUser) {
-      const filtered = properties.filter(p => (p as any).userId === currentUser.uid);
+      const filtered = properties.filter(p => p.userId === currentUser.uid);
       setUserProperties(filtered);
     } else {
       setUserProperties([]);
@@ -179,16 +184,16 @@ export default function App() {
     const completedProp: Property = {
       ...newProp,
       id: docId,
-      status: "pending" as any, // Default pending status
+      status: "pending", // Default pending status
       postedDate: new Date().toISOString().split("T")[0],
       postedBy: "Owner",
     };
 
     // Store custom userId, userEmail, userName for query filtering and administrative purposes
-    (completedProp as any).userId = currentUser?.uid || "guest-user";
-    (completedProp as any).userEmail = currentUser?.email || "guest@shivsayaproperties.com";
-    (completedProp as any).userName = currentUser?.displayName || "Guest User";
-    (completedProp as any).createdAt = new Date().toISOString();
+    completedProp.userId = currentUser?.uid || "guest-user";
+    completedProp.userEmail = currentUser?.email || "guest@shivsayaproperties.com";
+    completedProp.userName = currentUser?.displayName || "Guest User";
+    completedProp.createdAt = new Date().toISOString();
 
     const success = await addProperty(completedProp);
     if (success) {
@@ -461,7 +466,7 @@ export default function App() {
           <div className="flex-grow">
             {currentView === "home" && (
               <HomeView 
-                properties={properties.filter(p => !p.status || (p.status !== "pending" && p.status !== "rejected"))} 
+                properties={visibleProperties} 
                 onNavigate={handleNavigation} 
                 onSearch={handleSearchTrigger}
                 savedProperties={savedPropertyIds}
@@ -471,7 +476,7 @@ export default function App() {
 
             {currentView === "properties" && !selectedProperty && (
               <ListingsView 
-                properties={properties.filter(p => !p.status || (p.status !== "pending" && p.status !== "rejected"))} 
+                properties={visibleProperties} 
                 initialFilters={activeSearchFilters}
                 onNavigate={handleNavigation}
                 savedProperties={savedPropertyIds}
@@ -482,7 +487,7 @@ export default function App() {
             {currentView === "properties" && selectedProperty && (
               <DetailView 
                 property={selectedProperty} 
-                allProperties={properties.filter(p => !p.status || (p.status !== "pending" && p.status !== "rejected"))}
+                allProperties={visibleProperties}
                 onNavigate={handleNavigation}
                 savedProperties={savedPropertyIds}
                 onToggleSaved={handleToggleSaved}
@@ -492,7 +497,7 @@ export default function App() {
 
             {currentView === "saved" && (
               <SavedView 
-                properties={properties.filter(p => !p.status || (p.status !== "pending" && p.status !== "rejected"))} 
+                properties={visibleProperties} 
                 savedProperties={savedPropertyIds} 
                 onToggleSaved={handleToggleSaved}
                 onNavigate={handleNavigation}

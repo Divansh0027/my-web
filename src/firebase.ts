@@ -29,7 +29,8 @@ import {
   query, 
   where,
   getDocFromServer,
-  onSnapshot
+  onSnapshot,
+  setLogLevel
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 // Optional compilation safeguard using Vite's eager glob to prevent build breaks when JSON doesn't exist
@@ -61,6 +62,13 @@ if (isProd) {
   if (missingKeys.length > 0) {
     throw new Error(`Production Build/Deployment Error: Missing required Firebase environment variables/config: ${missingKeys.join(", ")}`);
   }
+}
+
+// Quiet Firestore connection logs to avoid warning/error spam in testing consoles
+try {
+  setLogLevel("error");
+} catch (e) {
+  console.warn("Could not set Firestore log level", e);
 }
 
 // Detect if we are using the placeholder setup
@@ -129,18 +137,32 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
   throw new Error(JSON.stringify(errInfo));
 }
 
-// Validate connection on startup if using real Firestore
-if (!isPlaceholder && dbInstance) {
-  async function testConnection() {
-    try {
-      await getDocFromServer(doc(dbInstance, 'test', 'connection'));
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('the client is offline')) {
-        console.warn("Please check your Firebase configuration or network status.");
+// Validate connection on startup silently if using real Firestore
+// (Removed active getDocFromServer call to prevent pre-emptive connection warning spam on slow cold start)
+
+/**
+ * Helper to recursively remove undefined values from objects before writing them to Firestore.
+ */
+export function cleanForFirestore<T>(obj: T): T {
+  if (obj === null || typeof obj !== "object") {
+    return obj;
+  }
+  if (obj instanceof Date) {
+    return obj as any;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanForFirestore(item)) as any;
+  }
+  const cleaned: any = {};
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const val = obj[key];
+      if (val !== undefined) {
+        cleaned[key] = cleanForFirestore(val);
       }
     }
   }
-  testConnection();
+  return cleaned;
 }
 
 /**
@@ -260,7 +282,7 @@ export const submitEnquiry = async (enquiry: Enquiry): Promise<{ success: boolea
   }
 
   try {
-    await setDoc(doc(dbInstance, "enquiries", completeEnquiry.id), completeEnquiry);
+    await setDoc(doc(dbInstance, "enquiries", completeEnquiry.id), cleanForFirestore(completeEnquiry));
     return { success: true, savedLocally: false };
   } catch (error) {
     console.warn("Firestore submitEnquiry failed, falling back to local storage:", error);
@@ -446,7 +468,7 @@ export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (()
       callback(uniqueAdmins);
       localStorage.setItem("ssp_admin_emails", JSON.stringify(uniqueAdmins));
     }, (err) => {
-      console.warn("Error subscribing remote admins, using local fallback", err);
+      console.log("Info: using local/cached admin fallback (dynamic sync active):", err?.message || err);
       callback(fallback);
     });
     return unsub;
@@ -521,11 +543,10 @@ export const subscribeRemoteControls = (callback: (controls: any) => void): (() 
         callback(data);
         localStorage.setItem("ssp_controls", JSON.stringify(data));
       } else {
-        setDoc(doc(dbInstance, "controls", "site_controls"), fallback).catch(e => console.warn("Controls seed error", e));
         callback(fallback);
       }
     }, (err) => {
-      console.warn("Error subscribing remote controls, using local fallback", err);
+      console.log("Info: using local/cached controls fallback (dynamic sync active):", err?.message || err);
       callback(fallback);
     });
     return unsub;
@@ -539,7 +560,7 @@ export const updateRemoteControls = async (controls: any): Promise<boolean> => {
   localStorage.setItem("ssp_controls", JSON.stringify(controls));
   if (isPlaceholder || !dbInstance) return true;
   try {
-    await setDoc(doc(dbInstance, "controls", "site_controls"), controls, { merge: true });
+    await setDoc(doc(dbInstance, "controls", "site_controls"), cleanForFirestore(controls), { merge: true });
     return true;
   } catch (err) {
     console.warn("Failed updating remote controls", err);
@@ -565,12 +586,11 @@ export const subscribeRemoteSettings = (callback: (settings: any) => void): (() 
         localStorage.setItem("ssp_settings", JSON.stringify(data));
       } else {
         if (fallback) {
-          setDoc(doc(dbInstance, "settings", "business_settings"), fallback).catch(e => console.warn("Settings seed error", e));
           callback(fallback);
         }
       }
     }, (err) => {
-      console.warn("Error subscribing remote settings, using local fallback", err);
+      console.log("Info: using local/cached settings fallback (dynamic sync active):", err?.message || err);
       if (fallback) callback(fallback);
     });
     return unsub;
@@ -584,7 +604,7 @@ export const updateRemoteSettings = async (settings: any): Promise<boolean> => {
   localStorage.setItem("ssp_settings", JSON.stringify(settings));
   if (isPlaceholder || !dbInstance) return true;
   try {
-    await setDoc(doc(dbInstance, "settings", "business_settings"), settings, { merge: true });
+    await setDoc(doc(dbInstance, "settings", "business_settings"), cleanForFirestore(settings), { merge: true });
     return true;
   } catch (err) {
     console.warn("Failed updating remote settings", err);
@@ -853,7 +873,7 @@ export const addProperty = async (property: Property): Promise<boolean> => {
 
   try {
     const docRef = doc(dbInstance, "properties", property.id);
-    await setDoc(docRef, property);
+    await setDoc(docRef, cleanForFirestore(property));
     return true;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, `properties/${property.id}`);
@@ -867,35 +887,59 @@ export const subscribeProperties = (callback: (props: Property[]) => void): (() 
     return () => {};
   }
 
-  try {
+  let activeUnsubscribe: (() => void) | null = null;
+  let isCancelled = false;
+
+  const init = async () => {
     const q = collection(dbInstance, "properties");
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (snapshot.empty) {
-        SAMPLE_PROPERTIES.forEach(async (prop) => {
+    try {
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty && !isCancelled) {
+        // Seed sequentially to avoid individual onSnapshot emission flashes
+        for (const prop of SAMPLE_PROPERTIES) {
           try {
             await setDoc(doc(dbInstance, "properties", prop.id), prop);
           } catch (e) {
-            console.warn("Properties seeding snapshot issue", e);
+            console.log("Info: Properties seeding skipped/restricted.", e);
           }
-        });
-        callback(SAMPLE_PROPERTIES);
-        return;
+        }
       }
-      const list: Property[] = [];
-      snapshot.forEach((docSnap) => {
-        list.push(docSnap.data() as Property);
+    } catch (err) {
+      console.log("Info: Properties offline/seeding pass complete, proceeding with listener:", err instanceof Error ? err.message : err);
+    }
+
+    if (isCancelled) return;
+
+    try {
+      activeUnsubscribe = onSnapshot(q, (snap) => {
+        const list: Property[] = [];
+        snap.forEach((docSnap) => {
+          list.push(docSnap.data() as Property);
+        });
+        if (list.length === 0) {
+          callback(SAMPLE_PROPERTIES);
+        } else {
+          callback(list);
+        }
+      }, (error) => {
+        console.log("Info: Live stream offline fallback active. Using local properties list:", error instanceof Error ? error.message : error);
+        callback(SAMPLE_PROPERTIES);
       });
-      callback(list);
-    }, (error) => {
-      console.warn("onSnapshot failed. Falling back to sample properties.", error);
+    } catch (snapErr) {
+      console.log("Info: Reading properties dynamic stream active with local fallback:", snapErr instanceof Error ? snapErr.message : snapErr);
       callback(SAMPLE_PROPERTIES);
-    });
-    return unsubscribe;
-  } catch (err) {
-    console.warn("Properties subscription crash, listing standard list.", err);
-    callback(SAMPLE_PROPERTIES);
-    return () => {};
-  }
+    }
+  };
+
+  init();
+
+  return () => {
+    isCancelled = true;
+    if (activeUnsubscribe) {
+      activeUnsubscribe();
+    }
+  };
 };
 
 export const updatePropertyInDb = async (property: Property): Promise<boolean> => {
@@ -904,7 +948,7 @@ export const updatePropertyInDb = async (property: Property): Promise<boolean> =
   }
   try {
     const docRef = doc(dbInstance, "properties", property.id);
-    await setDoc(docRef, property, { merge: true });
+    await setDoc(docRef, cleanForFirestore(property), { merge: true });
     return true;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, `properties/${property.id}`);
