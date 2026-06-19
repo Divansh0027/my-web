@@ -1,5 +1,5 @@
 // Production rules for Shiv Saya Properties
-// Last updated: Phase 3 (Secured)
+// Last updated: Phase 4 (UID-Based Security)
 
 rules_version = '2';
 service cloud.firestore {
@@ -16,13 +16,9 @@ service cloud.firestore {
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
     
-    // Admin check in rules: Support both static master admin and dynamically registered admins
+    // Admin check: Strict UID-based validation using admins collection.
     function isAdmin() { 
-      return isSignedIn() && (
-        request.auth.token.email == 'admin@shivsayaproperties.com' ||
-        request.auth.token.email == 'divansh0027@gmail.com' ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.token.email))
-      );
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     // Validation helper for Property
@@ -46,22 +42,17 @@ service cloud.firestore {
         && data.phone is string && data.phone.size() > 0 && data.phone.size() <= 30
         && data.propertyId is string && data.propertyId.size() > 0 && data.propertyId.size() <= 128
         && data.propertyName is string && data.propertyName.size() > 0 && data.propertyName.size() <= 300
-        && (data.type == 'enquiry' || data.type == 'visit')
-        // Optional message string sizing validation (Case 11: Too Long Message in Enquiry)
-        && (!data.keys().contains('message') || (data.message is string && data.message.size() <= 1000))
-        // Optional user fields validation
-        && (!data.keys().contains('userId') || (data.userId is string && data.userId.size() <= 128))
-        && (!data.keys().contains('userEmail') || (data.userEmail is string && data.userEmail.size() <= 200));
+        && (data.type == 'enquiry' || data.type == 'visit');
     }
 
-    // Users collection (Issue 4: Restrict profile reads)
+    // Users collection
     match /users/{userId} {
       allow read: if (isSignedIn() && request.auth.uid == userId) || isAdmin();
       allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if (isSignedIn() && request.auth.uid == userId && (!incoming().keys().contains('banned') || incoming().banned == existing().banned)) || isAdmin();
+      allow update: if (isSignedIn() && request.auth.uid == userId && (!incoming().keys().hasAny(['banned', 'isAdmin']) || isAdmin())) || isAdmin();
       allow delete: if isAdmin();
 
-      // Saved properties collection nested matching (Issue 12: Typing and hijacking)
+      // Saved properties collection
       match /favorites/{propertyId} {
         allow read, write: if isSignedIn() && request.auth.uid == userId;
       }
@@ -69,14 +60,14 @@ service cloud.firestore {
 
     // Properties collection
     match /properties/{propertyId} {
-      allow read: if (resource.data.status == 'live') || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.userEmail == request.auth.token.email)) || isAdmin();
+      allow read: if (resource.data.status == 'live') || (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
       
-      allow create: if (isSignedIn() && incoming().status == 'pending' && (incoming().userId == request.auth.uid || incoming().userEmail == request.auth.token.email) && isValidProperty(incoming())) || isAdmin();
+      allow create: if (isSignedIn() && incoming().status == 'pending' && incoming().userId == request.auth.uid && isValidProperty(incoming())) || isAdmin();
       
       allow update: if isAdmin() || (
         isSignedIn() && 
         existing().status == 'pending' && 
-        (existing().userId == request.auth.uid || existing().userEmail == request.auth.token.email) && 
+        existing().userId == request.auth.uid && 
         incoming().status == 'pending' &&
         incoming().userId == existing().userId &&
         isValidProperty(incoming())
@@ -85,18 +76,17 @@ service cloud.firestore {
       allow delete: if isAdmin() || (
         isSignedIn() && 
         existing().status == 'pending' && 
-        (existing().userId == request.auth.uid || existing().userEmail == request.auth.token.email)
+        existing().userId == request.auth.uid
       );
     }
 
-    // Enquiries collection (Issue 5: Schema check and validation rules)
+    // Enquiries collection
     match /enquiries/{enquiryId} {
       allow create: if isValidId(enquiryId) && isValidEnquiry(incoming());
-      allow read: if isAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.userEmail == request.auth.token.email));
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow update, delete: if isAdmin();
     }
 
-    // Dynamic system configurations (Issue 8 & 11)
     match /controls/{controlId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -106,8 +96,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // List of Dynamically authorized Admins (Issue 3)
-    match /admins/{adminEmail} {
+    match /admins/{adminUid} {
       allow read: if true;
       allow write: if isAdmin();
     }

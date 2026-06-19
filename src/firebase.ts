@@ -72,7 +72,7 @@ try {
 }
 
 // Detect if we are using the placeholder setup
-let isPlaceholder = !firebaseConfig.apiKey || firebaseConfig.apiKey.includes("placeholder");
+const isPlaceholder = false;
 
 let app;
 let authInstance: any;
@@ -94,7 +94,7 @@ if (!isPlaceholder) {
     storageInstance = getStorage(app);
   } catch (error) {
     console.warn("Failed to initialize remote Firebase. Falling back to local state.", error);
-    isPlaceholder = true;
+    
   }
 }
 
@@ -121,7 +121,7 @@ export interface FirestoreErrorInfo {
 }
 
 function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const currentAuth = !isPlaceholder ? authInstance : null;
+  const currentAuth = authInstance;
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -139,6 +139,27 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
 
 // Validate connection on startup silently if using real Firestore
 // (Removed active getDocFromServer call to prevent pre-emptive connection warning spam on slow cold start)
+
+// Diagnostic utility for Firestore connectivity
+export async function testFirestoreConnection(): Promise<{ success: boolean; message: string; details?: any }> {
+  if (!dbInstance) {
+    return { success: false, message: "Firestore is not initialized." };
+  }
+  try {
+    // Attempting to read a public or dummy document to force a backend network call
+    await getDocFromServer(doc(dbInstance, 'test', 'network_diagnostic_check'));
+    return { success: true, message: "Firestore connection successful." };
+  } catch (error: any) {
+    let message = "Firestore connection failed.";
+    if (error?.code === "unavailable") {
+      message = "Network unavailable. Client may be offline or firestore blocked by firewall.";
+    } else if (error?.code === "permission-denied") {
+      // Permission denied still indicates reachability
+      return { success: true, message: "Firestore reachable (permission denied, which verifies network connectivity)." };
+    }
+    return { success: false, message, details: error?.message || error };
+  }
+}
 
 /**
  * Helper to recursively remove undefined values from objects before writing them to Firestore.
@@ -180,30 +201,15 @@ export interface ClientUser {
   displayName: string;
   photoURL?: string;
   phone?: string;
+  isAdmin?: boolean;
 }
 
-let simulatedUser: ClientUser | null = null;
-const savedSimulatedUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
-if (savedSimulatedUser) {
-  try {
-    simulatedUser = JSON.parse(savedSimulatedUser);
-  } catch (e) {
-    console.warn("Failed to parse saved simulated user", e);
-  }
-}
 
-const isUserSimulated = (): boolean => {
-  return isPlaceholder || !!simulatedUser || (!authInstance?.currentUser && !!localStorage.getItem(LOCAL_STORAGE_USER_KEY));
-};
-
-// Simple custom Event Bus to trigger UI updates for Simulated Logins
 const authListeners = new Set<(user: any) => void>();
 
+
 export const getProperties = async (): Promise<Property[]> => {
-  if (isPlaceholder) {
-    // Return sample properties from file
-    return SAMPLE_PROPERTIES;
-  }
+  
   
   try {
     const q = collection(dbInstance, "properties");
@@ -249,9 +255,7 @@ export const getProperties = async (): Promise<Property[]> => {
 };
 
 export const getPropertyById = async (id: string): Promise<Property | null> => {
-  if (isPlaceholder) {
-    return SAMPLE_PROPERTIES.find(p => p.id === id) || null;
-  }
+  
   
   try {
     const docRef = doc(dbInstance, "properties", id);
@@ -273,13 +277,7 @@ export const submitEnquiry = async (enquiry: Enquiry): Promise<{ success: boolea
     dateStr: enquiry.dateStr || new Date().toISOString()
   };
 
-  if (isPlaceholder) {
-    const localEnquiriesStr = localStorage.getItem("ssp_local_enquiries");
-    const enquiries = localEnquiriesStr ? JSON.parse(localEnquiriesStr) : [];
-    enquiries.push(completeEnquiry);
-    localStorage.setItem("ssp_local_enquiries", JSON.stringify(enquiries));
-    return { success: true, savedLocally: true };
-  }
+  
 
   try {
     await setDoc(doc(dbInstance, "enquiries", completeEnquiry.id), cleanForFirestore(completeEnquiry));
@@ -301,7 +299,7 @@ export const submitEnquiry = async (enquiry: Enquiry): Promise<{ success: boolea
 };
 
 export const toggleFavorite = async (userId: string, propertyId: string): Promise<boolean> => {
-  if (isUserSimulated() || userId === "guest-user" || !userId || (!isPlaceholder && authInstance && !authInstance.currentUser)) {
+  if (userId === "guest-user" || !userId || (!authInstance?.currentUser)) {
     const localFavsStr = localStorage.getItem(LOCAL_STORAGE_FAVORITES_KEY);
     let favs: string[] = localFavsStr ? JSON.parse(localFavsStr) : [];
     if (favs.includes(propertyId)) {
@@ -329,7 +327,7 @@ export const toggleFavorite = async (userId: string, propertyId: string): Promis
 };
 
 export const getFavorites = async (userId: string): Promise<string[]> => {
-  if (isUserSimulated() || userId === "guest-user" || !userId || (!isPlaceholder && authInstance && !authInstance.currentUser)) {
+  if (userId === "guest-user" || !userId || (!authInstance?.currentUser)) {
     const localFavsStr = localStorage.getItem(LOCAL_STORAGE_FAVORITES_KEY);
     return localFavsStr ? JSON.parse(localFavsStr) : [];
   }
@@ -361,6 +359,7 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
     if (fireUser) {
       // Background verification of banned status
       let isBanned = false;
+      let isAdmin = false;
       try {
         const uDoc = await getDoc(doc(dbInstance, "users", fireUser.uid));
         if (uDoc.exists() && uDoc.data()?.banned === true) {
@@ -372,30 +371,32 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
 
       if (isBanned) {
         if (authInstance) await signOut(authInstance);
-        simulatedUser = null;
-        localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+        
         callback(null);
         return;
       }
 
-      simulatedUser = null;
-      localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+      
+      try {
+        const aDoc = await getDoc(doc(dbInstance, "admins", fireUser.uid));
+        if (aDoc.exists()) {
+          isAdmin = true;
+        }
+      } catch (err) {}
+
       callback({
         uid: fireUser.uid,
         email: fireUser.email || "",
         displayName: fireUser.displayName || fireUser.email?.split("@")[0] || "User",
-        photoURL: fireUser.photoURL || undefined
+        photoURL: fireUser.photoURL || undefined,
+        isAdmin
       });
     } else {
-      if (simulatedUser) {
-        callback(simulatedUser);
-      } else {
-        callback(null);
-      }
+      callback(null);
     }
   };
 
-  if (!isPlaceholder && authInstance) {
+  if (authInstance) {
     const unsubscribe = onAuthStateChanged(authInstance, handleUserChange);
     
     const listener = (user: any) => {
@@ -410,31 +411,14 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
       authListeners.delete(listener);
     };
   } else {
-    authListeners.add(callback);
-    callback(simulatedUser);
-    
-    return () => {
-      authListeners.delete(callback);
-    };
+    throw new Error("Firebase Auth is required but was not initialized.");
   }
 };
 
+
 export let ADMIN_EMAILS: string[] = [];
-
-try {
-  const storedAdmins = localStorage.getItem("ssp_admin_emails");
-  if (storedAdmins) {
-    ADMIN_EMAILS = JSON.parse(storedAdmins);
-  } else if (isPlaceholder) {
-    ADMIN_EMAILS = ["admin@shivsayaproperties.com", "divansh0027@gmail.com"];
-  }
-} catch (e) {
-  console.warn("Failed to load admin emails", e);
-}
-
-export const isAdminUser = (email: string | null | undefined): boolean => {
-  if (!email) return false;
-  return ADMIN_EMAILS.some(adminEmail => adminEmail.toLowerCase() === email.toLowerCase());
+export const isAdminUser = (user: ClientUser | null | undefined): boolean => {
+  return !!user?.isAdmin;
 };
 
 // Real-time Database Config synchronizers (Issue 3, 8 & 11)
@@ -446,13 +430,13 @@ export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (()
         return JSON.parse(stored);
       }
     } catch (_) {}
-    return isPlaceholder ? ["admin@shivsayaproperties.com", "divansh0027@gmail.com"] : [];
+    return [];
   };
 
   const fallback = getMergedAdmins();
   ADMIN_EMAILS = fallback;
   
-  if (isPlaceholder || !dbInstance) {
+  if (!dbInstance) {
     callback(fallback);
     return () => {};
   }
@@ -461,7 +445,10 @@ export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (()
     const unsub = onSnapshot(collection(dbInstance, "admins"), (snapshot) => {
       const list: string[] = [];
       snapshot.forEach((docSnap) => {
-        list.push(docSnap.id.toLowerCase());
+        const data = docSnap.data();
+        if (data.email) {
+          list.push(data.email.toLowerCase());
+        }
       });
       const uniqueAdmins = Array.from(new Set(list));
       ADMIN_EMAILS = uniqueAdmins;
@@ -480,21 +467,20 @@ export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (()
 
 export const addRemoteAdmin = async (email: string): Promise<boolean> => {
   const cleanEmail = email.trim().toLowerCase();
+  if (!dbInstance) return false;
   
   try {
-    const stored = localStorage.getItem("ssp_admin_emails");
-    const list = stored ? JSON.parse(stored) : [];
-    if (!list.includes(cleanEmail)) {
-      list.push(cleanEmail);
-      localStorage.setItem("ssp_admin_emails", JSON.stringify(list));
+    const q = query(collection(dbInstance, "users"), where("email", "==", cleanEmail));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      console.warn("User not found, cannot add as admin");
+      return false; // Can only add existing UID-linked users
     }
-  } catch (_) {}
+    const uid = snap.docs[0].id;
 
-  if (isPlaceholder || !dbInstance) return true;
-  
-  try {
-    await setDoc(doc(dbInstance, "admins", cleanEmail), {
+    await setDoc(doc(dbInstance, "admins", uid), {
       email: cleanEmail,
+      uid,
       addedAt: new Date().toISOString()
     });
     return true;
@@ -506,20 +492,16 @@ export const addRemoteAdmin = async (email: string): Promise<boolean> => {
 
 export const removeRemoteAdmin = async (email: string): Promise<boolean> => {
   const cleanEmail = email.trim().toLowerCase();
+  if (!dbInstance) return false;
   
   try {
-    const stored = localStorage.getItem("ssp_admin_emails");
-    if (stored) {
-      const list = JSON.parse(stored).filter((e: string) => e !== cleanEmail);
-      localStorage.setItem("ssp_admin_emails", JSON.stringify(list));
+    const q = query(collection(dbInstance, "users"), where("email", "==", cleanEmail));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      await deleteDoc(doc(dbInstance, "admins", snap.docs[0].id));
+      return true;
     }
-  } catch (_) {}
-
-  if (isPlaceholder || !dbInstance) return true;
-  
-  try {
-    await deleteDoc(doc(dbInstance, "admins", cleanEmail));
-    return true;
+    return false;
   } catch (err) {
     console.warn("Failed removing remote admin", err);
     return false;
@@ -531,7 +513,7 @@ export const subscribeRemoteControls = (callback: (controls: any) => void): (() 
   const localVal = localStorage.getItem("ssp_controls");
   const fallback = localVal ? JSON.parse(localVal) : { maintenanceMode: false, offlineMaintenance: false, slowMode: false };
   
-  if (isPlaceholder || !dbInstance) {
+  if (!dbInstance) {
     callback(fallback);
     return () => {};
   }
@@ -558,7 +540,7 @@ export const subscribeRemoteControls = (callback: (controls: any) => void): (() 
 
 export const updateRemoteControls = async (controls: any): Promise<boolean> => {
   localStorage.setItem("ssp_controls", JSON.stringify(controls));
-  if (isPlaceholder || !dbInstance) return true;
+  if (!dbInstance) return false;
   try {
     await setDoc(doc(dbInstance, "controls", "site_controls"), cleanForFirestore(controls), { merge: true });
     return true;
@@ -573,7 +555,7 @@ export const subscribeRemoteSettings = (callback: (settings: any) => void): (() 
   const localVal = localStorage.getItem("ssp_settings");
   const fallback = localVal ? JSON.parse(localVal) : null;
   
-  if (isPlaceholder || !dbInstance) {
+  if (!dbInstance) {
     if (fallback) callback(fallback);
     return () => {};
   }
@@ -602,7 +584,7 @@ export const subscribeRemoteSettings = (callback: (settings: any) => void): (() 
 
 export const updateRemoteSettings = async (settings: any): Promise<boolean> => {
   localStorage.setItem("ssp_settings", JSON.stringify(settings));
-  if (isPlaceholder || !dbInstance) return true;
+  if (!dbInstance) return false;
   try {
     await setDoc(doc(dbInstance, "settings", "business_settings"), cleanForFirestore(settings), { merge: true });
     return true;
@@ -613,7 +595,7 @@ export const updateRemoteSettings = async (settings: any): Promise<boolean> => {
 };
 
 export const loginWithGoogle = async (): Promise<ClientUser | null> => {
-  if (!isPlaceholder && authInstance) {
+  if (authInstance) {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(authInstance, provider);
@@ -638,8 +620,7 @@ export const loginWithGoogle = async (): Promise<ClientUser | null> => {
           throw new Error(banMsg);
         }
 
-        simulatedUser = null;
-        return {
+                return {
           uid: result.user.uid,
           email: result.user.email || "",
           displayName: result.user.displayName || "User",
@@ -650,38 +631,17 @@ export const loginWithGoogle = async (): Promise<ClientUser | null> => {
       if (error instanceof Error && error.message.includes("suspended")) {
         throw error;
       }
-      console.warn("Google Authenticator screen failed, starting simulated login.", error);
+      throw error;
     }
   }
 
-  // Simulated Login fallback (extremely elegant popup dialog simulation or fast autogen profile)
-  const defaultUser: ClientUser = {
-    uid: "dummy-user-123",
-    email: "guest@shivsayaproperties.com", // Sanitized guest placeholder as per instructions
-    displayName: "Guest User",
-    photoURL: undefined
-  };
-  simulatedUser = defaultUser;
-  localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(defaultUser));
-  authListeners.forEach(cb => cb(defaultUser));
-  return defaultUser;
+  throw new Error("Firebase Auth is required but was not initialized.");
 };
 
-const SIMULATED_DB_USERS_KEY = "ssp_simulated_db_users";
 
-const getSimulatedDbUsers = (): any[] => {
-  const usersStr = localStorage.getItem(SIMULATED_DB_USERS_KEY);
-  return usersStr ? JSON.parse(usersStr) : [];
-};
-
-const saveSimulatedDbUser = (user: any) => {
-  const users = getSimulatedDbUsers();
-  users.push(user);
-  localStorage.setItem(SIMULATED_DB_USERS_KEY, JSON.stringify(users));
-};
 
 export const loginWithEmailPassword = async (email: string, password: string): Promise<ClientUser> => {
-  if (!isPlaceholder && authInstance) {
+  if (authInstance) {
     const result = await signInWithEmailAndPassword(authInstance, email, password);
     let isBanned = false;
     let banMsg = "Your account has been suspended. Contact support@shivsayaproperties.com.";
@@ -710,36 +670,11 @@ export const loginWithEmailPassword = async (email: string, password: string): P
     };
   }
 
-  // Simulated login check
-  const users = getSimulatedDbUsers();
-  const matchedUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-
-  if (!matchedUser) {
-    throw new Error("auth/user-not-found - Account does not exist. Please register first.");
-  }
-  
-  if (matchedUser.banned === true) {
-    throw new Error("Your account has been suspended. Contact support@shivsayaproperties.com");
-  }
-
-  // Passwords are never stored. Simulated auth only tracks user identity.
-  // We simply allow any password for simulated accounts since we no longer verify passwords in simulation.
-  // Real auth uses Firebase Authentication.
-
-  const clientUser: ClientUser = {
-    uid: matchedUser.uid,
-    email: matchedUser.email,
-    displayName: matchedUser.displayName,
-    photoURL: undefined
-  };
-  simulatedUser = clientUser;
-  localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(clientUser));
-  authListeners.forEach(cb => cb(clientUser));
-  return clientUser;
+  throw new Error("Firebase Auth is required but was not initialized.");
 };
 
 export const signUpWithEmailPassword = async (name: string, email: string, phone: string, password: string): Promise<ClientUser> => {
-  if (!isPlaceholder && authInstance) {
+  if (authInstance) {
     try {
       const result = await createUserWithEmailAndPassword(authInstance, email, password);
       await updateProfile(result.user, { displayName: name });
@@ -768,38 +703,11 @@ export const signUpWithEmailPassword = async (name: string, email: string, phone
     }
   }
 
-  // Simulated Registration validation query
-  const users = getSimulatedDbUsers();
-  if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-    throw new Error("auth/email-already-in-use - This email address is already linked to an account.");
-  }
-
-  // Passwords are never stored.
-  // Simulated auth only tracks user identity.
-  const newUser = {
-    uid: `simulated-uid-${Date.now()}`,
-    email,
-    displayName: name,
-    phone,
-    createdAt: new Date().toISOString()
-  };
-
-  saveSimulatedDbUser(newUser);
-
-  const clientUser: ClientUser = {
-    uid: newUser.uid,
-    email: newUser.email,
-    displayName: newUser.displayName,
-    photoURL: undefined
-  };
-  simulatedUser = clientUser;
-  localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(clientUser));
-  authListeners.forEach(cb => cb(clientUser));
-  return clientUser;
+  throw new Error("Firebase Auth is required but was not initialized.");
 };
 
 export const sendPasswordReset = async (email: string): Promise<boolean> => {
-  if (!isPlaceholder && authInstance) {
+  if (authInstance) {
     try {
       await sendPasswordResetEmail(authInstance, email);
       return true;
@@ -809,30 +717,18 @@ export const sendPasswordReset = async (email: string): Promise<boolean> => {
     }
   }
 
-  // Simulated
-  const users = getSimulatedDbUsers();
-  const exists = users.some(u => u.email.toLowerCase() === email.toLowerCase()) || email === "guest@shivsayaproperties.com";
-  if (!exists) {
-    throw new Error("auth/user-not-found - No profile connected to this email.");
-  }
-  return true;
+  throw new Error("Firebase Auth is required but was not initialized.");
 };
 
 export const logoutUser = async (): Promise<void> => {
-  simulatedUser = null;
-  if (!isPlaceholder && authInstance) {
-    try {
-      await signOut(authInstance);
-    } catch (error) {
-      console.warn("Firebase logout error", error);
-    }
+  if (authInstance) {
+    await signOut(authInstance);
   }
-  localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
   authListeners.forEach(cb => cb(null));
 };
 
 export const updateUserProfileDetails = async (name: string, email: string, phone: string): Promise<boolean> => {
-  if (!isPlaceholder && authInstance && authInstance.currentUser) {
+  if (authInstance?.currentUser) {
     try {
       await updateProfile(authInstance.currentUser, { displayName: name });
       const docRef = doc(dbInstance, "users", authInstance.currentUser.uid);
@@ -850,26 +746,11 @@ export const updateUserProfileDetails = async (name: string, email: string, phon
     }
   }
 
-  if (simulatedUser) {
-    const updated = {
-      ...simulatedUser,
-      displayName: name,
-      email,
-      phone
-    };
-    simulatedUser = updated;
-    localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated));
-    authListeners.forEach(cb => cb(updated));
-    return true;
-  }
   return false;
 };
 
 export const addProperty = async (property: Property): Promise<boolean> => {
-  if (isPlaceholder) {
-    // Return true, App.tsx handles state updates directly
-    return true;
-  }
+  
 
   try {
     const docRef = doc(dbInstance, "properties", property.id);
@@ -882,10 +763,7 @@ export const addProperty = async (property: Property): Promise<boolean> => {
 };
 
 export const subscribeProperties = (callback: (props: Property[]) => void): (() => void) => {
-  if (isPlaceholder) {
-    callback(SAMPLE_PROPERTIES);
-    return () => {};
-  }
+  
 
   let activeUnsubscribe: (() => void) | null = null;
   let isCancelled = false;
@@ -943,9 +821,7 @@ export const subscribeProperties = (callback: (props: Property[]) => void): (() 
 };
 
 export const updatePropertyInDb = async (property: Property): Promise<boolean> => {
-  if (isPlaceholder) {
-    return true;
-  }
+  
   try {
     const docRef = doc(dbInstance, "properties", property.id);
     await setDoc(docRef, cleanForFirestore(property), { merge: true });
@@ -957,9 +833,7 @@ export const updatePropertyInDb = async (property: Property): Promise<boolean> =
 };
 
 export const deletePropertyFromDb = async (id: string): Promise<boolean> => {
-  if (isPlaceholder) {
-    return true;
-  }
+  
   try {
     const docRef = doc(dbInstance, "properties", id);
     await deleteDoc(docRef);
@@ -971,11 +845,11 @@ export const deletePropertyFromDb = async (id: string): Promise<boolean> => {
 };
 
 export const isStorageConnected = (): boolean => {
-  return !isPlaceholder && !!storageInstance;
+  return !!storageInstance;
 };
 
 export const uploadPropertyImage = async (userId: string, file: File, fileName: string): Promise<string> => {
-  if (isPlaceholder || !storageInstance) {
+  if (!storageInstance) {
     throw new Error("Storage is not activated or placeholder configuration detected");
   }
   const timestamp = Date.now();

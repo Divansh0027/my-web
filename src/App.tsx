@@ -278,7 +278,7 @@ export default function App() {
   const handleAuthSuccess = (user: any, welcomeMsg: string) => {
     setCurrentUser(user);
     triggerToast(welcomeMsg, "success");
-    const adminCheck = isAdminUser(user?.email);
+    const adminCheck = isAdminUser(user);
     setIsAdmin(adminCheck);
     if (redirectView) {
       setCurrentView(redirectView);
