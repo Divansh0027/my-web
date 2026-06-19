@@ -159,7 +159,7 @@ export default function ListingsView({
         }
       }
       // Status
-      if (selectedStatuses.length > 0 && !selectedStatuses.includes(prop.status)) {
+      if (selectedStatuses.length > 0 && !selectedStatuses.includes(prop.listingStatus)) {
         return false;
       }
       // Posted By
@@ -522,9 +522,11 @@ export default function ListingsView({
                               <Maximize className="h-3.5 w-3.5 text-slate-500" />
                               <span>{prop.area} {prop.areaUnit}</span>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-slate-400 bg-slate-800 px-1.5 py-1 text-[10px] rounded uppercase font-semibold">{prop.status}</span>
-                            </div>
+                            {prop.listingStatus && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-slate-400 bg-slate-800 px-1.5 py-1 text-[10px] rounded uppercase font-semibold">{prop.listingStatus}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
 

@@ -10,7 +10,7 @@ const defaults = {
   businessEmail: "info@shivsayaproperties.com",
   businessPhone: "+91-9911690027",
   businessAddress: "Delhi NCR, India",
-  reraNumber: "RERA-DELHI-NCR-XXXX",
+  reraNumber: "Registration Pending",
 };
 
 // Merge from localStorage on load if available

@@ -666,7 +666,7 @@ export default function DetailView({
                     <div className="flex items-center gap-3 border-t border-white/5 pt-3 mt-3 text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
                       {prop.bhk && <span>{prop.bhk} BHK</span>}
                       <span>{prop.area} {prop.areaUnit}</span>
-                      <span className="text-[#D4AF37]">{prop.status}</span>
+                      <span className="text-[#D4AF37]">{prop.listingStatus}</span>
                     </div>
                   </div>
                 </div>

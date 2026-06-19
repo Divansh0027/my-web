@@ -472,7 +472,7 @@ export default function ListPropertyView({
       verified: false, // Undergoes audit review
       featured: false,
       newLaunch: true,
-      status: "New Launch",
+      listingStatus: "New Launch",
       postedBy: "Owner",
       postedDate: new Date().toISOString().split("T")[0]
     };

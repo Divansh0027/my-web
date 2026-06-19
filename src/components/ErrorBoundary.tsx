@@ -84,7 +84,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
                   <Phone className="h-4 w-4" />
                 </a>
                 <a 
-                  href="mailto:divansh0027@gmail.com" 
+                  href="mailto:shivsayaproperties@gmail.com" 
                   className="p-2 bg-slate-900 border border-white/5 rounded-xl text-[#D4AF37] hover:bg-slate-850 hover:text-white transition-all cursor-pointer"
                   title="Shoot Email"
                 >

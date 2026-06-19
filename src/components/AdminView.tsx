@@ -452,11 +452,16 @@ export default function AdminView({
     }
 
     executeOperation(async () => {
-      const newList = [...adminsList, cleanEmail];
-      setAdminsList(newList);
-      await addRemoteAdmin(cleanEmail);
-      setNewAdminEmail("");
-    }, "New administrator access address provisioned");
+      const success = await addRemoteAdmin(cleanEmail);
+      if (success) {
+        const newList = [...adminsList, cleanEmail];
+        setAdminsList(newList);
+        setNewAdminEmail("");
+        onShowNotification("Admin access granted! Access activates on first login.", "success");
+      } else {
+        onShowNotification("Failed to add admin.", "info");
+      }
+    }, "Administrator processing...");
   };
 
   const handleRemoveAdminEmail = (emailToRemove: string) => {
@@ -518,9 +523,9 @@ export default function AdminView({
       executeOperation(() => {
         onUpdateProperty({
           ...prop,
-          status: "live"
+          status: "pending"
         });
-      }, "Listing is now live and public active");
+      }, "Listing is now pending review");
     } else {
       setRejectingProperty(prop);
       setRejectReason("Incomplete information");
@@ -1718,6 +1723,9 @@ export default function AdminView({
                             Add
                           </button>
                         </form>
+                        <p className="text-[10px] text-slate-500 italic mt-1 mb-2 leading-tight">
+                          If the user hasn't signed up yet, their admin access will activate automatically when they first log in.
+                        </p>
 
                         <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
                           {adminsList.map((adm) => (

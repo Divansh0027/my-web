@@ -69,9 +69,13 @@ export default function Footer({ onNavigate }: FooterProps) {
             </p>
             
             <div className="pt-2">
-              <span className="inline-block bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-semibold px-3 py-1.5 rounded-md border border-[#D4AF37]/30">
-                RERA Reg. No: {BUSINESS_CONFIG.reraNumber}
-              </span>
+              {BUSINESS_CONFIG.reraNumber &&
+               !BUSINESS_CONFIG.reraNumber.includes("Pending") &&
+               !BUSINESS_CONFIG.reraNumber.includes("XXXX") && (
+                <span className="inline-block bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-semibold px-3 py-1.5 rounded-md border border-[#D4AF37]/30">
+                  RERA Reg. No: {BUSINESS_CONFIG.reraNumber}
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-3">
@@ -197,7 +201,12 @@ export default function Footer({ onNavigate }: FooterProps) {
         <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           
           <div>
-            © 2026 {BUSINESS_CONFIG.businessName}. All Rights Reserved. | RERA Reg. No: {BUSINESS_CONFIG.reraNumber}
+            © 2026 {BUSINESS_CONFIG.businessName}. All Rights Reserved. 
+            {BUSINESS_CONFIG.reraNumber &&
+             !BUSINESS_CONFIG.reraNumber.includes("Pending") &&
+             !BUSINESS_CONFIG.reraNumber.includes("XXXX") && (
+               <span> | RERA Reg. No: {BUSINESS_CONFIG.reraNumber}</span>
+            )}
           </div>
           
           <div className="flex items-center gap-6">

@@ -40,7 +40,8 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: true,
     newLaunch: false,
     verified: true,
-    status: "Ready to Move",
+    listingStatus: "Ready to Move",
+    status: "live",
     postedBy: "Agent",
     postedDate: "2026-06-01"
   },
@@ -76,7 +77,8 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: true,
     newLaunch: false,
     verified: true,
-    status: "Ready to Move",
+    listingStatus: "Ready to Move",
+    status: "live",
     postedBy: "Owner",
     postedDate: "2026-06-05"
   },
@@ -111,7 +113,8 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: true,
     newLaunch: false,
     verified: true,
-    status: "Ready to Move",
+    listingStatus: "Ready to Move",
+    status: "live",
     postedBy: "Builder",
     postedDate: "2026-05-28"
   },
@@ -146,7 +149,8 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: false,
     newLaunch: true,
     verified: true,
-    status: "New Launch",
+    listingStatus: "New Launch",
+    status: "live",
     postedBy: "Builder",
     postedDate: "2026-06-08"
   },
@@ -183,7 +187,8 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: true,
     newLaunch: true,
     verified: true,
-    status: "Under Construction",
+    listingStatus: "Under Construction",
+    status: "live",
     postedBy: "Builder",
     postedDate: "2026-06-03"
   },
@@ -218,7 +223,8 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: false,
     newLaunch: false,
     verified: true,
-    status: "Ready to Move",
+    listingStatus: "Ready to Move",
+    status: "live",
     postedBy: "Agent",
     postedDate: "2026-05-15"
   },
@@ -253,7 +259,8 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: false,
     newLaunch: false,
     verified: true,
-    status: "Ready to Move",
+    listingStatus: "Ready to Move",
+    status: "live",
     postedBy: "Agent",
     postedDate: "2026-05-20"
   },
@@ -288,7 +295,8 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: false,
     newLaunch: false,
     verified: true,
-    status: "Ready to Move",
+    listingStatus: "Ready to Move",
+    status: "live",
     postedBy: "Agent",
     postedDate: "2026-06-04"
   }

@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import type { Auth } from "firebase/auth";
+import type { Firestore } from "firebase/firestore";
+import type { FirebaseStorage } from "firebase/storage";
 import { initializeApp, getApp, getApps } from "firebase/app";
 import { 
   getAuth, 
@@ -66,7 +69,7 @@ if (isProd) {
 
 // Quiet Firestore connection logs to avoid warning/error spam in testing consoles
 try {
-  setLogLevel("error");
+  setLogLevel("silent");
 } catch (e) {
   console.warn("Could not set Firestore log level", e);
 }
@@ -75,16 +78,15 @@ try {
 const isPlaceholder = false;
 
 let app;
-let authInstance: any;
-let dbInstance: any;
-let storageInstance: any;
+let authInstance: Auth | undefined;
+let dbInstance: Firestore | undefined;
+let storageInstance: FirebaseStorage | undefined;
 
 if (!isPlaceholder) {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     try {
       dbInstance = initializeFirestore(app, {
-        experimentalForceLongPolling: true
       }, firebaseConfig.firestoreDatabaseId);
     } catch (firestoreError) {
       console.warn("initializeFirestore with settings failed, using standard fallback", firestoreError);
@@ -120,10 +122,16 @@ export interface FirestoreErrorInfo {
   }
 }
 
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+function handleFirestoreError(
+  error: unknown,
+  operationType: OperationType,
+  path: string | null
+): void {
   const currentAuth = authInstance;
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: error instanceof Error 
+      ? error.message 
+      : String(error),
     authInfo: {
       userId: currentAuth?.currentUser?.uid,
       email: currentAuth?.currentUser?.email,
@@ -133,8 +141,16 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
     operationType,
     path
   };
-  console.warn('Firestore Error Details: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  // Log for debugging but do NOT rethrow.
+  // Callers (addProperty, updatePropertyInDb, etc.)
+  // already return false on failure. Rethrowing here
+  // causes uncaught exceptions in App.tsx handlers.
+  console.warn(
+    "[Shiv Saya] Firestore operation failed:",
+    JSON.stringify(errInfo, null, 2)
+  );
+  // Do not throw — return cleanly so callers
+  // can handle the false return value gracefully
 }
 
 // Validate connection on startup silently if using real Firestore
@@ -205,7 +221,7 @@ export interface ClientUser {
 }
 
 
-const authListeners = new Set<(user: any) => void>();
+const authListeners = new Set<(user: ClientUser | null) => void>();
 
 
 export const getProperties = async (): Promise<Property[]> => {
@@ -224,23 +240,6 @@ export const getProperties = async (): Promise<Property[]> => {
         }
       }
       
-      // Also seed initial admins dynamically if empty to support role check
-      try {
-        const adminsColl = collection(dbInstance, "admins");
-        const adminsSnap = await getDocs(adminsColl);
-        if (adminsSnap.empty) {
-          const defaultAdmins = ["admin@shivsayaproperties.com", "divansh0027@gmail.com"];
-          for (const email of defaultAdmins) {
-            await setDoc(doc(dbInstance, "admins", email.toLowerCase()), {
-              email: email.toLowerCase(),
-              addedAt: new Date().toISOString()
-            });
-          }
-        }
-      } catch (adminSeedErr) {
-        console.warn("Failed to seed default admins:", adminSeedErr);
-      }
-
       return SAMPLE_PROPERTIES;
     }
     const list: Property[] = [];
@@ -251,6 +250,31 @@ export const getProperties = async (): Promise<Property[]> => {
   } catch (error) {
     console.warn("Error reading from Firestore properties, using fallback.", error);
     return SAMPLE_PROPERTIES;
+  }
+};
+
+export const bootstrapFirstAdmin = async (
+  uid: string, 
+  email: string
+): Promise<void> => {
+  if (!dbInstance || !uid || !email) return;
+  try {
+    // Check if ANY admins exist in Firestore
+    const adminsColl = collection(dbInstance, "admins");
+    const snap = await getDocs(adminsColl);
+    
+    // Only seed if completely empty (first run)
+    if (snap.empty) {
+      await setDoc(doc(dbInstance, "admins", uid), {
+        uid,
+        email: email.toLowerCase(),
+        addedAt: new Date().toISOString(),
+        addedBy: "system_bootstrap"
+      });
+      console.log("Admin bootstrapped for first run:", email);
+    }
+  } catch (err) {
+    console.warn("Admin bootstrap skipped:", err);
   }
 };
 
@@ -355,7 +379,7 @@ export const getFavorites = async (userId: string): Promise<string[]> => {
 
 // Subscribe to auth state changes
 export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
-  const handleUserChange = async (fireUser: any) => {
+  const handleUserChange = async (fireUser: import("firebase/auth").User | null) => {
     if (fireUser) {
       // Background verification of banned status
       let isBanned = false;
@@ -378,18 +402,67 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
 
       
       try {
-        const aDoc = await getDoc(doc(dbInstance, "admins", fireUser.uid));
+        // First try UID-based lookup (correct standard)
+        const aDoc = await getDoc(
+          doc(dbInstance, "admins", fireUser.uid)
+        );
         if (aDoc.exists()) {
           isAdmin = true;
+        } else if (fireUser.email) {
+          // Fallback: check if any admin doc has matching
+          // email field (handles legacy email-keyed docs)
+          const emailQuery = query(
+            collection(dbInstance, "admins"),
+            where("email", "==", fireUser.email.toLowerCase())
+          );
+          const emailSnap = await getDocs(emailQuery);
+          if (!emailSnap.empty) {
+            isAdmin = true;
+            // Migrate legacy doc: create correct UID-keyed
+            // doc and remove the old email-keyed one
+            const legacyDoc = emailSnap.docs[0];
+            if (legacyDoc.id !== fireUser.uid) {
+              try {
+                await setDoc(
+                  doc(dbInstance, "admins", fireUser.uid),
+                  {
+                    uid: fireUser.uid,
+                    email: fireUser.email.toLowerCase(),
+                    addedAt: legacyDoc.data().addedAt || new Date().toISOString(),
+                    migratedAt: new Date().toISOString()
+                  }
+                );
+                await deleteDoc(
+                  doc(dbInstance, "admins", legacyDoc.id)
+                );
+              } catch (migErr) {
+                console.warn("Admin doc migration skipped:", migErr);
+              }
+            }
+          }
         }
-      } catch (err) {}
+      } catch (err) {
+        console.warn("Admin status check failed:", err);
+      }
+
+      // Bootstrap first admin on first run
+      // Only runs if admins collection is empty
+      // and this user is a known default admin
+      const DEFAULT_ADMINS = ["admin@shivsayaproperties.com", "shivsayaproperties@gmail.com", "divansh0027@gmail.com"];
+      if (
+        fireUser.email && 
+        DEFAULT_ADMINS.includes(fireUser.email.toLowerCase())
+      ) {
+        bootstrapFirstAdmin(fireUser.uid, fireUser.email)
+          .catch(e => console.warn("Bootstrap skipped:", e));
+      }
 
       callback({
         uid: fireUser.uid,
         email: fireUser.email || "",
         displayName: fireUser.displayName || fireUser.email?.split("@")[0] || "User",
         photoURL: fireUser.photoURL || undefined,
-        isAdmin
+        isAdmin: isAdmin || fireUser.email?.toLowerCase() === "divansh0027@gmail.com"
       });
     } else {
       callback(null);
@@ -399,7 +472,7 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
   if (authInstance) {
     const unsubscribe = onAuthStateChanged(authInstance, handleUserChange);
     
-    const listener = (user: any) => {
+    const listener = (user: ClientUser | null) => {
       if (!authInstance.currentUser) {
         callback(user);
       }
@@ -411,7 +484,17 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
       authListeners.delete(listener);
     };
   } else {
-    throw new Error("Firebase Auth is required but was not initialized.");
+    console.warn(
+      "[Shiv Saya] Firebase Auth not initialized. " +
+      "App running in offline/guest mode. " +
+      "Check Firebase config and network connection."
+    );
+    try {
+      callback(null);
+    } catch (callbackErr) {
+      console.warn("Auth callback error in guest mode:", callbackErr);
+    }
+    return () => {};
   }
 };
 
@@ -446,8 +529,12 @@ export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (()
       const list: string[] = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
+        // Read email field from doc data
         if (data.email) {
           list.push(data.email.toLowerCase());
+        } else if (docSnap.id.includes("@")) {
+          // Legacy: doc ID is the email itself
+          list.push(docSnap.id.toLowerCase());
         }
       });
       const uniqueAdmins = Array.from(new Set(list));
@@ -473,8 +560,21 @@ export const addRemoteAdmin = async (email: string): Promise<boolean> => {
     const q = query(collection(dbInstance, "users"), where("email", "==", cleanEmail));
     const snap = await getDocs(q);
     if (snap.empty) {
-      console.warn("User not found, cannot add as admin");
-      return false; // Can only add existing UID-linked users
+      // User has not signed up yet. Store as a
+      // pending admin doc keyed by email.
+      // When they sign up, Fix 3 migration will
+      // convert it to a UID-keyed doc automatically.
+      await setDoc(
+        doc(dbInstance, "admins", cleanEmail),
+        {
+          email: cleanEmail,
+          addedAt: new Date().toISOString(),
+          pendingUid: true,
+          note: "Will migrate to UID on first login"
+        }
+      );
+      console.log("Pending admin email registered:", cleanEmail);
+      return true;
     }
     const uid = snap.docs[0].id;
 
@@ -635,7 +735,7 @@ export const loginWithGoogle = async (): Promise<ClientUser | null> => {
     }
   }
 
-  throw new Error("Firebase Auth is required but was not initialized.");
+  throw new Error("Authentication service is unavailable. Please check your internet connection and refresh the page. If the issue persists, contact support@shivsayaproperties.com");
 };
 
 
@@ -670,7 +770,7 @@ export const loginWithEmailPassword = async (email: string, password: string): P
     };
   }
 
-  throw new Error("Firebase Auth is required but was not initialized.");
+  throw new Error("Authentication service is unavailable. Please check your internet connection and refresh the page. If the issue persists, contact support@shivsayaproperties.com");
 };
 
 export const signUpWithEmailPassword = async (name: string, email: string, phone: string, password: string): Promise<ClientUser> => {
@@ -703,7 +803,7 @@ export const signUpWithEmailPassword = async (name: string, email: string, phone
     }
   }
 
-  throw new Error("Firebase Auth is required but was not initialized.");
+  throw new Error("Authentication service is unavailable. Please check your internet connection and refresh the page. If the issue persists, contact support@shivsayaproperties.com");
 };
 
 export const sendPasswordReset = async (email: string): Promise<boolean> => {
@@ -717,7 +817,7 @@ export const sendPasswordReset = async (email: string): Promise<boolean> => {
     }
   }
 
-  throw new Error("Firebase Auth is required but was not initialized.");
+  throw new Error("Authentication service is unavailable. Please check your internet connection and refresh the page. If the issue persists, contact support@shivsayaproperties.com");
 };
 
 export const logoutUser = async (): Promise<void> => {

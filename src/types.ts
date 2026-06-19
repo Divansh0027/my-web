@@ -27,7 +27,8 @@ export interface Property {
   featured: boolean;
   newLaunch: boolean;
   verified: boolean;
-  status: "Ready to Move" | "Under Construction" | "New Launch" | "live" | "pending" | "rejected" | "featured" | string;
+  status?: "live" | "pending" | "rejected" | "featured" | string;
+  listingStatus?: "Ready to Move" | "Under Construction" | "New Launch" | string;
   postedDate: string;
   postedBy: "Owner" | "Builder" | "Agent" | string;
   bathrooms?: number;

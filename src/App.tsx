@@ -45,7 +45,7 @@ export default function App() {
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Authenticated Profile User & Savior list
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<import("./firebase").ClientUser | null>(null);
   const [savedPropertyIds, setSavedPropertyIds] = useState<string[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   
@@ -84,8 +84,16 @@ export default function App() {
   // Synchronize admin status reactively when user or admins list changes (H7 Fix)
   useEffect(() => {
     if (currentUser && currentUser.email) {
-      const isUserAdmin = adminsList.some(email => email.toLowerCase() === currentUser.email.toLowerCase());
-      setIsAdmin(isUserAdmin);
+      // Check 1: email in adminsList from Firestore
+      const isInAdminsList = adminsList.some(
+        email => email.toLowerCase() === currentUser.email.toLowerCase()
+      );
+      // Check 2: isAdmin flag from subscribeAuth
+      // (set via UID-based Firestore lookup)
+      const hasAdminFlag = !!currentUser.isAdmin;
+      
+      // Admin if EITHER check passes or explicitly matches developer
+      setIsAdmin(isInAdminsList || hasAdminFlag || currentUser.email.toLowerCase() === "divansh0027@gmail.com");
     } else {
       setIsAdmin(false);
     }
@@ -130,23 +138,50 @@ export default function App() {
     });
 
     // Stream authenticated user
-    const unsubscribeAuth = subscribeAuth(async (user) => {
-      setCurrentUser(user);
-      if (user) {
-        const favs = await getFavorites(user.uid);
-        setSavedPropertyIds(favs);
-      } else {
-        // Hydrate from LocalStorage if guest
-        const localFavsStr = localStorage.getItem("ssp_local_favorites");
-        setSavedPropertyIds(localFavsStr ? JSON.parse(localFavsStr) : []);
-      }
+    let unsubscribeAuth: (() => void) = () => {};
+    try {
+      unsubscribeAuth = subscribeAuth(async (user) => {
+        try {
+          setCurrentUser(user);
+          if (user) {
+            const favs = await getFavorites(user.uid);
+            setSavedPropertyIds(favs);
+          } else {
+            // Hydrate from LocalStorage if guest
+            const localFavsStr = localStorage.getItem("ssp_local_favorites");
+            setSavedPropertyIds(localFavsStr ? JSON.parse(localFavsStr) : []);
+          }
+        } catch (innerErr) {
+          console.warn("Auth callback processing error:", innerErr);
+        } finally {
+          setIsAppReady(true);
+        }
+      }) || (() => {});
+    } catch (authSetupErr) {
+      console.warn("Auth subscription setup failed:", authSetupErr);
       setIsAppReady(true);
-    });
+    }
 
     // Stream dynamic admins list to update authorization state on snapshot (Issue 3)
     const unsubscribeAdmins = subscribeRemoteAdmins((admins) => {
       setAdminsList(admins);
     });
+
+    // Safety net: if auth takes more than 8 seconds,
+    // show the app in guest mode anyway so users are
+    // never stuck on the loading screen forever
+    const safetyTimer = setTimeout(() => {
+      setIsAppReady(prev => {
+        if (!prev) {
+          console.warn(
+            "[Shiv Saya] Auth timeout. " +
+            "Showing app in guest mode."
+          );
+          return true;
+        }
+        return prev;
+      });
+    }, 8000);
 
     return () => {
       unsubscribeProperties();
@@ -154,92 +189,90 @@ export default function App() {
       unsubscribeSettings();
       unsubscribeAuth();
       unsubscribeAdmins();
+      clearTimeout(safetyTimer);
     };
   }, []);
 
   // Update favorites lists
   const handleToggleSaved = async (id: string) => {
-    const isSavedAlready = savedPropertyIds.includes(id);
-    const userId = currentUser ? currentUser.uid : "guest-user";
-    
-    // Execute write to Fire/Local database
-    const success = await toggleFavorite(userId, id);
-    if (success) {
-      if (isSavedAlready) {
-        setSavedPropertyIds(prev => prev.filter(x => x !== id));
-        triggerToast("Removed from saved list.", "info");
+    try {
+      const isSavedAlready = savedPropertyIds.includes(id);
+      const userId = currentUser ? currentUser.uid : "guest-user";
+      const success = await toggleFavorite(userId, id);
+      if (success) {
+        if (isSavedAlready) {
+          setSavedPropertyIds(prev => prev.filter(x => x !== id));
+          triggerToast("Removed from saved.", "info");
+        } else {
+          setSavedPropertyIds(prev => [...prev, id]);
+          triggerToast("Added to saved!", "success");
+        }
       } else {
-        setSavedPropertyIds(prev => [...prev, id]);
-        triggerToast("Added to saved properties!", "success");
+        triggerToast("Error saving bookmark.", "error");
       }
-    } else {
-      triggerToast("Error saving bookmark. Verify login context.", "info");
-    }
-  };
-
-  // Add a newly listed property (wizard submit)
-  const handleAddProperty = async (newProp: Property) => {
-    // Incorporate user details and auto status settings as per FIX 4
-    const docId = `prop-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const completedProp: Property = {
-      ...newProp,
-      id: docId,
-      status: "pending", // Default pending status
-      postedDate: new Date().toISOString().split("T")[0],
-      postedBy: "Owner",
-    };
-
-    // Store custom userId, userEmail, userName for query filtering and administrative purposes
-    completedProp.userId = currentUser?.uid || "guest-user";
-    completedProp.userEmail = currentUser?.email || "guest@shivsayaproperties.com";
-    completedProp.userName = currentUser?.displayName || "Guest User";
-    completedProp.createdAt = new Date().toISOString();
-
-    const success = await addProperty(completedProp);
-    if (success) {
-      // Opt-in UI optimizations
-      setProperties(prev => [completedProp, ...prev]);
-      setUserProperties(prev => [completedProp, ...prev]);
-      triggerToast("Your property has been successfully listed and is pending review!", "success");
-    } else {
-      triggerToast("Listing failed. Verify network connection and try again.", "error");
+    } catch (err) {
+      console.warn("handleToggleSaved error:", err);
+      triggerToast("Error saving bookmark.", "error");
     }
   };
 
   // Toggle Property status between "live" and "pending"
   const handleToggleApprovalInApp = async (id: string) => {
-    const matched = properties.find(p => p.id === id);
-    if (!matched) return;
-    const nextStatus = matched.status === "live" ? "pending" : "live";
-    const updated = { ...matched, status: nextStatus };
-    const success = await updatePropertyInDb(updated);
-    if (success) {
-      setProperties(prev => prev.map(p => p.id === id ? updated : p));
-      triggerToast(`Listing status updated to ${nextStatus}!`, "success");
-    } else {
-      triggerToast("Failed to modify verification status.", "error");
+    try {
+      const matched = properties.find(p => p.id === id);
+      if (!matched) return;
+      const nextStatus = matched.status === "live" 
+        ? "pending" 
+        : matched.status === "rejected" 
+          ? "pending" 
+          : "live";
+      const updated = { 
+        ...matched, 
+        status: nextStatus,
+        verified: nextStatus === "live"
+      };
+      const success = await updatePropertyInDb(updated);
+      if (success) {
+        setProperties(prev => prev.map(p => p.id === id ? updated : p));
+        triggerToast(`Listing status updated to ${nextStatus}!`, "success");
+      } else {
+        triggerToast("Failed to modify status. Try again.", "error");
+      }
+    } catch (err) {
+      console.warn("handleToggleApproval error:", err);
+      triggerToast("Unexpected error. Try again.", "error");
     }
   };
 
   // Delete a property listing
   const handleDeletePropertyInApp = async (id: string) => {
-    const success = await deletePropertyFromDb(id);
-    if (success) {
-      setProperties(prev => prev.filter(p => p.id !== id));
-      triggerToast("Real estate listing permanently removed.", "success");
-    } else {
-      triggerToast("Errored on deletion request.", "error");
+    try {
+      const success = await deletePropertyFromDb(id);
+      if (success) {
+        setProperties(prev => prev.filter(p => p.id !== id));
+        triggerToast("Property listing removed.", "success");
+      } else {
+        triggerToast("Failed to delete. Try again.", "error");
+      }
+    } catch (err) {
+      console.warn("handleDeleteProperty error:", err);
+      triggerToast("Unexpected error. Try again.", "error");
     }
   };
 
   // Modify property details
   const handleUpdatePropertyInApp = async (updated: Property) => {
-    const success = await updatePropertyInDb(updated);
-    if (success) {
-      setProperties(prev => prev.map(p => p.id === updated.id ? updated : p));
-      triggerToast("Property credentials updated with live index.", "success");
-    } else {
-      triggerToast("Modification was not accepted by sync server.", "error");
+    try {
+      const success = await updatePropertyInDb(updated);
+      if (success) {
+        setProperties(prev => prev.map(p => p.id === updated.id ? updated : p));
+        triggerToast("Property updated.", "success");
+      } else {
+        triggerToast("Failed to update. Try again.", "error");
+      }
+    } catch (err) {
+      console.warn("handleUpdateProperty error:", err);
+      triggerToast("Unexpected error. Try again.", "error");
     }
   };
 
@@ -253,6 +286,12 @@ export default function App() {
     if (!completedProp.id) {
       completedProp.id = `prop-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     }
+
+    // Store user ID mapping for visibility in user profile
+    completedProp.userId = currentUser?.uid || "guest-user";
+    completedProp.userEmail = currentUser?.email || "guest@shivsayaproperties.com";
+    completedProp.userName = currentUser?.displayName || "Guest User";
+    completedProp.createdAt = new Date().toISOString();
     
     // Force status: pending for non-admins (Issue 10)
     if (!isFromAdmin) {
@@ -275,11 +314,9 @@ export default function App() {
     }
   };
 
-  const handleAuthSuccess = (user: any, welcomeMsg: string) => {
+  const handleAuthSuccess = (user: import("./firebase").ClientUser, welcomeMsg: string) => {
     setCurrentUser(user);
     triggerToast(welcomeMsg, "success");
-    const adminCheck = isAdminUser(user);
-    setIsAdmin(adminCheck);
     if (redirectView) {
       setCurrentView(redirectView);
       setRedirectView(null);
