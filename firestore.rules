@@ -20,7 +20,9 @@ service cloud.firestore {
     function isAdmin() { 
       return isSignedIn() && (
         exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
-        request.auth.token.email == 'divansh0027@gmail.com'
+        request.auth.token.email == 'divansh0027@gmail.com' ||
+        request.auth.token.email == 'admin@shivsayaproperties.com' ||
+        request.auth.token.email == 'shivsayaproperties@gmail.com'
       );
     }
 
@@ -101,7 +103,10 @@ service cloud.firestore {
 
     match /admins/{adminUid} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAdmin() || 
+        (isSignedIn() && request.auth.token.email == 'admin@shivsayaproperties.com') || 
+        (isSignedIn() && request.auth.token.email == 'divansh0027@gmail.com') || 
+        (isSignedIn() && request.auth.token.email == 'shivsayaproperties@gmail.com');
     }
   }
 }

@@ -86,7 +86,7 @@ export interface ListingFilters {
   postedBy: string[];
 }
 
-export type AdminTab = "overview" | "properties" | "enquiries" | "users" | "analytics" | "settings" | "checklist";
+export type AdminTab = "overview" | "properties" | "pending_approvals" | "enquiries" | "users" | "analytics" | "settings" | "checklist";
 
 export interface EnquiryRecord {
   id: string;

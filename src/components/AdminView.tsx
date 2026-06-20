@@ -513,19 +513,54 @@ export default function AdminView({
   // PROPERTY DISMISS / APPROVAL CONSTRAINTS
   // ----------------------------------------------------
   const handlePropertyApprovalToggle = (id: string, currentStatus: string) => {
-    executeOperation(() => {
-      onToggleApproval(id);
-    }, `Listing status toggled for property successfully`);
+    if (currentStatus === "pending") {
+      setConfirmDialog({
+        isOpen: true,
+        title: "Approve Property",
+        message: "Are you sure you want to approve this property? It will be visible to the public.",
+        onConfirm: () => {
+          setConfirmDialog(p => ({ ...p, isOpen: false }));
+          executeOperation(() => {
+            onToggleApproval(id);
+          }, `Listing approved and published successfully`);
+        }
+      });
+    } else if (currentStatus === "live") {
+      setConfirmDialog({
+        isOpen: true,
+        title: "Revoke Approval",
+        message: "Are you sure you want to revoke approval? This will hide the property from the public.",
+        isDanger: true,
+        onConfirm: () => {
+          setConfirmDialog(p => ({ ...p, isOpen: false }));
+          executeOperation(() => {
+            onToggleApproval(id);
+          }, `Listing approval revoked`);
+        }
+      });
+    } else {
+      executeOperation(() => {
+        onToggleApproval(id);
+      }, `Listing status toggled for property successfully`);
+    }
   };
 
   const handlePropertyHideToggle = (prop: Property) => {
     if (prop.status === "rejected") {
-      executeOperation(() => {
-        onUpdateProperty({
-          ...prop,
-          status: "pending"
-        });
-      }, "Listing is now pending review");
+      setConfirmDialog({
+        isOpen: true,
+        title: "Restore Property",
+        message: "Are you sure you want to restore this rejected property back to pending?",
+        onConfirm: () => {
+          setConfirmDialog(p => ({ ...p, isOpen: false }));
+          executeOperation(() => {
+            onUpdateProperty({
+              ...prop,
+              status: "pending"
+            });
+          }, "Listing is now pending review");
+        }
+      });
     } else {
       setRejectingProperty(prop);
       setRejectReason("Incomplete information");
@@ -800,6 +835,7 @@ export default function AdminView({
           {[
             { id: "overview", label: "Dashboard", Icon: LayoutDashboard },
             { id: "properties", label: "Properties", Icon: Building },
+            { id: "pending_approvals", label: "Pending Approvals", Icon: Shield, badge: pendingApprovalsCount > 0 ? pendingApprovalsCount : undefined },
             { id: "enquiries", label: "Enquiries", Icon: Mail, badge: enquiries.filter(e => e.status === "New").length },
             { id: "users", label: "Users", Icon: Users },
             { id: "analytics", label: "Analytics", Icon: BarChart3 },
@@ -920,7 +956,7 @@ export default function AdminView({
                       <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
                         <div className="flex items-center gap-2">
                           <AlertTriangle className="h-4.5 w-4.5 text-amber-500" />
-                          <h3 className="font-extrabold text-white text-sm">Awaiting Audited Approvals</h3>
+                          <h3 className="font-extrabold text-white text-sm">Pending Approvals</h3>
                         </div>
                         <span className="text-[10px] text-slate-400 font-bold bg-slate-950 px-2 py-0.5 rounded-md">
                           {pendingApprovalsCount} Queue
@@ -1252,6 +1288,96 @@ export default function AdminView({
                                 </tr>
                               );
                             })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+
+              {/* =====================================================
+                  TAB: PENDING APPROVALS
+                  ===================================================== */}
+              {activeTab === "pending_approvals" && (
+                <div className="space-y-6 animate-fadeIn">
+                  <div>
+                    <h2 className="text-xl text-white font-extrabold tracking-tight">Pending Approvals Queue</h2>
+                    <p className="text-xs text-slate-400 font-medium">Explicit listing of all records lacking physical validation or compliance audit.</p>
+                  </div>
+
+                  <div className="bg-slate-900 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-950 border-b border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <th className="py-4.5 px-4 w-12 text-center">#</th>
+                            <th className="py-4.5 px-4">Title & Locality</th>
+                            <th className="py-4.5 px-4 w-32">Price Scale</th>
+                            <th className="py-4.5 px-4 w-28 text-center">Audit Status</th>
+                            <th className="py-4.5 px-4 w-48 text-center">Panel Actions</th>
+                          </tr>
+                        </thead>
+
+                        <tbody className="divide-y divide-white/5 text-xs text-slate-300">
+                          {properties.filter(p => p.status === "pending").length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="py-16 text-center text-slate-500 font-medium">
+                                <div className="flex flex-col items-center justify-center gap-2">
+                                  <ShieldCheck className="h-10 w-10 text-emerald-500" />
+                                  <p className="text-xs text-slate-400 font-semibold">Queue Clear</p>
+                                  <p className="text-[10px] text-slate-500">No properties are currently pending approval.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : (
+                            properties.filter(p => p.status === "pending").map((prop, idx) => (
+                              <tr key={prop.id} className="hover:bg-slate-950/20 transition-all text-xs font-sans">
+                                {/* Index column */}
+                                <td className="py-4 px-4 text-center font-bold text-slate-500">{idx + 1}</td>
+
+                                {/* Title & locality column */}
+                                <td className="py-4 px-4 min-w-0">
+                                  <h4 className="font-extrabold text-white leading-normal truncate max-w-sm sm:max-w-md">{prop.title}</h4>
+                                  <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                    <MapPin className="h-3 w-3 text-[#D4AF37]" /> {prop.location}
+                                  </p>
+                                </td>
+
+                                {/* Price column */}
+                                <td className="py-4 px-4 font-bold text-[#D4AF37]">
+                                  {formatIndianCurrency(prop.price)}
+                                </td>
+
+                                {/* Status tag */}
+                                <td className="py-4 px-4 text-center">
+                                  <span className="inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold border leading-none uppercase bg-amber-500/15 text-amber-400 border-amber-500/20 animate-pulse">
+                                    {prop.status}
+                                  </span>
+                                </td>
+
+                                {/* Actions column */}
+                                <td className="py-4 px-4">
+                                  <div className="flex items-center justify-center gap-2">
+                                    <button
+                                      onClick={() => handlePropertyApprovalToggle(prop.id, prop.status)}
+                                      className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-[10px] flex items-center gap-1 cursor-pointer transition-all focus:ring-2 ring-emerald-500/50"
+                                      title="Audit Approve"
+                                    >
+                                      <Check className="h-3.5 w-3.5" /> Approve
+                                    </button>
+                                    <button
+                                      onClick={() => handlePropertyHideToggle(prop)}
+                                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-white/5 hover:border-red-500/30 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
+                                      title="Reject Listing"
+                                    >
+                                      <X className="h-3.5 w-3.5" /> Reject
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
                           )}
                         </tbody>
                       </table>
