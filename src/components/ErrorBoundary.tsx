@@ -1,5 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from "react";
-import { ShieldAlert, RefreshCw, Mail, Phone, Home, HelpCircle } from "lucide-react";
+import React, { ErrorInfo, ReactNode } from "react";
+import { ShieldAlert, RefreshCw, Mail, Phone, HelpCircle } from "lucide-react";
 
 interface Props {
   children?: ReactNode;
@@ -22,9 +22,24 @@ export default class ErrorBoundary extends React.Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught React exception within Shiv Saya Portal:", error, errorInfo);
+    try {
+      fetch('/api/log-error', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: error.message, stack: errorInfo.componentStack }) 
+      }).catch(e => console.warn("Failed to log error telemetry", e));
+    } catch {
+      // suppress
+    }
   }
 
+  private handleReload = () => {
+    window.location.reload();
+  };
+
   private handleReset = () => {
+    localStorage.clear();
+    sessionStorage.clear();
     this.setState({ hasError: false, error: null });
     window.location.hash = "";
     window.location.reload();
@@ -58,15 +73,15 @@ export default class ErrorBoundary extends React.Component<Props, State> {
             </div>
 
             {/* Error Stack Information */}
-            <div className="bg-slate-950 border border-white/5 rounded-2xl p-4.5 space-y-2">
+            <div className="bg-slate-950 border border-white/5 rounded-2xl p-4 space-y-2">
               <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                 <HelpCircle className="h-3.5 w-3.5 text-slate-500" />
                 Technical Reference Logs
               </div>
-              <div className="font-mono text-[10px] text-red-400/90 whitespace-pre-wrap select-text leading-relaxed overflow-x-auto max-h-32 bg-slate-950 p-2 rounded border border-white/5">
+              <pre className="font-mono text-[10px] text-red-400/90 whitespace-pre-wrap select-text leading-relaxed overflow-x-auto max-h-32 bg-slate-950 p-2 rounded border border-white/5">
                 {this.state.error?.name || "ErrorException"}: {this.state.error?.message || "Render pipeline failure"}
                 {"\n"}{this.state.error?.stack || ""}
-              </div>
+              </pre>
             </div>
 
             {/* Assistance Contact Card */}
@@ -97,19 +112,20 @@ export default class ErrorBoundary extends React.Component<Props, State> {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               <button
                 type="button"
-                onClick={this.handleReset}
+                onClick={this.handleReload}
                 className="w-full py-3 bg-[#D4AF37] hover:brightness-110 text-slate-950 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98 shadow-md"
               >
                 <RefreshCw className="h-4 w-4 animate-spin-slow" />
-                Attempt Live Reload
+                Reload Page
               </button>
-              <a
-                href="/"
-                className="w-full py-3 bg-slate-800 hover:bg-slate-750 text-white rounded-xl text-xs font-bold border border-white/5 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
+              <button
+                type="button"
+                onClick={this.handleReset}
+                className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold border border-red-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
               >
-                <Home className="h-4 w-4" />
-                Return to Homepage
-              </a>
+                <ShieldAlert className="h-4 w-4" />
+                Reset Application
+              </button>
             </div>
           </div>
         </div>

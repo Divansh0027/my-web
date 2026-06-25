@@ -3,15 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, Suspense, useCallback } from "react";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomeView from "./components/HomeView";
-import ListingsView from "./components/ListingsView";
-import DetailView from "./components/DetailView";
-import SavedView from "./components/SavedView";
-import ListPropertyView from "./components/ListPropertyView";
-import ProfileView from "./components/ProfileView";
 import Notification from "./components/Notification";
 import { 
   subscribeProperties, 
@@ -19,20 +15,25 @@ import {
   toggleFavorite, 
   subscribeAuth, 
   addProperty, 
-  isAdminUser, 
   updatePropertyInDb, 
   deletePropertyFromDb,
   subscribeRemoteAdmins,
   subscribeRemoteControls,
-  subscribeRemoteSettings
+  subscribeRemoteSettings,
+  logAdminAction
 } from "./firebase";
 import { Property } from "./types";
-import { SAMPLE_PROPERTIES } from "./data/sampleData";
 import LoginModal from "./components/LoginModal";
-import AdminView from "./components/AdminView";
 import ErrorBoundary from "./components/ErrorBoundary";
-import DevChecklist from "./components/DevChecklist";
 import { BUSINESS_CONFIG } from "./config";
+
+const ListingsView = React.lazy(() => import("./components/ListingsView"));
+const DetailView = React.lazy(() => import("./components/DetailView"));
+const SavedView = React.lazy(() => import("./components/SavedView"));
+const ListPropertyView = React.lazy(() => import("./components/ListPropertyView"));
+const ProfileView = React.lazy(() => import("./components/ProfileView"));
+const AdminView = React.lazy(() => import("./components/AdminView"));
+const DevChecklist = import.meta.env.DEV ? React.lazy(() => import("./components/DevChecklist")) : () => null;
 
 export default function App() {
   // Loading states & controls
@@ -40,30 +41,72 @@ export default function App() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
 
   // Routing & View Managers
-  const [currentView, setCurrentView] = useState<string>("home");
-  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const currentView = useMemo(() => {
+    const path = location.pathname;
+    if (path === "/") return "home";
+    if (path === "/properties") return "properties";
+    if (path.startsWith("/property/")) return "properties";
+    if (path === "/saved") return "saved";
+    if (path === "/list-property") return "list_property";
+    if (path === "/profile") return "profile";
+    if (path === "/admin") return "admin";
+    return "home";
+  }, [location.pathname]);
+
+  const selectedPropertyId = useMemo(() => {
+    if (location.pathname.startsWith("/property/")) {
+      return location.pathname.split("/property/")[1];
+    }
+    return null;
+  }, [location.pathname]);
+
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Launch clean dynamic visual confirmation toast alert
+  const triggerToast = useCallback((msg: string, type: "success" | "info" | "error" = "success") => {
+    setToastMessage(msg);
+    setToastType(type);
+    
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    
+    toastTimerRef.current = setTimeout(() => {
+      setToastMessage(null);
+      toastTimerRef.current = null;
+    }, 4000);
+  }, []);
 
   // Authenticated Profile User & Savior list
   const [currentUser, setCurrentUser] = useState<import("./firebase").ClientUser | null>(null);
   const [savedPropertyIds, setSavedPropertyIds] = useState<string[]>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
   
   // Auth state modal triggers
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [redirectView, setRedirectView] = useState<string | null>(null);
+  const getRedirectView = () => sessionStorage.getItem("redirectView");
+  const setRedirectView = (view: string | null) => {
+    if (view) {
+      sessionStorage.setItem("redirectView", view);
+    } else {
+      sessionStorage.removeItem("redirectView");
+    }
+  };
 
   // Unified Database properties
-  const [properties, setProperties] = useState<Property[]>(SAMPLE_PROPERTIES);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [isLoadingProperties, setIsLoadingProperties] = useState(true);
   const [userProperties, setUserProperties] = useState<Property[]>([]); // Locally created ones
 
   // Derived visible properties securely memoized (H12 Fix)
   const visibleProperties = useMemo(() => {
-    return properties.filter(p => !p.status || (p.status !== "pending" && p.status !== "rejected"));
+    return properties.filter(p => !p.moderationStatus || (p.moderationStatus !== "pending" && p.moderationStatus !== "rejected"));
   }, [properties]);
 
   // Search parameters bridge (Home Hero -> Listings Sidebar)
-  const [activeSearchFilters, setActiveSearchFilters] = useState<{ location: string; type: string; budgetMax: number; bhk: string } | null>(null);
+  const [activeSearchFilters, setActiveSearchFilters] = useState<{ query?: string; location: string; type: string; budgetMax: number; bhk: string } | null>(null);
 
   // Toast alert
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -81,22 +124,16 @@ export default function App() {
 
   const [adminsList, setAdminsList] = useState<string[]>([]);
 
-  // Synchronize admin status reactively when user or admins list changes (H7 Fix)
-  useEffect(() => {
+  // Synchronize admin status reactively
+  const isAdmin = useMemo(() => {
     if (currentUser && currentUser.email) {
-      // Check 1: email in adminsList from Firestore
       const isInAdminsList = adminsList.some(
         email => email.toLowerCase() === currentUser.email.toLowerCase()
       );
-      // Check 2: isAdmin flag from subscribeAuth
-      // (set via UID-based Firestore lookup)
       const hasAdminFlag = !!currentUser.isAdmin;
-      
-      // Admin if EITHER check passes or explicitly matches developer
-      setIsAdmin(isInAdminsList || hasAdminFlag || currentUser.email.toLowerCase() === "divansh0027@gmail.com");
-    } else {
-      setIsAdmin(false);
+      return isInAdminsList || hasAdminFlag || currentUser.email.toLowerCase() === "divansh0027@gmail.com";
     }
+    return false;
   }, [currentUser, adminsList]);
 
   // Load properties and auth state
@@ -107,6 +144,7 @@ export default function App() {
     // Stream properties via onSnapshot
     const unsubscribeProperties = subscribeProperties((dbProps) => {
       setProperties(dbProps);
+      setIsLoadingProperties(false);
     });
 
     // Stream operational controls / maintenance blocks live from Firestore (Issue 8)
@@ -146,6 +184,16 @@ export default function App() {
           if (user) {
             const favs = await getFavorites(user.uid);
             setSavedPropertyIds(favs);
+            
+            const redirectView = getRedirectView();
+            if (redirectView) {
+              if (redirectView === "list_property") navigate("/list-property");
+              else if (redirectView === "profile") navigate("/profile");
+              else if (redirectView === "admin") navigate("/admin");
+              else if (redirectView === "saved") navigate("/saved");
+              else navigate("/");
+              setRedirectView(null);
+            }
           } else {
             // Hydrate from LocalStorage if guest
             const localFavsStr = localStorage.getItem("ssp_local_favorites");
@@ -194,7 +242,7 @@ export default function App() {
   }, []);
 
   // Update favorites lists
-  const handleToggleSaved = async (id: string) => {
+  const handleToggleSaved = useCallback(async (id: string) => {
     try {
       const isSavedAlready = savedPropertyIds.includes(id);
       const userId = currentUser ? currentUser.uid : "guest-user";
@@ -214,27 +262,42 @@ export default function App() {
       console.warn("handleToggleSaved error:", err);
       triggerToast("Error saving bookmark.", "error");
     }
-  };
+  }, [savedPropertyIds, currentUser, triggerToast]);
 
   // Toggle Property status between "live" and "pending"
-  const handleToggleApprovalInApp = async (id: string) => {
+  const handleToggleApprovalInApp = async (id: string, customReason?: string) => {
     try {
       const matched = properties.find(p => p.id === id);
       if (!matched) return;
-      const nextStatus = matched.status === "live" 
+      const nextStatus = matched.moderationStatus === "live" 
         ? "pending" 
-        : matched.status === "rejected" 
+        : matched.moderationStatus === "rejected" 
           ? "pending" 
           : "live";
+
+      const reason = customReason || "Admin status toggle";
+
       const updated = { 
         ...matched, 
-        status: nextStatus,
-        verified: nextStatus === "live"
+        moderationStatus: nextStatus as any,
+        verified: nextStatus === "live",
+        auditLog: [
+          ...(matched.auditLog || []),
+          {
+             action: `Status changed to ${nextStatus}`,
+             reason: reason,
+             timestamp: new Date().toISOString(),
+             user: currentUser?.email || "Unknown Admin"
+          }
+        ]
       };
       const success = await updatePropertyInDb(updated);
       if (success) {
         setProperties(prev => prev.map(p => p.id === id ? updated : p));
         triggerToast(`Listing status updated to ${nextStatus}!`, "success");
+        if (currentUser?.email) {
+          logAdminAction("approve/toggle_status", id, currentUser.email, { moderationStatus: nextStatus, reason });
+        }
       } else {
         triggerToast("Failed to modify status. Try again.", "error");
       }
@@ -247,10 +310,17 @@ export default function App() {
   // Delete a property listing
   const handleDeletePropertyInApp = async (id: string) => {
     try {
+      if (!properties.some(p => p.id === id)) {
+        triggerToast("Property not found.", "error");
+        return;
+      }
       const success = await deletePropertyFromDb(id);
       if (success) {
         setProperties(prev => prev.filter(p => p.id !== id));
         triggerToast("Property listing removed.", "success");
+        if (currentUser?.email) {
+          logAdminAction("delete_property", id, currentUser.email);
+        }
       } else {
         triggerToast("Failed to delete. Try again.", "error");
       }
@@ -267,6 +337,9 @@ export default function App() {
       if (success) {
         setProperties(prev => prev.map(p => p.id === updated.id ? updated : p));
         triggerToast("Property updated.", "success");
+        if (currentUser?.email) {
+          logAdminAction("update_property", updated.id, currentUser.email, { status: updated.moderationStatus });
+        }
       } else {
         triggerToast("Failed to update. Try again.", "error");
       }
@@ -276,13 +349,19 @@ export default function App() {
     }
   };
 
-  const handleAddPropertyInApp = async (newProp: Property) => {
+  const handleAddProperty = async (newProp: Property, options?: { postedBy?: string; forceStatus?: string }) => {
     const isFromAdmin = currentView === "admin";
     const completedProp: Property = {
-      postedDate: new Date().toISOString().split("T")[0],
-      postedBy: isFromAdmin ? "Admin Hub" : "Owner",
       ...newProp,
     };
+    completedProp.postedDate = newProp.postedDate || new Date().toISOString().split("T")[0];
+    const postedByOverride = options?.postedBy || newProp.postedBy || (isFromAdmin ? "Admin Hub" : "Owner");
+    if (postedByOverride === "Owner" || postedByOverride === "Agent" || postedByOverride === "Builder") {
+      completedProp.postedBy = postedByOverride;
+    } else {
+      completedProp.postedBy = "Agent";
+      completedProp.customPostedBy = postedByOverride;
+    }
     if (!completedProp.id) {
       completedProp.id = `prop-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     }
@@ -294,10 +373,12 @@ export default function App() {
     completedProp.createdAt = new Date().toISOString();
     
     // Force status: pending for non-admins (Issue 10)
-    if (!isFromAdmin) {
-      completedProp.status = "pending";
-    } else if (!completedProp.status) {
-      completedProp.status = "pending";
+    if (options?.forceStatus) {
+      completedProp.moderationStatus = options.forceStatus as any;
+    } else if (!isFromAdmin) {
+      completedProp.moderationStatus = "pending";
+    } else if (!completedProp.moderationStatus) {
+      completedProp.moderationStatus = "pending";
     }
 
     const success = await addProperty(completedProp);
@@ -314,17 +395,7 @@ export default function App() {
     }
   };
 
-  const handleAuthSuccess = (user: import("./firebase").ClientUser, welcomeMsg: string) => {
-    setCurrentUser(user);
-    triggerToast(welcomeMsg, "success");
-    if (redirectView) {
-      setCurrentView(redirectView);
-      setRedirectView(null);
-    }
-  };
-
-  // Orchestrate active routing changes (with dynamic Auth Guards)
-  const handleNavigation = (view: string, targetPropertyId?: string) => {
+  const handleNavigation = useCallback((view: string, targetPropertyId?: string) => {
     if (view === "admin" && !isAdmin) {
       triggerToast("Access Denied: Administrative credentials required.", "info");
       return;
@@ -343,36 +414,24 @@ export default function App() {
       setActiveSearchFilters(null);
     }
     
-    setCurrentView(view);
-    if (targetPropertyId) {
-      setSelectedPropertyId(targetPropertyId);
-    } else {
-      setSelectedPropertyId(null);
-    }
+    if (view === "home") navigate("/");
+    else if (view === "properties" && targetPropertyId) navigate(`/property/${targetPropertyId}`);
+    else if (view === "properties") navigate("/properties");
+    else if (view === "saved") navigate("/saved");
+    else if (view === "list_property") navigate("/list-property");
+    else if (view === "profile") navigate("/profile");
+    else if (view === "admin") navigate("/admin");
+    else navigate("/");
+    
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, [isAdmin, currentUser, navigate, triggerToast]);
 
   // Trigger search submit redirection
-  const handleSearchTrigger = (searchFilters: { location: string; type: string; budgetMax: number; bhk: string }) => {
+  const handleSearchTrigger = useCallback((searchFilters: { query?: string; location: string; type: string; budgetMax: number; bhk: string }) => {
     setActiveSearchFilters(searchFilters);
-    setCurrentView("properties");
+    navigate("/properties");
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // Launch clean dynamic visual confirmation toast alert
-  const triggerToast = (msg: string, type: "success" | "info" | "error" = "success") => {
-    setToastMessage(msg);
-    setToastType(type);
-    
-    if (toastTimerRef.current) {
-      clearTimeout(toastTimerRef.current);
-    }
-    
-    toastTimerRef.current = setTimeout(() => {
-      setToastMessage(null);
-      toastTimerRef.current = null;
-    }, 4000);
-  };
+  }, [navigate]);
 
   // Get active selected property details computed
   const getSelectedProperty = (): Property | null => {
@@ -430,7 +489,7 @@ export default function App() {
               href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=Hi`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#D4AF37] to-[#B5942B] hover:brightness-110 text-slate-950 font-bold rounded-xl text-xs transition-all active:scale-98 shadow-lg"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B5942B] hover:brightness-110 text-slate-950 font-bold rounded-xl text-xs transition-all active:scale-98 shadow-lg"
             >
               <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
@@ -446,33 +505,9 @@ export default function App() {
     );
   }
 
-  if (currentView === "admin" && isAdmin) {
-    return (
-      <ErrorBoundary>
-        <div className="bg-[#0F172A] min-h-screen text-slate-100 font-sans flex flex-col justify-between">
-          {/* GLOBAL TOAST FLOATING BANNER */}
-          <Notification 
-            message={toastMessage} 
-            type={toastType} 
-            onClose={() => setToastMessage(null)} 
-          />
-          <AdminView 
-            currentView={currentView}
-            onNavigate={handleNavigation}
-            properties={properties}
-            onToggleApproval={handleToggleApprovalInApp}
-            onDeleteProperty={handleDeletePropertyInApp}
-            onUpdateProperty={handleUpdatePropertyInApp}
-            onAddProperty={handleAddPropertyInApp}
-            onShowNotification={triggerToast}
-          />
-        </div>
-      </ErrorBoundary>
-    );
-  }
-
   return (
     <ErrorBoundary>
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-[#D4AF37] text-[#0F172A] px-4 py-2 rounded-md z-50 font-bold">Skip to main content</a>
       <div className="bg-[#0F172A] min-h-screen text-slate-100 font-sans flex flex-col justify-between">
         
         {/* GLOBAL TOAST FLOATING BANNER */}
@@ -483,95 +518,145 @@ export default function App() {
         />
 
         {/* HEADER DESKTOP / STICKY HEADER */}
-        <Navbar 
-          currentView={currentView} 
-          onNavigate={handleNavigation} 
-          savedCount={savedPropertyIds.length} 
-          onOpenAuth={() => setIsLoginModalOpen(true)}
-          isAdmin={isAdmin}
-        />
+        {currentView !== "admin" && (
+          <Navbar 
+            currentView={currentView} 
+            onNavigate={handleNavigation} 
+            savedCount={savedPropertyIds.length} 
+            onOpenAuth={() => setIsLoginModalOpen(true)}
+            isAdmin={isAdmin}
+          />
+        )}
 
         {/* SECURE LIGHTWEIGHT AUTH OVERLAY LOGIN PORTAL */}
         <LoginModal 
           isOpen={isLoginModalOpen}
           onClose={() => setIsLoginModalOpen(false)}
-          onSuccess={handleAuthSuccess}
         />
 
         {/* MAIN SCREEN WORKSPACE CONTAINER WITH WRAPPED ERROR BOUNDARY */}
-        <ErrorBoundary>
-          <div className="flex-grow">
-            {currentView === "home" && (
-              <HomeView 
-                properties={visibleProperties} 
-                onNavigate={handleNavigation} 
-                onSearch={handleSearchTrigger}
-                savedProperties={savedPropertyIds}
-                onToggleSaved={handleToggleSaved}
-              />
-            )}
+        <main id="main-content" className="flex-1 flex flex-col relative w-full">
+          <Suspense fallback={
+            <div className="flex-grow bg-[#0F172A] flex flex-col items-center justify-center p-6 text-center shadow-2xl min-h-[50vh]">
+              <div className="relative h-12 w-12 mb-4">
+                <div className="absolute inset-0 rounded-full border-2 border-[#D4AF37]/20"></div>
+                <div className="absolute inset-0 rounded-full border-2 border-t-[#D4AF37] border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
+              </div>
+            </div>
+          }>
+            <Routes>
+              <Route path="/" element={
+                <ErrorBoundary>
+                  <HomeView 
+                    properties={visibleProperties} 
+                    isLoading={isLoadingProperties}
+                    onNavigate={handleNavigation} 
+                    onSearch={handleSearchTrigger}
+                    savedProperties={savedPropertyIds}
+                    onToggleSaved={handleToggleSaved}
+                  />
+                </ErrorBoundary>
+              } />
 
-            {currentView === "properties" && !selectedProperty && (
-              <ListingsView 
-                properties={visibleProperties} 
-                initialFilters={activeSearchFilters}
-                onNavigate={handleNavigation}
-                savedProperties={savedPropertyIds}
-                onToggleSaved={handleToggleSaved}
-              />
-            )}
+              <Route path="/properties" element={
+                <ErrorBoundary>
+                  <ListingsView 
+                    properties={visibleProperties} 
+                    isLoadingData={isLoadingProperties}
+                    initialFilters={activeSearchFilters}
+                    onNavigate={handleNavigation}
+                    savedProperties={savedPropertyIds}
+                    onToggleSaved={handleToggleSaved}
+                  />
+                </ErrorBoundary>
+              } />
 
-            {currentView === "properties" && selectedProperty && (
-              <DetailView 
-                property={selectedProperty} 
-                allProperties={visibleProperties}
-                onNavigate={handleNavigation}
-                savedProperties={savedPropertyIds}
-                onToggleSaved={handleToggleSaved}
-                onShowNotification={triggerToast}
-              />
-            )}
+              <Route path="/property/:id" element={
+                <ErrorBoundary>
+                  <DetailView 
+                    property={selectedProperty} 
+                    isLoadingData={isLoadingProperties}
+                    allProperties={visibleProperties}
+                    onNavigate={handleNavigation}
+                    savedProperties={savedPropertyIds}
+                    onToggleSaved={handleToggleSaved}
+                    onShowNotification={triggerToast}
+                  />
+                </ErrorBoundary>
+              } />
 
-            {currentView === "saved" && (
-              <SavedView 
-                properties={visibleProperties} 
-                savedProperties={savedPropertyIds} 
-                onToggleSaved={handleToggleSaved}
-                onNavigate={handleNavigation}
-              />
-            )}
+              <Route path="/saved" element={
+                <ErrorBoundary>
+                  <SavedView 
+                    properties={visibleProperties} 
+                    savedProperties={savedPropertyIds} 
+                    isLoadingData={isLoadingProperties}
+                    onToggleSaved={handleToggleSaved}
+                    onNavigate={handleNavigation}
+                    onOpenLogin={() => setIsLoginModalOpen(true)}
+                  />
+                </ErrorBoundary>
+              } />
 
-            {currentView === "list_property" && (
-              <ListPropertyView 
-                onAddProperty={handleAddPropertyInApp} 
-                onShowNotification={triggerToast}
-                onNavigate={handleNavigation}
-              />
-            )}
+              <Route path="/list-property" element={
+                <ErrorBoundary>
+                  <ListPropertyView 
+                    onAddProperty={handleAddProperty} 
+                    onShowNotification={triggerToast}
+                    onNavigate={handleNavigation}
+                  />
+                </ErrorBoundary>
+              } />
 
-            {currentView === "profile" && (
-              <ProfileView 
-                onNavigate={handleNavigation} 
-                userProperties={userProperties}
-                onShowNotification={triggerToast}
-                allProperties={properties}
-                savedPropertyIds={savedPropertyIds}
-                onToggleSaved={handleToggleSaved}
-                onDeleteProperty={handleDeletePropertyInApp}
-              />
-            )}
-          </div>
-        </ErrorBoundary>
+              <Route path="/profile" element={
+                <ErrorBoundary>
+                  <ProfileView 
+                    onNavigate={handleNavigation} 
+                    userProperties={userProperties}
+                    onShowNotification={triggerToast}
+                    allProperties={properties}
+                    savedPropertyIds={savedPropertyIds}
+                    onToggleSaved={handleToggleSaved}
+                    onDeleteProperty={handleDeletePropertyInApp}
+                  />
+                </ErrorBoundary>
+              } />
 
-        {/* MASTER FOOTER */}
-        <Footer onNavigate={handleNavigation} />
+              <Route path="/admin" element={
+                <ErrorBoundary>
+                  {isAdmin ? (
+                    <AdminView 
+                      currentView={currentView}
+                      onNavigate={handleNavigation}
+                      properties={properties}
+                      onToggleApproval={handleToggleApprovalInApp}
+                      onDeleteProperty={handleDeletePropertyInApp}
+                      onUpdateProperty={handleUpdatePropertyInApp}
+                      onAddProperty={handleAddProperty}
+                      onShowNotification={triggerToast}
+                    />
+                  ) : (
+                    <div className="flex-grow flex items-center justify-center p-6 text-center text-red-500 font-bold">Access Denied</div>
+                  )}
+                </ErrorBoundary>
+              } />
+            </Routes>
+          </Suspense>
+
+          {/* MASTER FOOTER */}
+          <Footer onNavigate={handleNavigation} />
+        </main>
 
         {/* FLOATING DEVELOPER PRE-LAUNCH CHECKLIST */}
-        <DevChecklist />
+        {import.meta.env.DEV && (
+          <React.Suspense fallback={null}>
+            <DevChecklist />
+          </React.Suspense>
+        )}
 
         {/* ================= TOUCH MOBILE BOTTOM TAB BAR ACTIONS ================= */}
         {currentView !== "admin" && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-45 bg-[#0F172A]/90 backdrop-blur-md border-t border-white/5 py-2.5 px-4 flex items-center justify-around text-center shadow-2xl select-none">
+          <div className="lg:hidden bg-[#0b0f19] border-t border-white/5 py-4 px-4 flex items-center justify-around text-center select-none w-full pb-8">
             
             {/* Tab 1: Home */}
             <button
@@ -606,7 +691,7 @@ export default function App() {
                 currentView === "list_property" ? "text-[#D4AF37]" : "text-slate-400"
               }`}
             >
-              <div className="h-4.5 w-4.5 bg-gradient-to-br from-[#D4AF37] to-[#B5942B] rounded flex items-center justify-center text-slate-950">
+              <div className="h-4 w-4 bg-gradient-to-br from-[#D4AF37] to-[#B5942B] rounded flex items-center justify-center text-slate-950">
                 <span className="text-sm font-black leading-none">+</span>
               </div>
               <span className="text-[10px] font-bold">Post</span>

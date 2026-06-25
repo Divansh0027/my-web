@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 
@@ -12,7 +13,7 @@ interface NotificationProps {
   onClose: () => void;
 }
 
-export default function Notification({ message, type, onClose }: NotificationProps) {
+export default React.memo(function Notification({ message, type, onClose }: NotificationProps) {
   return (
     <AnimatePresence>
       {message && (
@@ -22,6 +23,8 @@ export default function Notification({ message, type, onClose }: NotificationPro
           exit={{ opacity: 0, y: -20, scale: 0.9 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] max-w-sm w-[90vw] md:w-auto font-sans"
+          role={type === 'error' ? 'alert' : 'status'}
+          aria-live={type === 'error' ? 'assertive' : 'polite'}
         >
           <div className={`flex items-center gap-3.5 px-5 py-4 rounded-2xl shadow-2xl border backdrop-blur-md ${
             type === "success" 
@@ -54,4 +57,4 @@ export default function Notification({ message, type, onClose }: NotificationPro
       )}
     </AnimatePresence>
   );
-}
+});

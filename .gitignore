@@ -2,6 +2,5 @@ firebase-applet-config.json
 .env
 .env.local
 .env.production
-dist
 node_modules
 .DS_Store

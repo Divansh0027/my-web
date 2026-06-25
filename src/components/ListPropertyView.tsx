@@ -7,11 +7,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Check, ClipboardList, ShieldAlert, Award, FileText, 
-  ArrowRight, ArrowLeft, Heart, Image as ImageIcon, Plus, Trash2, CheckCircle2, AlertCircle, Sparkles, RefreshCw, Upload
+  ArrowRight, ArrowLeft, Trash2, CheckCircle2, AlertCircle, Sparkles, RefreshCw, Upload
 } from "lucide-react";
-import { Property } from "../types";
+import { Property, City } from "../types";
 import { subscribeAuth, uploadPropertyImage, isStorageConnected } from "../firebase";
-import confetti from "canvas-confetti";
 import { BUSINESS_CONFIG } from "../config";
 
 interface ListPropertyViewProps {
@@ -27,7 +26,7 @@ export default function ListPropertyView({
 }: ListPropertyViewProps) {
   
   // Auth listener
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<import("../firebase").ClientUser | null>(null);
 
   useEffect(() => {
     const unsub = subscribeAuth((user) => {
@@ -80,9 +79,7 @@ export default function ListPropertyView({
   const [youtubeUrl, setYoutubeUrl] = useState("");
 
   // Photos State: Support custom URL addition paired with presets
-  const [customPhotoUrl, setCustomPhotoUrl] = useState("");
   const [customPhotos, setCustomPhotos] = useState<string[]>([]);
-  const [selectedPresetIndex, setSelectedPresetIndex] = useState(0);
 
   // Step 4 Verification acceptance checklist
   const [isAgreedToCheckList, setIsAgreedToCheckList] = useState(false);
@@ -150,6 +147,7 @@ export default function ListPropertyView({
         setFurnishing(d.furnishing || "Semi-Furnished");
         setAmenities(d.amenities || ["Parking", "Water Supply"]);
         setCustomPhotos(d.customPhotos || []);
+        setYoutubeUrl(d.youtubeUrl || "");
         setStep(d.step || 1);
         onShowNotification("Restored active property listing draft.", "success");
       } catch (err) {
@@ -160,28 +158,33 @@ export default function ListPropertyView({
 
   // Save changes to localStorage on any state modification
   useEffect(() => {
-    const draftData = {
-      title,
-      description,
-      type,
-      bhk,
-      city,
-      locality,
-      price,
-      priceUnit,
-      area,
-      areaUnit,
-      floor,
-      facing,
-      furnishing,
-      amenities,
-      customPhotos,
-      step
-    };
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+    const timeoutId = setTimeout(() => {
+      const draftData = {
+        title,
+        description,
+        type,
+        bhk,
+        city,
+        locality,
+        price,
+        priceUnit,
+        area,
+        areaUnit,
+        floor,
+        facing,
+        furnishing,
+        amenities,
+        customPhotos,
+        youtubeUrl,
+        step
+      };
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+    }, 3000);
+    
+    return () => clearTimeout(timeoutId);
   }, [
     title, description, type, bhk, city, locality, price, priceUnit, 
-    area, areaUnit, floor, facing, furnishing, amenities, customPhotos, step
+    area, areaUnit, floor, facing, furnishing, amenities, customPhotos, youtubeUrl, step
   ]);
 
   // Autofill Certifying display name once currentUser becomes active
@@ -208,6 +211,7 @@ export default function ListPropertyView({
     setFurnishing("Semi-Furnished");
     setAmenities(["Parking", "Water Supply"]);
     setCustomPhotos([]);
+    setYoutubeUrl("");
     setStep(1);
     onShowNotification("Draft cleared. Starting fresh registration.", "info");
   };
@@ -216,21 +220,6 @@ export default function ListPropertyView({
     setAmenities(prev => 
       prev.includes(am) ? prev.filter(x => x !== am) : [...prev, am]
     );
-  };
-
-  const handleAddCustomPhoto = () => {
-    if (!customPhotoUrl.trim()) return;
-    if (!customPhotoUrl.startsWith("http")) {
-      onShowNotification("Please provide a valid fully qualified photo URL.", "info");
-      return;
-    }
-    setCustomPhotos(prev => [...prev, customPhotoUrl.trim()]);
-    setCustomPhotoUrl("");
-    onShowNotification("Custom photo URL added to listed gallery.", "success");
-  };
-
-  const handleRemoveCustomPhoto = (index: number) => {
-    setCustomPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
   // Validation routines per progressive step
@@ -280,31 +269,37 @@ export default function ListPropertyView({
     setStep(prev => Math.max(prev - 1, 1));
   };
 
-  const triggerConfettiSuccess = () => {
+  const triggerConfettiSuccess = async () => {
     // 3 round confetti shower burst
     const end = Date.now() + (3 * 1000);
     const colors = ["#D4AF37", "#B5942B", "#FFFFFF", "#1E293B"];
+    
+    try {
+      const { default: confetti } = await import("canvas-confetti");
 
-    (function frame() {
-      confetti({
-        particleCount: 4,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors: colors
-      });
-      confetti({
-        particleCount: 4,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors: colors
-      });
+      (function frame() {
+        confetti({
+          particleCount: 4,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: colors
+        });
+        confetti({
+          particleCount: 4,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: colors
+        });
 
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    }());
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      }());
+    } catch(e) {
+      console.warn("Failed to load confetti", e);
+    }
   };
 
   const handleFilesAdded = (files: FileList | null) => {
@@ -319,7 +314,7 @@ export default function ListPropertyView({
     }
     
     if (currentCount + incomingFiles.length > 10) {
-      onShowNotification("Maximum 10 photos allowed for real estate uploads.", "error");
+      onShowNotification("Maximum 10 photos allowed.", "error");
       return;
     }
     
@@ -356,7 +351,17 @@ export default function ListPropertyView({
       return;
     }
 
-    if (!isAgreedToCheckList || !certifyingName.trim()) {
+    if (youtubeUrl.trim()) {
+      const isValidYoutube = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(youtubeUrl);
+      if (!isValidYoutube) {
+        onShowNotification("Please enter a valid YouTube URL.", "info");
+        setStep(3);
+        return;
+      }
+    }
+
+    const finalCertifyingName = currentUser?.displayName || certifyingName;
+    if (!isAgreedToCheckList || !finalCertifyingName.trim()) {
       onShowNotification("Please complete step 4 checkmarks and authorize with your signature name.", "info");
       return;
     }
@@ -378,16 +383,17 @@ export default function ListPropertyView({
                  imgFile.file, 
                  imgFile.file.name
                );
-               uploadedUrls.push(downloadUrl);
+               uploadedUrls.push(downloadUrl.url);
              } catch (err: any) {
                console.warn(`Single file upload failed for ${imgFile.file.name}, using base64`, err);
                // Base64 single file fallback
-               const base64Str = await new Promise<string>((resolve) => {
+               const base64Url = await new Promise<string>((resolve, reject) => {
                  const reader = new FileReader();
                  reader.onload = () => resolve(reader.result as string);
+                 reader.onerror = e => reject(e);
                  reader.readAsDataURL(imgFile.file);
                });
-               throw err;
+               uploadedUrls.push(base64Url);
              }
           }
         } else {
@@ -396,7 +402,7 @@ export default function ListPropertyView({
           for (let i = 0; i < imageFiles.length; i++) {
              setUploadProgress({ current: i + 1, total: imageFiles.length });
              const imgFile = imageFiles[i];
-             const base64Str = await new Promise<string>((resolve, reject) => {
+             await new Promise<string>((resolve, reject) => {
                const reader = new FileReader();
                reader.onload = () => resolve(reader.result as string);
                reader.onerror = e => reject(e);
@@ -419,15 +425,16 @@ export default function ListPropertyView({
       try {
         for (let i = uploadedUrls.length; i < imageFiles.length; i++) {
            const imgFile = imageFiles[i];
-           const base64Str = await new Promise<string>((resolve) => {
+           const base64Str = await new Promise<string>((resolve, reject) => {
              const reader = new FileReader();
              reader.onload = () => resolve(reader.result as string);
+             reader.onerror = (e) => reject(e);
              reader.readAsDataURL(imgFile.file);
            });
-           throw uploadError;
+           uploadedUrls.push(base64Str);
         }
       } catch (err) {
-        // continue
+        console.error("Base64 fallback failed", err);
       }
     } finally {
       setIsUploading(false);
@@ -436,10 +443,6 @@ export default function ListPropertyView({
     const priceNum = priceUnit === "Lakhs" 
       ? Number(price) * 100000 
       : Number(price) * 10000000;
-
-    const priceStrVal = priceUnit === "Lakhs" 
-      ? `₹${price} Lakhs` 
-      : `₹${price} Crore`;
 
     // Compile images list combining presets with custom ones
     const finalImages = [
@@ -452,10 +455,9 @@ export default function ListPropertyView({
       title: title.trim(),
       description: description.trim(),
       price: priceNum,
-      priceString: priceStrVal,
-      location: `${locality.trim()}, ${city}`,
+            location: `${locality.trim()}, ${city}`,
       locality: locality.trim(),
-      city,
+      city: city as City,
       type,
       category: type === "Commercial" ? "Commercial" : type === "Plot" ? "Plots" : "Buy",
       bhk: type === "Commercial" || type === "Plot" ? null : Number(bhk),
@@ -467,12 +469,12 @@ export default function ListPropertyView({
       furnishing: type === "Plot" ? "Unfurnished" : furnishing,
       images: finalImages,
       imageUrls: uploadedUrls,
-      videoUrl: youtubeUrl.trim() || undefined,
+      ...(youtubeUrl.trim() ? { videoUrl: youtubeUrl.trim() } : {}),
       amenities,
       verified: false, // Undergoes audit review
       featured: false,
       newLaunch: true,
-      listingStatus: "New Launch",
+      availabilityStatus: "New Launch",
       postedBy: "Owner",
       postedDate: new Date().toISOString().split("T")[0]
     };
@@ -559,7 +561,6 @@ export default function ListPropertyView({
             {/* Step Numbers & Labels */}
             <div className="grid grid-cols-4 gap-2">
               {stepsLabel.map((s) => {
-                const IconComp = s.icon;
                 const isActive = step === s.num;
                 const isCompleted = step > s.num;
                 return (
@@ -632,7 +633,7 @@ export default function ListPropertyView({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Property Title */}
                       <div className="md:col-span-2 space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <label htmlFor="step1-title-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                           Property Listing Title <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -651,7 +652,7 @@ export default function ListPropertyView({
 
                       {/* Description */}
                       <div className="md:col-span-2 space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <label htmlFor="step1-desc-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                           Detailed Description <span className="text-red-500">*</span>
                         </label>
                         <textarea
@@ -670,7 +671,7 @@ export default function ListPropertyView({
 
                       {/* Type Select */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Property Type Asset Class</label>
+                        <label htmlFor="step1-type-select" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Property Type Asset Class</label>
                         <select
                           id="step1-type-select"
                           value={type}
@@ -688,7 +689,7 @@ export default function ListPropertyView({
                       {/* BHK Config (Disabled for Commercial/Plots) */}
                       {type !== "Commercial" && type !== "Plot" ? (
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">BHK Configuration</label>
+                          <label htmlFor="step1-bhk-select" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">BHK Configuration</label>
                           <select
                             id="step1-bhk-select"
                             value={bhk}
@@ -704,8 +705,8 @@ export default function ListPropertyView({
                         </div>
                       ) : (
                         <div className="space-y-1.5 opacity-40">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">BHK Config</label>
-                          <input
+                          <label htmlFor="auto-listpropertyview-711" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">BHK Config</label>
+                          <input id="auto-listpropertyview-711"
                             type="text"
                             disabled
                             value="Not Applicable for this asset class"
@@ -716,7 +717,7 @@ export default function ListPropertyView({
 
                       {/* City Select */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Delhi NCR City Hub</label>
+                        <label htmlFor="step1-city-select" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Delhi NCR City Hub</label>
                         <select
                           id="step1-city-select"
                           value={city}
@@ -736,7 +737,7 @@ export default function ListPropertyView({
 
                       {/* Locality Address */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <label htmlFor="step1-locality-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                           Locality Sector / Block Address <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -764,7 +765,7 @@ export default function ListPropertyView({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Price input */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <label htmlFor="step2-price-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                           Property Ask price <span className="text-red-500">*</span>
                         </label>
                         <div className="flex gap-2.5">
@@ -797,7 +798,7 @@ export default function ListPropertyView({
 
                       {/* Area input */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <label htmlFor="step2-area-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                           Super / Built-up Area <span className="text-red-500">*</span>
                         </label>
                         <div className="flex gap-2.5">
@@ -826,7 +827,7 @@ export default function ListPropertyView({
                       {/* Floor Coordinates (Not applicable for Land plots) */}
                       {type !== "Plot" ? (
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Floor Coordinates</label>
+                          <label htmlFor="step2-floor-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Floor Coordinates</label>
                           <input
                             id="step2-floor-input"
                             type="text"
@@ -838,8 +839,8 @@ export default function ListPropertyView({
                         </div>
                       ) : (
                         <div className="space-y-1.5 opacity-40">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Floor Coordinates</label>
-                          <input
+                          <label htmlFor="auto-listpropertyview-845" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Floor Coordinates</label>
+                          <input id="auto-listpropertyview-845"
                             type="text"
                             disabled
                             value="N/A (Plot Class)"
@@ -850,7 +851,7 @@ export default function ListPropertyView({
 
                       {/* Facing aspect */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Facing Aspect Direction</label>
+                        <label htmlFor="step2-facing-select" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Facing Aspect Direction</label>
                         <select
                           id="step2-facing-select"
                           value={facing}
@@ -868,7 +869,7 @@ export default function ListPropertyView({
 
                       {/* Furnishing */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Furnishing Standards</label>
+                        <label htmlFor="step2-furnishing-select" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Furnishing Standards</label>
                         <select
                           id="step2-furnishing-select"
                           value={furnishing}
@@ -895,7 +896,7 @@ export default function ListPropertyView({
                     {/* Pre-configured premium presets */}
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pre-attached Professional Presets</label>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pre-attached Professional Presets</p>
                         <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold px-2.5 py-0.5 rounded-full uppercase">Enabled</span>
                       </div>
                       <p className="text-[10px] text-slate-400 leading-relaxed">
@@ -905,7 +906,7 @@ export default function ListPropertyView({
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                         {(presetPhotos[type] || presetPhotos.Flat).map((url, i) => (
                           <div key={i} className="relative h-20 rounded-xl overflow-hidden bg-slate-950 border border-white/5">
-                            <img src={url} alt="Preset visual" className="h-full w-full object-cover" />
+                            <img width={800} height={600} src={url} alt="Preset visual" className="h-full w-full object-cover" loading="lazy" />
                             <span className="absolute bottom-1 right-1 bg-[#0F172A]/85 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase">Preset {i+1}</span>
                           </div>
                         ))}
@@ -915,7 +916,7 @@ export default function ListPropertyView({
                     {/* Add Custom Local Upload block */}
                     <div className="space-y-3.5 pt-2">
                       <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Include Custom Photos</label>
+                        <label htmlFor="property-image-file-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Include Custom Photos</label>
                         <span className="text-[9px] bg-slate-800 border border-white/10 text-slate-400 font-bold px-2.5 py-0.5 rounded-full uppercase">
                           {imageFiles.length}/10 uploaded
                         </span>
@@ -930,7 +931,7 @@ export default function ListPropertyView({
                           handleFilesAdded(e.dataTransfer.files);
                         }}
                         onClick={() => document.getElementById("property-image-file-input")?.click()}
-                        className="border border-dashed border-white/10 hover:border-[#D4AF37]/50 bg-slate-1000 rounded-2xl py-6 px-4 text-center cursor-pointer transition-all hover:bg-slate-950/80 group"
+                        className="border border-dashed border-white/10 hover:border-[#D4AF37]/50 bg-slate-950 rounded-2xl py-6 px-4 text-center cursor-pointer transition-all hover:bg-slate-950/80 group"
                       >
                         <input 
                           id="property-image-file-input"
@@ -969,14 +970,14 @@ export default function ListPropertyView({
                             return (
                               <div key={i} className="relative bg-slate-950 border border-white/5 rounded-xl overflow-hidden group p-2 flex flex-col justify-between">
                                 <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-slate-900 border border-white/5">
-                                  <img src={img.previewUrl} alt={img.file.name} className="h-full w-full object-cover" />
+                                  <img width={800} height={600} src={img.previewUrl} alt={img.file.name} className="h-full w-full object-cover" loading="lazy" />
                                   <button
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleRemoveImageFile(i);
                                     }}
-                                    className="absolute top-1 right-1 h-5.5 w-5.5 bg-red-600 hover:bg-red-700 hover:scale-105 active:scale-95 text-white flex items-center justify-center rounded-full shadow-md transition-all cursor-pointer"
+                                    className="absolute top-1 right-1 h-5 w-5 bg-red-600 hover:bg-red-700 hover:scale-105 active:scale-95 text-white flex items-center justify-center rounded-full shadow-md transition-all cursor-pointer"
                                     title="Delete photo"
                                   >
                                     <Trash2 className="h-3 w-3" />
@@ -999,7 +1000,7 @@ export default function ListPropertyView({
 
                     {/* YouTube Video URL block */}
                     <div className="space-y-1.5 pt-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Optional YouTube Video tour URL</label>
+                      <label htmlFor="step3-video-url-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Optional YouTube Video tour URL</label>
                       <input
                         id="step3-video-url-input"
                         type="url"
@@ -1012,7 +1013,7 @@ export default function ListPropertyView({
 
                     {/* Amenities checkboxes */}
                     <div className="space-y-3 pt-3">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Select Premium Amenities Installed</label>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Select Premium Amenities Installed</p>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                         {amenitiesList.map((am) => {
                           const isSelected = amenities.includes(am);
@@ -1061,13 +1062,13 @@ export default function ListPropertyView({
                       </div>
 
                       {/* ACCEPTANCE CHECKBOX */}
-                      <label className="flex items-start gap-3 p-4 bg-slate-950/40 border border-white/5 rounded-2xl hover:border-[#D4AF37]/25 transition-all select-none cursor-pointer">
+                      <label htmlFor="step4-agree-checkbox" className="flex items-start gap-3 p-4 bg-slate-950/40 border border-white/5 rounded-2xl hover:border-[#D4AF37]/25 transition-all select-none cursor-pointer">
                         <input
                           id="step4-agree-checkbox"
                           type="checkbox"
                           checked={isAgreedToCheckList}
                           onChange={(e) => setIsAgreedToCheckList(e.target.checked)}
-                          className="mt-0.5 rounded border-white/10 text-[#D4AF37] focus:ring-[#D4AF37]/30 h-4.5 w-4.5 bg-slate-950"
+                          className="mt-0.5 rounded border-white/10 text-[#D4AF37] focus:ring-[#D4AF37]/30 h-4 w-4 bg-slate-950"
                         />
                         <span className="text-xs text-slate-350 font-semibold leading-relaxed">
                           I accept the physically audited declaration, and I authorize {BUSINESS_CONFIG.consultantName}'s evaluation consultants to contact me directly using verified contact records.
@@ -1076,15 +1077,16 @@ export default function ListPropertyView({
 
                       {/* SIGNATURE NAME FIELD */}
                       <div className="space-y-1.5 pt-2">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Type Full Authorizing Name (Signature Proof)</label>
+                        <label htmlFor="step4-sig-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Type Full Authorizing Name (Signature Proof)</label>
                         <input
                           id="step4-sig-input"
                           type="text"
                           required
                           placeholder={`e.g. ${BUSINESS_CONFIG.consultantName}`}
-                          value={certifyingName}
+                          value={currentUser?.displayName || certifyingName}
+                          disabled={!!currentUser?.displayName}
                           onChange={(e) => setCertifyingName(e.target.value)}
-                          className="w-full bg-slate-950 border border-white/10 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-650 outline-none"
+                          className="w-full bg-slate-950 border border-white/10 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-650 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       </div>
                     </div>
@@ -1098,7 +1100,7 @@ export default function ListPropertyView({
                       id="wizard-prev-btn"
                       type="button"
                       onClick={handlePrevStep}
-                      className="flex-1 py-3.5 border border-white/10 hover:bg-white/5 rounded-xl text-center text-slate-400 hover:text-white text-xs font-bold uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="flex-1 py-3 border border-white/10 hover:bg-white/5 rounded-xl text-center text-slate-400 hover:text-white text-xs font-bold uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <ArrowLeft className="h-4 w-4" />
                       Back
@@ -1110,7 +1112,7 @@ export default function ListPropertyView({
                       id="wizard-next-btn"
                       type="button"
                       onClick={handleNextStep}
-                      className="flex-1 py-3.5 bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 text-xs font-bold rounded-xl text-center shadow-lg uppercase transition-all hover:brightness-110 flex items-center justify-center gap-1.5 cursor-pointer ml-auto"
+                      className="flex-1 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 text-xs font-bold rounded-xl text-center shadow-lg uppercase transition-all hover:brightness-110 flex items-center justify-center gap-1.5 cursor-pointer ml-auto"
                     >
                       Next Step
                       <ArrowRight className="h-4 w-4" />
@@ -1119,11 +1121,11 @@ export default function ListPropertyView({
                     <button
                       id="wizard-submit-btn"
                       type="submit"
-                      disabled={!isAgreedToCheckList || !certifyingName.trim()}
+                      disabled={!isAgreedToCheckList || !(currentUser?.displayName || certifyingName).trim()}
                       onClick={handleFormSubmit}
-                      className="flex-1 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 text-xs font-black rounded-xl text-center shadow-lg uppercase transition-all hover:brightness-110 disabled:opacity-30 flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 text-xs font-black rounded-xl text-center shadow-lg uppercase transition-all hover:brightness-110 disabled:opacity-30 flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <CheckCircle2 className="h-4.5 w-4.5" />
+                      <CheckCircle2 className="h-4 w-4" />
                       Publish For Audit
                     </button>
                   )}

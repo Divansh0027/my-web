@@ -1,3 +1,4 @@
+import { formatPrice } from "../utils/format";
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -6,10 +7,11 @@
 import React, { useState, useEffect } from "react";
 import { 
   UserCheck, Shield, Clipboard, Calendar, Trash2, Mail, 
-  Phone, Heart, Edit3, Save, MapPin, Key, Sparkles, LogOut, CheckCircle2, Building, ShieldAlert, Settings
+  Phone, Heart, Edit3, Save, MapPin, Key, Sparkles, Building, ShieldAlert, Settings
 } from "lucide-react";
-import { subscribeAuth, updateUserProfileDetails } from "../firebase";
+import { subscribeAuth, updateUserProfileDetails, logoutUser } from "../firebase";
 import { Enquiry, Property } from "../types";
+import { BUSINESS_CONFIG } from "../config";
 
 interface ProfileViewProps {
   onNavigate: (view: string, selectedPropertyId?: string) => void;
@@ -30,7 +32,7 @@ export default function ProfileView({
   onToggleSaved,
   onDeleteProperty
 }: ProfileViewProps) {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<import("../firebase").ClientUser | null>(null);
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [activeTab, setActiveTab] = useState<"listings" | "favorites" | "enquiries" | "settings">("listings");
   
@@ -40,6 +42,9 @@ export default function ProfileView({
   const [editEmail, setEditEmail] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [animationsEnabled, setAnimationsEnabled] = useState(
+    localStorage.getItem("ssp_animations_enabled") !== "false"
+  );
 
   useEffect(() => {
     // 1. Subscribe to Auth
@@ -129,7 +134,7 @@ export default function ProfileView({
             <div className="flex flex-col sm:flex-row items-center gap-5 w-full md:w-auto">
               <div className="h-16 w-16 shrink-0 rounded-full border border-[#D4AF37]/35 overflow-hidden bg-slate-800 flex items-center justify-center">
                 {user?.photoURL ? (
-                  <img src={user.photoURL} alt={user.displayName} className="h-full w-full object-cover" />
+                  <img width={800} height={600} src={user.photoURL} alt={user.displayName} className="h-full w-full object-cover" loading="lazy" />
                 ) : (
                   <UserCheck className="h-7 w-7 text-[#D4AF37]" />
                 )}
@@ -154,8 +159,8 @@ export default function ProfileView({
                 <form onSubmit={handleSaveProfile} className="w-full space-y-3.5 pt-1">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-slate-400">Display Name</label>
-                      <input 
+                      <label htmlFor="auto-profileview-156" className="text-[10px] font-bold uppercase text-slate-400">Display Name</label>
+                      <input id="auto-profileview-156" 
                         type="text" 
                         required
                         value={editName}
@@ -164,8 +169,8 @@ export default function ProfileView({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-slate-400">Email Address (Readonly)</label>
-                      <input 
+                      <label htmlFor="auto-profileview-166" className="text-[10px] font-bold uppercase text-slate-400">Email Address (Readonly)</label>
+                      <input id="auto-profileview-166" 
                         type="email" 
                         disabled
                         value={editEmail}
@@ -173,8 +178,8 @@ export default function ProfileView({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-slate-400">Contact (+91 Indian)</label>
-                      <input 
+                      <label htmlFor="auto-profileview-175" className="text-[10px] font-bold uppercase text-slate-400">Contact (+91 Indian)</label>
+                      <input id="auto-profileview-175" 
                         type="tel" 
                         maxLength={10}
                         placeholder="10 digit number"
@@ -209,7 +214,7 @@ export default function ProfileView({
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-4.5 py-2 hover:bg-slate-800 text-xs text-[#D4AF37] hover:text-white border border-[#D4AF37]/20 rounded-xl transition-all self-stretch md:self-auto flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+                className="px-4 py-2 hover:bg-slate-800 text-xs text-[#D4AF37] hover:text-white border border-[#D4AF37]/20 rounded-xl transition-all self-stretch md:self-auto flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
               >
                 <Edit3 className="h-4 w-4" />
                 Edit Profile
@@ -272,7 +277,7 @@ export default function ProfileView({
         {activeTab === "listings" && (
           <div className="bg-slate-900 border border-white/5 rounded-3xl p-6 sm:p-8 space-y-6">
             <h3 className="text-white font-extrabold text-sm border-b border-white/5 pb-2.5 flex items-center gap-2">
-              <Building className="h-4.5 w-4.5 text-[#D4AF37]" />
+              <Building className="h-4 w-4 text-[#D4AF37]" />
               Property Audit & Approvals
             </h3>
 
@@ -293,9 +298,9 @@ export default function ProfileView({
               <div className="space-y-4">
                 {userProperties.map((prop) => {
                   const isVerified = prop.verified;
-                  const isRejected = prop.status === "rejected";
+                  const isRejected = prop.moderationStatus === "rejected";
                   const isPending = !isVerified && !isRejected;
-                  const isLive = isVerified || prop.status === "live";
+                  const isLive = isVerified || prop.moderationStatus === "live";
                   
                   const handleDeleteClick = async (e: React.MouseEvent) => {
                     e.stopPropagation();
@@ -315,16 +320,16 @@ export default function ProfileView({
                   return (
                     <div 
                       key={prop.id} 
-                      className="p-4.5 bg-slate-950 border border-white/5 rounded-2xl hover:border-[#D4AF37]/20 transition-all flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4"
+                      className="p-4 bg-slate-950 border border-white/5 rounded-2xl hover:border-[#D4AF37]/20 transition-all flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4"
                     >
-                      <div className="cursor-pointer flex-1 space-y-1" onClick={() => onNavigate("properties", prop.id)}>
+                      <button className="cursor-pointer flex-1 space-y-1 block text-left outline-none focus:ring-2 focus:ring-[#D4AF37]/50 rounded-lg p-1" onClick={() => onNavigate("properties", prop.id)}>
                         <h4 className="font-extrabold text-white text-xs hover:text-[#D4AF37] transition-all leading-snug">{prop.title}</h4>
                         <p className="text-[10px] text-slate-400 font-semibold flex items-center gap-1.5 pt-0.5">
                           <MapPin className="h-3 w-3 text-slate-500 shrink-0" />
                           {prop.locality}, {prop.city}
                         </p>
-                        <p className="text-[10px] text-[#D4AF37] font-black">{prop.priceString || `₹${(prop.price/100000).toFixed(0)} Lakhs`}</p>
-                      </div>
+                        <p className="text-[10px] text-[#D4AF37] font-black">{formatPrice(prop.price) || `₹${(prop.price/100000).toFixed(0)} Lakhs`}</p>
+                      </button>
  
                       <div className="flex flex-wrap items-center justify-between md:justify-end gap-3 border-t border-white/5 md:border-none pt-3.5 md:pt-0">
                         <div className="flex flex-col items-start md:items-end gap-1.5">
@@ -377,7 +382,7 @@ export default function ProfileView({
         {activeTab === "favorites" && (
           <div className="bg-slate-900 border border-white/5 rounded-3xl p-6 sm:p-8 space-y-6">
             <h3 className="text-white font-extrabold text-sm border-b border-white/5 pb-2.5 flex items-center gap-2">
-              <Heart className="h-4.5 w-4.5 text-rose-500 fill-rose-500/20" />
+              <Heart className="h-4 w-4 text-rose-500 fill-rose-500/20" />
               My Saved Shortlists
             </h3>
 
@@ -406,7 +411,7 @@ export default function ProfileView({
                           src={prop.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=400&q=80"} 
                           alt={prop.title} 
                           className="h-full w-full object-cover group-hover:scale-105 transition-all duration-300"
-                        />
+                        loading="lazy" />
                         <button
                           onClick={(e) => { e.stopPropagation(); onToggleSaved(prop.id); }}
                           className="absolute top-2.5 right-2.5 h-8 w-8 rounded-full bg-[#0F172A]/80 backdrop-blur-md text-rose-500 flex items-center justify-center border border-white/10 cursor-pointer shadow-md"
@@ -416,14 +421,14 @@ export default function ProfileView({
                         </button>
                       </div>
 
-                      <div className="cursor-pointer space-y-1.5" onClick={() => onNavigate("properties", prop.id)}>
+                      <button className="cursor-pointer space-y-1.5 block text-left outline-none focus:ring-2 focus:ring-[#D4AF37]/50 rounded-lg" onClick={() => onNavigate("properties", prop.id)}>
                         <h4 className="font-extrabold text-white text-xs line-clamp-1 group-hover:text-[#D4AF37] transition-all pt-1">{prop.title}</h4>
                         <p className="text-[10px] text-slate-500 flex items-center gap-1">
                           <MapPin className="h-3 w-3 shrink-0" />
                           {prop.locality}, {prop.city}
                         </p>
-                        <p className="text-[#D4AF37] font-bold text-xs">{prop.priceString || `₹${(prop.price/100000).toFixed(0)} Lakhs`}</p>
-                      </div>
+                        <p className="text-[#D4AF37] font-bold text-xs">{formatPrice(prop.price) || `₹${(prop.price/100000).toFixed(0)} Lakhs`}</p>
+                      </button>
                     </div>
 
                     <div className="pt-3 border-t border-white/5 mt-3 flex justify-between items-center">
@@ -447,7 +452,7 @@ export default function ProfileView({
           <div className="bg-slate-900 border border-white/5 rounded-3xl p-6 sm:p-8 space-y-6">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <h3 className="text-white font-extrabold text-sm flex items-center gap-2">
-                <Calendar className="h-4.5 w-4.5 text-[#D4AF37]" />
+                <Calendar className="h-4 w-4 text-[#D4AF37]" />
                 Scheduled Site Visits & Enquiries
               </h3>
               {enquiries.length > 0 && (
@@ -493,7 +498,7 @@ export default function ProfileView({
           <div className="bg-slate-900 border border-white/5 rounded-3xl p-6 sm:p-8 space-y-8">
             <div>
               <h3 className="text-white font-extrabold text-sm border-b border-white/5 pb-2.5 flex items-center gap-2">
-                <Settings className="h-4.5 w-4.5 text-[#D4AF37]" />
+                <Settings className="h-4 w-4 text-[#D4AF37]" />
                 Account Settings & Preferences
               </h3>
               <p className="text-slate-400 text-xs mt-2 font-medium leading-relaxed">
@@ -511,7 +516,7 @@ export default function ProfileView({
                     Shiv Saya Properties RERA License
                   </div>
                   <p className="text-[10px] text-slate-400 leading-relaxed font-semibold">
-                    Authorized Real Estate Brokerage License No. RERA-HR-REA-2026-X9
+                    Authorized Real Estate Brokerage License No. {BUSINESS_CONFIG.reraNumber || "RERA-HR-REA-2026-X9"}
                   </p>
                 </div>
                 <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-wider rounded border border-emerald-500/20 shrink-0">
@@ -557,8 +562,9 @@ export default function ProfileView({
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       if (window.confirm("Are you sure you want to completely sign out and flush all local caches?")) {
+                        await logoutUser();
                         localStorage.clear();
                         onShowNotification("All local user caches have been securely invalidated.", "success");
                         setTimeout(() => window.location.reload(), 1200);
@@ -582,14 +588,16 @@ export default function ProfileView({
                     Toggle active sparkling effect animations on gold accents.
                   </p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input 
+                <label htmlFor="auto-profileview-584" className="relative inline-flex items-center cursor-pointer">
+                  <input id="auto-profileview-584" 
                     type="checkbox" 
                     className="sr-only peer" 
-                    defaultChecked 
+                    checked={animationsEnabled}
                     onChange={(e) => {
-                      localStorage.setItem("ssp_animations_enabled", e.target.checked ? "true" : "false");
-                      onShowNotification(`Effects animations ${e.target.checked ? "enabled" : "muted"}.`, "success");
+                      const enabled = e.target.checked;
+                      setAnimationsEnabled(enabled);
+                      localStorage.setItem("ssp_animations_enabled", String(enabled));
+                      onShowNotification(`Effects animations ${enabled ? "enabled" : "muted"}.`, "success");
                     }}
                   />
                   <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37] peer-checked:after:bg-slate-950"></div>

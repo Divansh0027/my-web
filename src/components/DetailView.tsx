@@ -1,16 +1,16 @@
+import { formatPrice } from "../utils/format";
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { Helmet } from "react-helmet-async";
 import { 
-  ChevronLeft, 
   MapPin, 
   Share2, 
   Heart, 
-  Calendar, 
   Check, 
   ArrowLeft, 
   Car, 
@@ -19,21 +19,18 @@ import {
   Trees, 
   Dumbbell, 
   Key, 
-  UserCheck, 
   PhoneCall, 
   ShieldAlert, 
-  Info,
   BadgeCheck,
-  Calculator,
-  Compass,
-  Maximize
+  Calculator
 } from "lucide-react";
 import { Property, Enquiry } from "../types";
 import { submitEnquiry, subscribeAuth } from "../firebase";
 import { BUSINESS_CONFIG } from "../config";
 
 interface DetailViewProps {
-  property: Property;
+  property?: Property | null;
+  isLoadingData?: boolean;
   allProperties: Property[];
   onNavigate: (view: string, selectedPropertyId?: string) => void;
   savedProperties: string[];
@@ -43,6 +40,7 @@ interface DetailViewProps {
 
 export default function DetailView({ 
   property, 
+  isLoadingData,
   allProperties, 
   onNavigate, 
   savedProperties, 
@@ -53,9 +51,10 @@ export default function DetailView({
   // Gallery
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
 
   // Authenticated User State
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<import("../firebase").ClientUser | null>(null);
 
   useEffect(() => {
     const unsub = subscribeAuth((user) => {
@@ -67,21 +66,22 @@ export default function DetailView({
   // Form Inputs
   const [senderName, setSenderName] = useState("");
   const [senderPhone, setSenderPhone] = useState("");
-  const [senderMessage, setSenderMessage] = useState(`Hi, I am interested in "${property.title}". Please send me the brochure and available payment plans.`);
+  const [senderMessage, setSenderMessage] = useState(`Hi, I am interested in "${property?.title || "this property"}". Please send me the brochure and available payment plans.`);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [visitType, setVisitType] = useState<"enquiry" | "visit">("enquiry");
 
   // EMI Calculator State
-  const [loanPrincipal, setLoanPrincipal] = useState(Math.round(property.price * 0.8)); // 80% default
+  const basePrice = property?.price ?? 0;
+  const [loanPrincipal, setLoanPrincipal] = useState(Math.round(basePrice * 0.8)); // 80% default
   const [interestRate, setInterestRate] = useState(8.5); // 8.5% default
   const [loanTenure, setLoanTenure] = useState(20); // 20 years default
   const [monthlyEmi, setMonthlyEmi] = useState(0);
 
-  const isSaved = savedProperties.includes(property.id);
+  const isSaved = property ? savedProperties.includes(property.id) : false;
 
   // Auto-init loan principal when property changes
   useEffect(() => {
-    setLoanPrincipal(Math.round(property.price * 0.8));
+    setLoanPrincipal(Math.round((property?.price ?? 0) * 0.8));
     setActiveImageIdx(0);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [property]);
@@ -102,7 +102,7 @@ export default function DetailView({
   }, [loanPrincipal, interestRate, loanTenure]);
 
   // Handle Enquiry submission
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) {
       onShowNotification("Please sign in to submit enquiries.", "error");
@@ -121,8 +121,8 @@ export default function DetailView({
       name: senderName,
       phone: senderPhone,
       message: senderMessage,
-      propertyId: property.id,
-      propertyName: property.title,
+      propertyId: property?.id || "unknown",
+      propertyName: property?.title || "Unknown Property",
       type: visitType,
       userId: currentUser?.uid || "guest-user",
       userEmail: currentUser?.email || "guest@guest.com"
@@ -145,26 +145,25 @@ export default function DetailView({
       // Reset inputs
       setSenderName("");
       setSenderPhone("");
-      setSenderMessage(`Hi, I am interested in "${property.title}". Please send me the brochure and available payment plans.`);
+      setSenderMessage(`Hi, I am interested in "${property?.title || "this property"}". Please send me the brochure and available payment plans.`);
     } else {
       onShowNotification("Failed to submit enquiry. Checking database...", "error");
     }
-  };
+  }, [currentUser, senderName, senderPhone, senderMessage, property?.id, property?.title, visitType, onShowNotification]);
 
   // Copy shareable link
-  const handleShareClick = () => {
+  const handleShareClick = useCallback(() => {
     navigator.clipboard.writeText(window.location.href);
     onShowNotification("Property link copied to clipboard!", "success");
-  };
+  }, [onShowNotification]);
 
-  // Fetch similar properties
-  const getSimilarProperties = (): Property[] => {
+  // Fetch similar properties dynamically (memoized so it does not evaluate every render)
+  const similarProperties = useMemo(() => {
+    if (!property) return [];
     return allProperties
       .filter((p) => p.id !== property.id && (p.city === property.city || p.type === property.type))
       .slice(0, 3);
-  };
-
-  const similarProperties = getSimilarProperties();
+  }, [allProperties, property?.id, property?.city, property?.type]);
 
   // Helper mapping for amenities icons
   const getAmenityIcon = (name: string) => {
@@ -179,8 +178,50 @@ export default function DetailView({
     return <Check className="h-5 w-5 text-[#D4AF37]" />;
   };
 
+  if (isLoadingData || !property) {
+    return (
+      <div className="font-sans text-slate-200 bg-[#0F172A] pt-24 pb-20 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 animate-pulse">
+          <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="h-4 bg-slate-800 rounded w-32"></div>
+            <div className="h-4 bg-slate-800 rounded w-48"></div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-pulse">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="lg:col-span-8 space-y-8">
+              <div className="h-96 sm:h-[480px] w-full bg-slate-800 rounded-2xl"></div>
+              <div className="flex gap-2 w-full overflow-x-auto pb-1">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-20 w-28 bg-slate-800 rounded-xl shrink-0"></div>
+                ))}
+              </div>
+              <div className="p-8 bg-slate-900 border border-white/5 rounded-2xl space-y-4">
+                <div className="h-8 bg-slate-800 rounded w-1/3"></div>
+                <div className="h-10 bg-slate-800 rounded w-2/3"></div>
+                <div className="h-6 bg-slate-800 rounded w-1/4"></div>
+              </div>
+            </div>
+            <div className="lg:col-span-4 space-y-8">
+              <div className="bg-slate-900 border border-white/5 rounded-2xl p-6 space-y-6">
+                <div className="h-6 bg-slate-800 rounded w-1/2"></div>
+                <div className="h-10 bg-slate-800 rounded w-full"></div>
+                <div className="h-32 bg-slate-800 rounded w-full"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="font-sans text-slate-200 bg-[#0F172A] pt-24 pb-20 min-h-screen">
+      <Helmet>
+        <title>{property.title} | Shiv Saya Properties</title>
+        <meta name="description" content={`Buy ${property.title} in ${property.city}. ${property.description?.substring(0, 120)}...`} />
+        {property.images?.[0] && <meta property="og:image" content={property.images[0]} />}
+      </Helmet>
       
       {/* BREADCRUMBS BAR */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
@@ -213,14 +254,14 @@ export default function DetailView({
             <div className="space-y-3">
               {/* Main Display Frame */}
               <div 
-                onClick={() => setIsLightboxOpen(true)}
+                onClick={() => { setIsLightboxOpen(true); setIsZoomed(false); }}
                 className="relative h-96 sm:h-[480px] w-full rounded-2xl overflow-hidden cursor-pointer group border border-white/5 shadow-2xl"
               >
                 <img 
-                  src={property.images[activeImageIdx]} 
+                  src={property.images[activeImageIdx] || '/placeholder-property.jpg'} 
                   alt={property.title} 
                   className="h-full w-full object-cover group-hover:scale-[1.01] transition-transform duration-500" 
-                />
+                loading="lazy" />
                 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
                   <span className="bg-slate-950/80 backdrop-blur-md px-4 py-2 rounded-lg text-xs font-semibold text-[#D4AF37] border border-white/10">
@@ -239,11 +280,12 @@ export default function DetailView({
                   <button
                     key={idx}
                     onClick={() => setActiveImageIdx(idx)}
+                    aria-label={`View thumbnail ${idx + 1}`}
                     className={`h-20 w-28 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
                       activeImageIdx === idx ? "border-[#D4AF37]" : "border-transparent opacity-60 hover:opacity-100"
                     }`}
                   >
-                    <img src={img} alt={`Thumbnail ${idx}`} className="h-full w-full object-cover" />
+                    <img width={800} height={600} src={img} alt={`Thumbnail ${idx}`} loading="lazy" className="h-full w-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -261,15 +303,17 @@ export default function DetailView({
                     onClick={handleShareClick}
                     className="h-9 w-9 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-full flex items-center justify-center transition-all border border-white/5"
                     title="Copy listing URL"
+                    aria-label="Copy listing URL"
                   >
-                    <Share2 className="h-4.5 w-4.5" />
+                    <Share2 className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => onToggleSaved(property.id)}
                     className="h-9 w-9 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-full flex items-center justify-center transition-all border border-white/5"
                     title="Save to favorites"
+                    aria-label="Save to favorites"
                   >
-                    <Heart className={`h-4.5 w-4.5 ${isSaved ? "fill-red-500 text-red-500 border-none" : ""}`} />
+                    <Heart className={`h-4 w-4 ${isSaved ? "fill-red-500 text-red-500 border-none" : ""}`} />
                   </button>
                 </div>
               </div>
@@ -281,7 +325,7 @@ export default function DetailView({
               <div className="flex flex-wrap items-center gap-6 pt-2 border-t border-white/5">
                 <div>
                   <div className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Property Price</div>
-                  <div className="text-3xl font-black text-[#D4AF37] mt-0.5 tracking-tight">{property.priceString}</div>
+                  <div className="text-3xl font-black text-[#D4AF37] mt-0.5 tracking-tight">{formatPrice(property.price)}</div>
                 </div>
                 
                 <div className="h-10 w-px bg-white/10 hidden sm:block"></div>
@@ -291,7 +335,7 @@ export default function DetailView({
                   <div className="flex items-center gap-1 text-slate-300 text-sm mt-1.5 font-medium">
                     <MapPin className="h-4 w-4 text-[#D4AF37]" />
                     <a
-                      href={`https://maps.google.com/?q=${encodeURIComponent(property.location)}`}
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location)}`}
                       target="_blank"
                       rel="noreferrer"
                       className="hover:underline hover:text-[#D4AF37]"
@@ -351,7 +395,7 @@ export default function DetailView({
                 {property.amenities.map((am) => (
                   <div key={am} className="p-4 bg-slate-850/60 border border-white/5 rounded-xl flex items-center gap-3">
                     <div className="h-9 w-9 bg-[#D4AF37]/10 rounded-lg flex items-center justify-center shrink-0">
-                      {getAmenityIcon(am)}
+                      {typeof getAmenityIcon === "function" ? getAmenityIcon(am) : <Check className="h-5 w-5 text-[#D4AF37]" />}
                     </div>
                     <span className="text-slate-200 text-xs font-semibold">{am}</span>
                   </div>
@@ -376,7 +420,7 @@ export default function DetailView({
                   <h4 className="text-white font-bold text-sm tracking-tight">{property.location}</h4>
                   <p className="text-slate-400 text-xs max-w-sm mx-auto">Physical inspections and location coordinates can be verified coordinates-free with our advisor.</p>
                   <a
-                    href={`https://maps.google.com/?q=${encodeURIComponent(property.location)}`}
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location)}`}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex py-2 px-4 rounded-lg bg-slate-900 text-xs font-bold text-[#D4AF37] border border-[#D4AF37]/35 hover:bg-[#D4AF37] hover:text-slate-950 transition-all select-none"
@@ -390,17 +434,18 @@ export default function DetailView({
               <div className="space-y-3">
                 <h4 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Nearby Landmark Benchmarks</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {(property.landmarks || [
-                    { name: "Indira Gandhi International Airport", type: "Airport (25 mins)" },
-                    { name: "Delhi Metro Blue Line Station", type: "Metro Station (5 mins)" },
-                    { name: "Max Super Specialty Medical Hub", type: "Hospital (8 mins)" },
-                    { name: "Gaur City Premium Shopping Corridor", type: "Mall (10 mins)" }
-                  ]).map((land, i) => (
-                    <div key={i} className="flex justify-between items-center text-xs p-3.5 bg-slate-850/40 rounded-xl border border-white/5">
-                      <span className="text-slate-300 font-medium truncate max-w-[200px]">{land.name}</span>
-                      <span className="text-[#D4AF37] font-semibold text-[10px] uppercase bg-[#D4AF37]/10 px-2.5 py-0.5 rounded-md">{land.type}</span>
+                  {property.landmarks && property.landmarks.length > 0 ? (
+                    property.landmarks.map((land, i) => (
+                      <div key={i} className="flex justify-between items-center text-xs p-3.5 bg-slate-850/40 rounded-xl border border-white/5">
+                        <span className="text-slate-300 font-medium truncate max-w-[200px]">{land.name}</span>
+                        <span className="text-[#D4AF37] font-semibold text-[10px] uppercase bg-[#D4AF37]/10 px-2.5 py-0.5 rounded-md">{land.type}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full border border-white/5 p-4 rounded-xl text-center">
+                      <span className="text-slate-400 text-xs font-semibold">Nearby amenities available on request</span>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -408,7 +453,7 @@ export default function DetailView({
             {/* EMI CALCULATOR SECTION */}
             <div className="p-8 bg-slate-900 border border-white/5 rounded-2xl space-y-6">
               <div className="flex items-center gap-3 border-b border-white/5 pb-3.5">
-                <Calculator className="h-5.5 w-5.5 text-[#D4AF37]" />
+                <Calculator className="h-5 w-5 text-[#D4AF37]" />
                 <h3 className="text-white font-extrabold text-lg">Dynamic Home Loan EMI Calculator</h3>
               </div>
               
@@ -417,31 +462,32 @@ export default function DetailView({
                   {/* Loan Slider */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs">
-                      <label className="font-bold text-slate-400 uppercase tracking-wide">Loan Amount (INR)</label>
+                      <label htmlFor="auto-detailview-415" className="font-bold text-slate-400 uppercase tracking-wide">Loan Amount (INR)</label>
                       <span className="text-white font-extrabold text-xs">₹{(loanPrincipal / 100000).toFixed(1)} Lakhs</span>
                     </div>
-                    <input
+                    <input id="auto-detailview-415"
                       type="range"
-                      min={property.price * 0.2}
-                      max={property.price * 0.9}
+                      min={(property?.price ?? 0) * 0.2}
+                      max={(property?.price ?? 0) * 0.9}
                       step={100000}
                       value={loanPrincipal}
                       onChange={(e) => setLoanPrincipal(Number(e.target.value))}
-                      className="w-full accent-[#D4AF37] bg-slate-800 cursor-pointer"
+                      className="w-full accent-[#D4AF37] bg-slate-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!property?.price}
                     />
                     <div className="flex justify-between text-[9px] text-slate-500 font-medium">
-                      <span>Min: 20% (₹{(property.price * 0.2 / 100000).toFixed(0)}L)</span>
-                      <span>Max: 90% (₹{(property.price * 0.9 / 100000).toFixed(0)}L)</span>
+                      <span>Min: 20% (₹{((property?.price ?? 0) * 0.2 / 100000).toFixed(0)}L)</span>
+                      <span>Max: 90% (₹{((property?.price ?? 0) * 0.9 / 100000).toFixed(0)}L)</span>
                     </div>
                   </div>
 
                   {/* Interest rate Slider */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs">
-                      <label className="font-bold text-slate-400 uppercase tracking-wide">Annual Interest Rate (%)</label>
+                      <label htmlFor="auto-detailview-437" className="font-bold text-slate-400 uppercase tracking-wide">Annual Interest Rate (%)</label>
                       <span className="text-white font-extrabold text-xs">{interestRate}%</span>
                     </div>
-                    <input
+                    <input id="auto-detailview-437"
                       type="range"
                       min={6.5}
                       max={15}
@@ -459,10 +505,10 @@ export default function DetailView({
                   {/* Tenure slider */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs">
-                      <label className="font-bold text-slate-400 uppercase tracking-wide">Loan Tenure (Years)</label>
+                      <label htmlFor="auto-detailview-458" className="font-bold text-slate-400 uppercase tracking-wide">Loan Tenure (Years)</label>
                       <span className="text-white font-extrabold text-xs">{loanTenure} Years</span>
                     </div>
-                    <input
+                    <input id="auto-detailview-458"
                       type="range"
                       min={5}
                       max={30}
@@ -502,16 +548,17 @@ export default function DetailView({
             <div className="bg-slate-900 border border-white/5 rounded-2xl p-6 shadow-2xl space-y-6">
               
               {/* Agent Badge Profile */}
-              <div className="flex items-center gap-4.5 border-b border-white/5 pb-4">
+              <div className="flex items-center gap-4 border-b border-white/5 pb-4">
                 <img 
                   src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" 
                   alt={BUSINESS_CONFIG.consultantName} 
+                  loading="lazy"
                   className="h-14 w-14 rounded-full object-cover border border-[#D4AF37]/30"
                 />
                 <div>
                   <div className="flex items-center gap-1">
                     <h4 className="font-extrabold text-white text-sm">{BUSINESS_CONFIG.consultantName}</h4>
-                    <BadgeCheck className="h-4.5 w-4.5 text-emerald-400 shrink-0" />
+                    <BadgeCheck className="h-4 w-4 text-emerald-400 shrink-0" />
                   </div>
                   <p className="text-xs text-[#D4AF37] font-semibold mt-0.5">Real Estate Consultant</p>
                   <p className="text-[10px] text-slate-500 font-medium">{BUSINESS_CONFIG.businessName}</p>
@@ -543,8 +590,8 @@ export default function DetailView({
               {/* Form Entry */}
               <form onSubmit={handleFormSubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Full Name</label>
-                  <input
+                  <label htmlFor="auto-detailview-543" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Full Name</label>
+                  <input id="auto-detailview-543"
                     type="text"
                     required
                     placeholder="Enter your name"
@@ -555,8 +602,8 @@ export default function DetailView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Phone Number</label>
-                  <input
+                  <label htmlFor="auto-detailview-555" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Phone Number</label>
+                  <input id="auto-detailview-555"
                     type="tel"
                     required
                     maxLength={15}
@@ -568,8 +615,8 @@ export default function DetailView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Message Notes</label>
-                  <textarea
+                  <label htmlFor="auto-detailview-568" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Message Notes</label>
+                  <textarea id="auto-detailview-568"
                     rows={4}
                     placeholder="Describe extra requirement (budget, floors)..."
                     value={senderMessage}
@@ -581,7 +628,7 @@ export default function DetailView({
                 <button
                   disabled={isSubmitting}
                   type="submit"
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 text-xs font-bold shadow-lg hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 text-xs font-bold shadow-lg hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <span>Submitting Details...</span>
@@ -639,13 +686,13 @@ export default function DetailView({
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {similarProperties.map((prop) => (
-                <div
+                <button
                   key={prop.id}
                   onClick={() => onNavigate("properties", prop.id)}
-                  className="bg-slate-900 border border-white/5 rounded-2xl overflow-hidden cursor-pointer shadow hover:border-[#D4AF37]/35 transition-all group"
+                  className="bg-slate-900 border border-white/5 rounded-2xl overflow-hidden cursor-pointer shadow hover:border-[#D4AF37]/35 transition-all group text-left w-full focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
                 >
                   <div className="relative h-48 w-full overflow-hidden">
-                    <img src={prop.images[0]} alt={prop.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img width={800} height={600} src={prop.images[0] || '/placeholder-property.jpg'} alt={prop.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <span className="absolute bottom-3 left-3 bg-slate-950/80 text-emerald-400 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded">
                       ✓ Verified
                     </span>
@@ -655,7 +702,7 @@ export default function DetailView({
                   </div>
 
                   <div className="p-5 space-y-2.5">
-                    <span className="text-lg font-black text-[#D4AF37]">{prop.priceString}</span>
+                    <span className="text-lg font-black text-[#D4AF37]">{formatPrice(prop.price)}</span>
                     <h4 className="text-white text-sm font-semibold truncate group-hover:text-[#D4AF37] transition-colors">{prop.title}</h4>
                     
                     <div className="flex items-center gap-1.5 text-slate-400 text-xs">
@@ -666,10 +713,10 @@ export default function DetailView({
                     <div className="flex items-center gap-3 border-t border-white/5 pt-3 mt-3 text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
                       {prop.bhk && <span>{prop.bhk} BHK</span>}
                       <span>{prop.area} {prop.areaUnit}</span>
-                      <span className="text-[#D4AF37]">{prop.listingStatus}</span>
+                      <span className="text-[#D4AF37]">{prop.availabilityStatus}</span>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -690,6 +737,7 @@ export default function DetailView({
             {/* Close */}
             <button
               onClick={() => setIsLightboxOpen(false)}
+              aria-label="Close Lightbox"
               className="absolute top-6 right-6 h-12 w-12 rounded-full bg-slate-800 hover:bg-[#D4AF37] text-white hover:text-slate-950 font-bold items-center justify-center flex transition-colors shadow z-50 cursor-pointer"
             >
               ✕
@@ -698,22 +746,39 @@ export default function DetailView({
             {/* Slider frame */}
             <div className="max-w-4xl w-full flex items-center justify-between gap-4" onClick={(e) => e.stopPropagation()}>
               <button
-                onClick={() => setActiveImageIdx((prev) => (prev - 1 + property.images.length) % property.images.length)}
+                onClick={() => { setIsZoomed(false); setActiveImageIdx((prev) => (prev - 1 + Math.max(property.images.length, 1)) % Math.max(property.images.length, 1)); }}
+                aria-label="Previous image"
                 className="h-12 w-12 bg-slate-900 border border-white/10 hover:bg-[#D4AF37] text-white hover:text-slate-950 rounded-full flex items-center justify-center shrink-0 cursor-pointer"
               >
                 ◀
               </button>
 
-              <div className="max-h-[75vh] max-w-full overflow-hidden rounded-2xl border border-white/10">
-                <img 
-                  src={property.images[activeImageIdx]} 
+              <div className="max-h-[75vh] max-w-full overflow-hidden rounded-2xl border border-white/10 relative flex-1 flex items-center justify-center group" onClick={() => setIsZoomed(!isZoomed)}>
+                <motion.img 
+                  drag={isZoomed}
+                  dragConstraints={{ top: -500, left: -500, right: 500, bottom: 500 }}
+                  animate={{ scale: isZoomed ? 2 : 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  src={property.images[activeImageIdx] || '/placeholder-property.jpg'} 
                   alt="Lightbox High-def View" 
-                  className="max-h-[75vh] w-auto max-w-full object-contain mx-auto" 
+                  loading="lazy"
+                  className={`max-h-[75vh] w-auto max-w-full object-contain mx-auto ${isZoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`} 
                 />
+                {!isZoomed && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-slate-950/80 backdrop-blur-md px-4 py-2 rounded-lg text-xs font-semibold text-white border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    🔍 Click to Zoom In
+                  </div>
+                )}
+                {isZoomed && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-slate-950/80 backdrop-blur-md px-4 py-2 rounded-lg text-xs font-semibold text-white border border-white/10 pointer-events-none">
+                    Drag to pan, Click to Zoom Out
+                  </div>
+                )}
               </div>
 
               <button
-                onClick={() => setActiveImageIdx((prev) => (prev + 1) % property.images.length)}
+                onClick={() => { setIsZoomed(false); setActiveImageIdx((prev) => (prev + 1) % Math.max(property.images.length, 1)); }}
+                aria-label="Next image"
                 className="h-12 w-12 bg-slate-900 border border-white/10 hover:bg-[#D4AF37] text-white hover:text-slate-950 rounded-full flex items-center justify-center shrink-0 cursor-pointer"
               >
                 ▶
@@ -722,7 +787,7 @@ export default function DetailView({
 
             {/* Pagination numbers */}
             <div className="text-slate-400 text-xs mt-6 font-bold uppercase tracking-widest select-none">
-              Photo {activeImageIdx + 1} of {property.images.length}
+              Photo {property.images.length > 0 ? activeImageIdx + 1 : 0} of {property.images.length}
             </div>
           </motion.div>
         )}

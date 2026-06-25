@@ -1,10 +1,13 @@
+import { formatPrice } from "../utils/format";
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { motion } from "motion/react";
+import { Helmet } from "react-helmet-async";
+import { trackEvent } from "../firebase";
 import { 
   Building, 
   MapPin, 
@@ -26,20 +29,22 @@ import {
   ChevronRight,
   Heart
 } from "lucide-react";
-import { Property, Testimonial } from "../types";
+import { Property } from "../types";
 import { SERVICES, TESTIMONIALS, COVERED_AREAS } from "../data/sampleData";
 import { BUSINESS_CONFIG } from "../config";
 
 interface HomeViewProps {
   properties: Property[];
+  isLoading?: boolean;
   onNavigate: (view: string, selectedPropertyId?: string) => void;
-  onSearch: (filters: { location: string; type: string; budgetMax: number; bhk: string }) => void;
+  onSearch: (filters: { query?: string; location: string; type: string; budgetMax: number; bhk: string }) => void;
   savedProperties: string[];
   onToggleSaved: (id: string) => void;
 }
 
 export default function HomeView({ 
   properties, 
+  isLoading,
   onNavigate, 
   onSearch, 
   savedProperties, 
@@ -47,9 +52,10 @@ export default function HomeView({
 }: HomeViewProps) {
   
   // Search parameters state
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
   const [searchType, setSearchType] = useState("");
-  const [searchBudget, setSearchBudget] = useState(10000000); // Default Max ₹10Cr (100,000,000)
+  const [searchBudget, setSearchBudget] = useState(100000000); // Default Max ₹10Cr (100,000,000)
   const [searchBhk, setSearchBhk] = useState("All");
 
   // Tab filters for featured properties
@@ -59,63 +65,92 @@ export default function HomeView({
   const [activeTestimonial, setActiveTestimonial] = useState(0);
 
   // Handle hero search trigger
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Track search event with analytics
+    trackEvent("home_search", {
+      query: searchQuery || "none",
+      location: searchLocation || "none",
+      type: searchType || "none",
+      budget: searchBudget.toString(),
+      bhk: searchBhk
+    });
+
     onSearch({
+      query: searchQuery,
       location: searchLocation,
       type: searchType,
       budgetMax: searchBudget,
       bhk: searchBhk === "All" ? "" : searchBhk
     });
-  };
+  }, [onSearch, searchQuery, searchLocation, searchType, searchBudget, searchBhk]);
+
+  const handleTabChange = useCallback((tab: "All" | "Buy" | "Rent" | "Commercial" | "Plots") => {
+    setActiveTab(tab);
+    trackEvent("home_filter_property_type", {
+      type: tab
+    });
+  }, []);
 
   // Filter properties based on the active tab
-  const getFilteredProperties = () => {
+  const filteredProperties = useMemo(() => {
     let filtered = properties;
     if (activeTab !== "All") {
-      filtered = properties.filter(p => p.category === activeTab);
+      if (activeTab === "Commercial") {
+        filtered = properties.filter(p => p.category === "Commercial" || p.type === "Commercial");
+      } else if (activeTab === "Plots") {
+        filtered = properties.filter(p => p.category === "Plots" || p.type === "Plot");
+      } else {
+        filtered = properties.filter(p => p.category === activeTab);
+      }
     }
     return filtered.slice(0, 6); // Max 6 featured
-  };
+  }, [properties, activeTab]);
 
-  const handleLocalityClick = (locality: string) => {
+  const handleLocalityClick = useCallback((locality: string) => {
+    trackEvent("home_search", {
+      query: "none",
+      location: locality,
+      type: "none",
+      budget: "100000000",
+      bhk: "All"
+    });
+
     onSearch({
       location: locality,
       type: "",
       budgetMax: 100000000, // No max
       bhk: ""
     });
-  };
+  }, [onSearch]);
 
-  const nextTestimonial = () => {
+  const nextTestimonial = useCallback(() => {
     setActiveTestimonial((prev) => (prev + 1) % TESTIMONIALS.length);
-  };
+  }, []);
 
-  const prevTestimonial = () => {
+  const prevTestimonial = useCallback(() => {
     setActiveTestimonial((prev) => (prev - 1 + TESTIMONIALS.length) % TESTIMONIALS.length);
-  };
-
-  const formatPrice = (num: number) => {
-    if (num >= 10000000) {
-      return `₹${(num / 10000000).toFixed(2).replace(/\.00$/, '')} Crore`;
-    }
-    return `₹${(num / 100000).toFixed(2).replace(/\.00$/, '')} Lakhs`;
-  };
+  }, []);
 
   return (
     <div className="font-sans text-slate-200 overflow-x-hidden bg-[#0F172A] pt-18">
+      <Helmet>
+        <title>Shiv Saya Properties - Real Estate Agents in Delhi NCR</title>
+        <meta name="description" content="Shiv Saya Properties offers verified real estate listings in Ghaziabad, Noida, Delhi NCR. Buy, sell, or rent flats, villas, plots, and commercial spaces." />
+      </Helmet>
       
       {/* SECTION 1: CINEMATIC HERO */}
       <section className="relative min-h-[92vh] flex items-center justify-center py-20 px-4 bg-gradient-to-b from-[#0F172A] via-[#111827] to-[#0F172A] overflow-hidden">
         
         {/* Abstract Background Accents */}
-        <div className="absolute inset-0 pointer-events-none z-0 opacity-30">
+        <div className="absolute inset-0 pointer-events-none z-0 opacity-30" aria-hidden="true" role="presentation">
           <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-gradient-to-tr from-[#D4AF37]/10 to-transparent blur-3xl"></div>
           <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] rounded-full bg-gradient-to-bl from-emerald-500/5 to-transparent blur-3xl"></div>
         </div>
 
         {/* Dynamic Micro-particles Simulation in CSS */}
-        <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 pointer-events-none z-0" aria-hidden="true" role="presentation">
           <div className="absolute top-[30%] left-[15%] w-1.5 h-1.5 bg-[#D4AF37]/40 rounded-full animate-ping duration-2000"></div>
           <div className="absolute top-[60%] left-[80%] w-2 h-2 bg-emerald-500/20 rounded-full animate-ping duration-3000"></div>
           <div className="absolute top-[80%] left-[25%] w-1 h-1 bg-[#D4AF37]/30 rounded-full animate-ping duration-1000"></div>
@@ -165,7 +200,7 @@ export default function HomeView({
           >
             <button
               onClick={() => onNavigate("properties")}
-              className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 font-bold text-sm shadow-xl shadow-[#D4AF37]/15 hover:brightness-110 active:scale-98 transition-all"
+              className="w-full sm:w-auto px-8 py-3 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 font-bold text-sm shadow-xl shadow-[#D4AF37]/15 hover:brightness-110 active:scale-98 transition-all"
             >
               Explore Properties
             </button>
@@ -173,9 +208,9 @@ export default function HomeView({
               href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.consultation)}`}
               target="_blank"
               rel="noreferrer"
-              className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-[#10B981] hover:bg-emerald-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all"
+              className="w-full sm:w-auto px-7 py-3 rounded-full bg-[#10B981] hover:bg-emerald-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all"
             >
-              <Phone className="h-4.5 w-4.5" />
+              <Phone className="h-4 w-4" />
               Chat on WhatsApp
             </a>
             <button
@@ -184,7 +219,7 @@ export default function HomeView({
                 const sec = document.getElementById("contact_sec");
                 if (sec) sec.scrollIntoView({ behavior: "smooth" });
               }}
-              className="w-full sm:w-auto px-7 py-3.5 rounded-full border border-white/20 hover:bg-white/10 hover:border-white/40 text-white font-semibold text-sm transition-all"
+              className="w-full sm:w-auto px-7 py-3 rounded-full border border-white/20 hover:bg-white/10 hover:border-white/40 text-white font-semibold text-sm transition-all"
             >
               Book Free Consultation
             </button>
@@ -198,10 +233,29 @@ export default function HomeView({
             transition={{ duration: 0.8, delay: 0.4 }}
             className="w-full max-w-5xl mt-12 bg-slate-900/80 backdrop-blur-xl border border-white/10 p-5 rounded-2xl md:rounded-full shadow-2xl flex flex-col md:flex-row items-center gap-4 text-left"
           >
+            {/* Search Query Input */}
+            <div className="w-full md:w-[25%] px-3">
+              <label htmlFor="home-search-input" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Search keyword</label>
+              <div className="relative">
+                <Search className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input 
+                  id="home-search-input"
+                  type="text"
+                  placeholder="e.g. Dwarka Flat" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-transparent border-none text-white text-sm focus:outline-none focus:ring-0 font-medium placeholder-slate-600 pl-6 h-6"
+                />
+              </div>
+            </div>
+
+            {/* Separator */}
+            <div className="hidden md:block h-8 w-px bg-white/10 self-center"></div>
+
             {/* Location Select */}
             <div className="w-full md:flex-1 px-3">
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Locality</label>
-              <select
+              <label htmlFor="auto-homeview-201" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Locality</label>
+              <select id="auto-homeview-201"
                 value={searchLocation}
                 onChange={(e) => setSearchLocation(e.target.value)}
                 className="w-full bg-transparent border-none text-white text-sm focus:outline-none focus:ring-0 font-medium cursor-pointer"
@@ -223,8 +277,8 @@ export default function HomeView({
 
             {/* Property Type Select */}
             <div className="w-full md:w-[18%] px-3">
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Type</label>
-              <select
+              <label htmlFor="auto-homeview-224" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Type</label>
+              <select id="auto-homeview-224"
                 value={searchType}
                 onChange={(e) => setSearchType(e.target.value)}
                 className="w-full bg-transparent border-none text-white text-sm focus:outline-none focus:ring-0 font-medium cursor-pointer"
@@ -243,8 +297,8 @@ export default function HomeView({
 
             {/* Budget Max Select */}
             <div className="w-full md:w-[22%] px-3">
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Max Budget</label>
-              <select
+              <label htmlFor="auto-homeview-244" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Max Budget</label>
+              <select id="auto-homeview-244"
                 value={searchBudget}
                 onChange={(e) => setSearchBudget(Number(e.target.value))}
                 className="w-full bg-transparent border-none text-white text-sm focus:outline-none focus:ring-0 font-medium cursor-pointer"
@@ -263,8 +317,8 @@ export default function HomeView({
 
             {/* BHK Select */}
             <div className="w-full md:w-[12%] px-3">
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">BHK</label>
-              <select
+              <label htmlFor="auto-homeview-264" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">BHK</label>
+              <select id="auto-homeview-264"
                 value={searchBhk}
                 onChange={(e) => setSearchBhk(e.target.value)}
                 className="w-full bg-transparent border-none text-white text-sm focus:outline-none focus:ring-0 font-medium cursor-pointer"
@@ -333,7 +387,7 @@ export default function HomeView({
               {(["All", "Buy", "Rent", "Commercial", "Plots"] as const).map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => handleTabChange(tab)}
                   className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
                     activeTab === tab 
                       ? "bg-[#D4AF37] text-slate-950" 
@@ -347,14 +401,33 @@ export default function HomeView({
           </div>
 
           {/* Properties Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {getFilteredProperties().map((prop) => {
-              const isSaved = savedProperties.includes(prop.id);
-              return (
-                <motion.div
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-slate-900 border border-white/5 rounded-2xl p-4 space-y-4 animate-pulse">
+                  <div className="bg-slate-800 h-64 w-full rounded-xl"></div>
+                  <div className="h-4 bg-slate-800 rounded w-1/3"></div>
+                  <div className="h-6 bg-slate-800 rounded w-3/4"></div>
+                  <div className="h-4 bg-slate-800 rounded w-1/2"></div>
+                  <div className="flex gap-4">
+                    <div className="h-8 bg-slate-800 rounded w-1/3"></div>
+                    <div className="h-8 bg-slate-800 rounded w-1/3"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredProperties.map((prop) => {
+                const isSaved = savedProperties.includes(prop.id);
+                return (
+                  <motion.div
                   key={prop.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
                   whileHover={{ y: -8 }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
                   className="bg-slate-900 border border-white/5 rounded-2xl overflow-hidden shadow-lg group flex flex-col justify-between"
                 >
                   {/* Image, Status Header */}
@@ -363,7 +436,7 @@ export default function HomeView({
                       src={prop.images[0]} 
                       alt={prop.title} 
                       className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                    />
+                    loading="lazy" />
                     
                     {/* Badge */}
                     <div className="absolute top-4 left-4 flex gap-1.5">
@@ -404,7 +477,7 @@ export default function HomeView({
                     <div>
                       {/* Price Grid */}
                       <div className="flex items-center justify-between">
-                        <span className="text-2xl font-bold text-[#D4AF37] tracking-tight">{prop.priceString}</span>
+                        <span className="text-2xl font-bold text-[#D4AF37] tracking-tight">{formatPrice(prop.price)}</span>
                         <span className="text-xs text-slate-400 uppercase tracking-widest">{prop.postedBy} Listing</span>
                       </div>
 
@@ -415,7 +488,7 @@ export default function HomeView({
 
                       {/* Locality */}
                       <div className="flex items-center gap-1 text-slate-400 text-xs mt-2.5">
-                        <MapPin className="h-4.5 w-4.5 text-[#D4AF37] shrink-0" />
+                        <MapPin className="h-4 w-4 text-[#D4AF37] shrink-0" />
                         <span className="truncate">{prop.location}</span>
                       </div>
 
@@ -456,9 +529,10 @@ export default function HomeView({
                         href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.propertyEnquiry(prop.title))}`}
                         target="_blank"
                         rel="noreferrer"
+                        aria-label={`Enquire about ${prop.title} on WhatsApp`}
                         className="h-11 w-11 shrink-0 rounded-xl bg-[#10B981]/20 hover:bg-[#10B981]/30 text-[#10B981] border border-[#10B981]/30 flex items-center justify-center transition-all"
                       >
-                        <Phone className="h-4.5 w-4.5" />
+                        <Phone className="h-4 w-4" />
                       </a>
                     </div>
                   </div>
@@ -467,12 +541,13 @@ export default function HomeView({
               );
             })}
           </div>
+          )}
 
           {/* View All Properties Bottom CTA */}
           <div className="mt-12 text-center">
             <button
               onClick={() => onNavigate("properties")}
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-slate-800 border border-white/10 hover:border-white/20 rounded-full font-bold text-white text-xs transition-all group hover:bg-[#D4AF37] hover:text-slate-950"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-slate-800 border border-white/10 hover:border-white/20 rounded-full font-bold text-white text-xs transition-all group hover:bg-[#D4AF37] hover:text-slate-950"
             >
               View All Premium Listings
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -495,22 +570,20 @@ export default function HomeView({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6.5">
-            {SERVICES.map((serv, idx) => (
+            {SERVICES.map((serv) => (
               <div
                 key={serv.id}
                 className="p-8 bg-slate-900 border border-white/5 rounded-2xl transition-all duration-300 hover:border-[#D4AF37]/50 hover:shadow-xl hover:shadow-[#D4AF37]/5 group"
               >
                 <div className="h-12 w-12 bg-[#D4AF37]/10 rounded-xl flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-slate-950 transition-all duration-300 mb-6">
                   {/* Assign standard beautiful icons dynamically */}
-                  {idx === 0 && <Building className="h-5.5 w-5.5" />}
-                  {idx === 1 && <Building className="h-5.5 w-5.5" />}
-                  {idx === 2 && <Layers className="h-5.5 w-5.5" />}
-                  {idx === 3 && <Compass className="h-5.5 w-5.5" />}
-                  {idx === 4 && <Building className="h-5.5 w-5.5" />}
-                  {idx === 5 && <MapPin className="h-5.5 w-5.5" />}
-                  {idx === 6 && <Sliders className="h-5.5 w-5.5" />}
-                  {idx === 7 && <Award className="h-5.5 w-5.5" />}
-                  {idx === 8 && <ShieldCheck className="h-5.5 w-5.5" />}
+                  {(() => {
+                    const ICON_MAP: Record<string, any> = {
+                      Building, Layers, Compass, MapPin, Sliders, Award, ShieldCheck
+                    };
+                    const Icon = ICON_MAP[(serv as any).icon] || Building;
+                    return <Icon className="h-5 w-5" />;
+                  })()}
                 </div>
 
                 <h3 className="text-white text-md font-semibold tracking-tight group-hover:text-[#D4AF37] transition-colors">
@@ -716,7 +789,7 @@ export default function HomeView({
               rel="noreferrer"
               className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#10B981] hover:bg-emerald-600 text-white font-bold text-sm flex items-center justify-center gap-2.5 shadow-md transition-all text-center"
             >
-              <Phone className="h-4.5 w-4.5" />
+              <Phone className="h-4 w-4" />
               WhatsApp Us Now
             </a>
           </div>

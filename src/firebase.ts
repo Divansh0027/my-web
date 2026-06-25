@@ -12,7 +12,6 @@ import {
   signInWithPopup, 
   GoogleAuthProvider, 
   signOut, 
-  User, 
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -27,7 +26,6 @@ import {
   getDoc, 
   doc, 
   setDoc, 
-  addDoc,
   deleteDoc,
   query, 
   where,
@@ -36,33 +34,28 @@ import {
   setLogLevel
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-// Optional compilation safeguard using Vite's eager glob to prevent build breaks when JSON doesn't exist
-const configFiles = (import.meta as any).glob("../firebase-applet-config.json", { eager: true }) as Record<string, any>;
-const firebaseConfigJson = configFiles["../firebase-applet-config.json"]?.default || {};
+import { getAnalytics, isSupported, logEvent as firebaseLogEvent, Analytics } from "firebase/analytics";
 
 import { Property, Enquiry } from "./types";
-import { SAMPLE_PROPERTIES } from "./data/sampleData";
-
-const envApiKey = (import.meta as any).env.VITE_FIREBASE_API_KEY;
-const isProd = (import.meta as any).env.PROD;
 
 const firebaseConfig = {
-  apiKey: envApiKey && envApiKey.trim() !== "" ? envApiKey : firebaseConfigJson.apiKey,
-  projectId: (import.meta as any).env.VITE_FIREBASE_PROJECT_ID || firebaseConfigJson.projectId,
-  authDomain: (import.meta as any).env.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfigJson.authDomain,
-  storageBucket: (import.meta as any).env.VITE_FIREBASE_STORAGE_BUCKET || firebaseConfigJson.storageBucket,
-  messagingSenderId: (import.meta as any).env.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseConfigJson.messagingSenderId,
-  appId: (import.meta as any).env.VITE_FIREBASE_APP_ID || firebaseConfigJson.appId,
-  firestoreDatabaseId: (import.meta as any).env.VITE_FIREBASE_DATABASE_ID || firebaseConfigJson.firestoreDatabaseId || (firebaseConfigJson as any).databaseId,
-  measurementId: firebaseConfigJson.measurementId || ""
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID,
+  measurementId: ""
 };
 
-// Fail loudly in production if crucial keys are missing
-if (isProd) {
-  const missingKeys = [];
-  if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("placeholder")) missingKeys.push("VITE_FIREBASE_API_KEY");
-  if (!firebaseConfig.projectId || firebaseConfig.projectId.includes("placeholder")) missingKeys.push("VITE_FIREBASE_PROJECT_ID");
-  if (missingKeys.length > 0) {
+const isProd = import.meta.env.PROD;
+const missingKeys: string[] = [];
+if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("placeholder")) missingKeys.push("VITE_FIREBASE_API_KEY");
+if (!firebaseConfig.projectId || firebaseConfig.projectId.includes("placeholder")) missingKeys.push("VITE_FIREBASE_PROJECT_ID");
+if (missingKeys.length > 0) {
+  console.error("Missing Firebase environment variables:", missingKeys.join(", "));
+  if (isProd) {
     throw new Error(`Production Build/Deployment Error: Missing required Firebase environment variables/config: ${missingKeys.join(", ")}`);
   }
 }
@@ -74,30 +67,32 @@ try {
   console.warn("Could not set Firestore log level", e);
 }
 
-// Detect if we are using the placeholder setup
-const isPlaceholder = false;
-
-let app;
+let app: any;
 let authInstance: Auth | undefined;
 let dbInstance: Firestore | undefined;
 let storageInstance: FirebaseStorage | undefined;
+let analyticsInstance: Analytics | undefined;
 
-if (!isPlaceholder) {
+try {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
   try {
-    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-    try {
-      dbInstance = initializeFirestore(app, {
-      }, firebaseConfig.firestoreDatabaseId);
-    } catch (firestoreError) {
-      console.warn("initializeFirestore with settings failed, using standard fallback", firestoreError);
-      dbInstance = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-    }
-    authInstance = getAuth(app);
-    storageInstance = getStorage(app);
-  } catch (error) {
-    console.warn("Failed to initialize remote Firebase. Falling back to local state.", error);
-    
+    dbInstance = initializeFirestore(app, {
+    }, firebaseConfig.firestoreDatabaseId);
+  } catch (firestoreError) {
+    console.warn("initializeFirestore with settings failed, using standard fallback", firestoreError);
+    dbInstance = getFirestore(app, firebaseConfig.firestoreDatabaseId);
   }
+  authInstance = getAuth(app);
+  storageInstance = getStorage(app);
+  
+  isSupported().then(supported => {
+    if (supported && app) {
+      analyticsInstance = getAnalytics(app);
+    }
+  });
+} catch (error) {
+  console.warn("Failed to initialize remote Firebase. Falling back to local state.", error);
+  
 }
 
 // Error handling for Firestore according to instructions
@@ -116,42 +111,53 @@ export interface FirestoreErrorInfo {
   path: string | null;
   authInfo: {
     userId?: string | null;
-    email?: string | null;
-    emailVerified?: boolean | null;
     isAnonymous?: boolean | null;
   }
 }
 
-function handleFirestoreError(
+export class FirestoreError extends Error {
+  constructor(public info: FirestoreErrorInfo) {
+    super(info.error);
+    this.name = 'FirestoreError';
+  }
+}
+
+export function handleFirestoreError(
   error: unknown,
   operationType: OperationType,
   path: string | null
-): void {
+): FirestoreErrorInfo {
   const currentAuth = authInstance;
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error 
       ? error.message 
       : String(error),
     authInfo: {
-      userId: currentAuth?.currentUser?.uid,
-      email: currentAuth?.currentUser?.email,
-      emailVerified: currentAuth?.currentUser?.emailVerified,
-      isAnonymous: currentAuth?.currentUser?.isAnonymous,
+      userId: currentAuth?.currentUser?.uid ?? null,
+      isAnonymous: currentAuth?.currentUser?.isAnonymous ?? null,
     },
     operationType,
     path
   };
-  // Log for debugging but do NOT rethrow.
-  // Callers (addProperty, updatePropertyInDb, etc.)
-  // already return false on failure. Rethrowing here
-  // causes uncaught exceptions in App.tsx handlers.
   console.warn(
     "[Shiv Saya] Firestore operation failed:",
-    JSON.stringify(errInfo, null, 2)
+    { operationType: errInfo.operationType, path: errInfo.path, error: errInfo.error, userId: errInfo.authInfo.userId }
   );
-  // Do not throw — return cleanly so callers
-  // can handle the false return value gracefully
+  return errInfo;
 }
+
+export const trackEvent = (eventName: string, eventParams?: Record<string, string | number | boolean>) => {
+  if (analyticsInstance) {
+    try {
+      firebaseLogEvent(analyticsInstance, eventName, eventParams);
+    } catch (e) {
+      console.warn("Analytics tracking failed", e);
+    }
+  } else {
+    // Analytics is commonly blocked by ad/tracker blockers
+    console.debug(`[Analytics] ${eventName}`, eventParams);
+  }
+};
 
 // Validate connection on startup silently if using real Firestore
 // (Removed active getDocFromServer call to prevent pre-emptive connection warning spam on slow cold start)
@@ -163,7 +169,7 @@ export async function testFirestoreConnection(): Promise<{ success: boolean; mes
   }
   try {
     // Attempting to read a public or dummy document to force a backend network call
-    await getDocFromServer(doc(dbInstance, 'test', 'network_diagnostic_check'));
+    await getDocFromServer(doc(dbInstance as Firestore, 'test', 'network_diagnostic_check'));
     return { success: true, message: "Firestore connection successful." };
   } catch (error: any) {
     let message = "Firestore connection failed.";
@@ -181,6 +187,9 @@ export async function testFirestoreConnection(): Promise<{ success: boolean; mes
  * Helper to recursively remove undefined values from objects before writing them to Firestore.
  */
 export function cleanForFirestore<T>(obj: T): T {
+  if (typeof obj === "string") {
+    return obj.trim().substring(0, 500000) as unknown as T;
+  }
   if (obj === null || typeof obj !== "object") {
     return obj;
   }
@@ -207,40 +216,29 @@ export function cleanForFirestore<T>(obj: T): T {
  */
 
 // Local state for LocalStorage fallback
-const LOCAL_STORAGE_ENQUIRIES_KEY = "ssp_local_enquiries";
 const LOCAL_STORAGE_FAVORITES_KEY = "ssp_local_favorites";
-const LOCAL_STORAGE_USER_KEY = "ssp_local_user";
 
 export interface ClientUser {
   uid: string;
   email: string;
   displayName: string;
-  photoURL?: string;
-  phone?: string;
-  isAdmin?: boolean;
+  photoURL?: string | undefined;
+  phone?: string | undefined;
+  isAdmin?: boolean | undefined;
 }
+
+export type AuthResult = { success: true; user: ClientUser } | { success: false; error: string; banned?: boolean };
 
 
 const authListeners = new Set<(user: ClientUser | null) => void>();
 
 
 export const getProperties = async (): Promise<Property[]> => {
-  
-  
   try {
-    const q = collection(dbInstance, "properties");
+    const q = collection(dbInstance as Firestore, "properties");
     const snapshot = await getDocs(q);
     if (snapshot.empty) {
-      // Seed Firestore with sample properties if empty (helpful for deployment first runs)
-      for (const prop of SAMPLE_PROPERTIES) {
-        try {
-          await setDoc(doc(dbInstance, "properties", prop.id), prop);
-        } catch (seedErr) {
-          console.warn(`Failed to seed custom property ${prop.id}. This is expected if client writes are forbidden:`, seedErr);
-        }
-      }
-      
-      return SAMPLE_PROPERTIES;
+      return [];
     }
     const list: Property[] = [];
     snapshot.forEach((docSnap) => {
@@ -248,8 +246,8 @@ export const getProperties = async (): Promise<Property[]> => {
     });
     return list;
   } catch (error) {
-    console.warn("Error reading from Firestore properties, using fallback.", error);
-    return SAMPLE_PROPERTIES;
+    console.warn("Error reading from Firestore properties.", error);
+    return [];
   }
 };
 
@@ -260,12 +258,12 @@ export const bootstrapFirstAdmin = async (
   if (!dbInstance || !uid || !email) return;
   try {
     // Check if ANY admins exist in Firestore
-    const adminsColl = collection(dbInstance, "admins");
+    const adminsColl = collection(dbInstance as Firestore, "admins");
     const snap = await getDocs(adminsColl);
     
     // Only seed if completely empty (first run)
     if (snap.empty) {
-      await setDoc(doc(dbInstance, "admins", uid), {
+      await setDoc(doc(dbInstance as Firestore, "admins", uid), {
         uid,
         email: email.toLowerCase(),
         addedAt: new Date().toISOString(),
@@ -282,15 +280,15 @@ export const getPropertyById = async (id: string): Promise<Property | null> => {
   
   
   try {
-    const docRef = doc(dbInstance, "properties", id);
+    const docRef = doc(dbInstance as Firestore, "properties", id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       return docSnap.data() as Property;
     }
-    return SAMPLE_PROPERTIES.find(p => p.id === id) || null;
+    return null;
   } catch (error) {
     console.warn("Error getting property by ID, using local.", error);
-    return SAMPLE_PROPERTIES.find(p => p.id === id) || null;
+    return null;
   }
 };
 
@@ -304,7 +302,7 @@ export const submitEnquiry = async (enquiry: Enquiry): Promise<{ success: boolea
   
 
   try {
-    await setDoc(doc(dbInstance, "enquiries", completeEnquiry.id), cleanForFirestore(completeEnquiry));
+    await setDoc(doc(dbInstance as Firestore, "enquiries", completeEnquiry.id), cleanForFirestore(completeEnquiry));
     return { success: true, savedLocally: false };
   } catch (error) {
     console.warn("Firestore submitEnquiry failed, falling back to local storage:", error);
@@ -336,7 +334,7 @@ export const toggleFavorite = async (userId: string, propertyId: string): Promis
   }
 
   try {
-    const favRef = doc(dbInstance, "users", userId, "favorites", propertyId);
+    const favRef = doc(dbInstance as Firestore, "users", userId, "favorites", propertyId);
     const snapshot = await getDoc(favRef);
     if (snapshot.exists()) {
       await deleteDoc(favRef);
@@ -345,7 +343,7 @@ export const toggleFavorite = async (userId: string, propertyId: string): Promis
     }
     return true;
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `users/${userId}/favorites/${propertyId}`);
+    console.error('toggleFavorite failed:', error);
     return false;
   }
 };
@@ -357,7 +355,7 @@ export const getFavorites = async (userId: string): Promise<string[]> => {
   }
 
   try {
-    const q = collection(dbInstance, "users", userId, "favorites");
+    const q = collection(dbInstance as Firestore, "users", userId, "favorites");
     const snapshot = await getDocs(q);
     const list: string[] = [];
     snapshot.forEach((docSnap) => {
@@ -380,97 +378,104 @@ export const getFavorites = async (userId: string): Promise<string[]> => {
 // Subscribe to auth state changes
 export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
   const handleUserChange = async (fireUser: import("firebase/auth").User | null) => {
-    if (fireUser) {
-      // Background verification of banned status
-      let isBanned = false;
-      let isAdmin = false;
-      try {
-        const uDoc = await getDoc(doc(dbInstance, "users", fireUser.uid));
-        if (uDoc.exists() && uDoc.data()?.banned === true) {
-          isBanned = true;
+    try {
+      if (fireUser) {
+        // Background verification of banned status
+        let isBanned = false;
+        let isAdmin = false;
+        try {
+          const uDoc = await getDoc(doc(dbInstance as Firestore, "users", fireUser.uid));
+          if (uDoc.exists() && uDoc.data()?.banned === true) {
+            isBanned = true;
+          }
+        } catch (err) {
+          console.warn("Banned check failed on auth subscription change", err);
         }
-      } catch (err) {
-        console.warn("Banned check failed on auth subscription change", err);
-      }
 
-      if (isBanned) {
-        if (authInstance) await signOut(authInstance);
+        if (isBanned) {
+          if (authInstance) await signOut(authInstance);
+          
+          callback(null);
+          return;
+        }
+
         
-        callback(null);
-        return;
-      }
-
-      
-      try {
-        // First try UID-based lookup (correct standard)
-        const aDoc = await getDoc(
-          doc(dbInstance, "admins", fireUser.uid)
-        );
-        if (aDoc.exists()) {
-          isAdmin = true;
-        } else if (fireUser.email) {
-          // Fallback: check if any admin doc has matching
-          // email field (handles legacy email-keyed docs)
-          const emailQuery = query(
-            collection(dbInstance, "admins"),
-            where("email", "==", fireUser.email.toLowerCase())
+        try {
+          // First try UID-based lookup (correct standard)
+          const aDoc = await getDoc(
+            doc(dbInstance as Firestore, "admins", fireUser.uid)
           );
-          const emailSnap = await getDocs(emailQuery);
-          if (!emailSnap.empty) {
+          if (aDoc.exists()) {
             isAdmin = true;
-            // Migrate legacy doc: create correct UID-keyed
-            // doc and remove the old email-keyed one
-            const legacyDoc = emailSnap.docs[0];
-            if (legacyDoc.id !== fireUser.uid) {
-              try {
-                await setDoc(
-                  doc(dbInstance, "admins", fireUser.uid),
-                  {
-                    uid: fireUser.uid,
-                    email: fireUser.email.toLowerCase(),
-                    addedAt: legacyDoc.data().addedAt || new Date().toISOString(),
-                    migratedAt: new Date().toISOString()
-                  }
-                );
-                await deleteDoc(
-                  doc(dbInstance, "admins", legacyDoc.id)
-                );
-              } catch (migErr) {
-                console.warn("Admin doc migration skipped:", migErr);
+          } else if (fireUser.email) {
+            // Fallback: check if any admin doc has matching
+            // email field (handles legacy email-keyed docs)
+            const emailQuery = query(
+              collection(dbInstance as Firestore, "admins"),
+              where("email", "==", fireUser.email.toLowerCase())
+            );
+            const emailSnap = await getDocs(emailQuery);
+            if (!emailSnap.empty) {
+              isAdmin = true;
+              // Migrate legacy doc: create correct UID-keyed
+              // doc and remove the old email-keyed one
+              const legacyDoc = emailSnap.docs[0];
+              if (legacyDoc.id !== fireUser.uid) {
+                try {
+                  await setDoc(
+                    doc(dbInstance as Firestore, "admins", fireUser.uid),
+                    {
+                      uid: fireUser.uid,
+                      email: fireUser.email.toLowerCase(),
+                      addedAt: legacyDoc.data().addedAt || new Date().toISOString(),
+                      migratedAt: new Date().toISOString()
+                    }
+                  );
+                  await deleteDoc(
+                    doc(dbInstance as Firestore, "admins", legacyDoc.id)
+                  );
+                } catch (migErr) {
+                  console.warn("Admin doc migration skipped:", migErr);
+                }
               }
             }
           }
+        } catch (err) {
+          console.warn("Admin status check failed:", err);
         }
-      } catch (err) {
-        console.warn("Admin status check failed:", err);
-      }
 
-      // Bootstrap first admin on first run
-      // Only runs if admins collection is empty
-      // and this user is a known default admin
-      const DEFAULT_ADMINS = ["admin@shivsayaproperties.com", "shivsayaproperties@gmail.com", "divansh0027@gmail.com"];
-      if (
-        fireUser.email && 
-        DEFAULT_ADMINS.includes(fireUser.email.toLowerCase())
-      ) {
-        bootstrapFirstAdmin(fireUser.uid, fireUser.email)
-          .catch(e => console.warn("Bootstrap skipped:", e));
-      }
+        // Bootstrap first admin on first run
+        // Only runs if admins collection is empty
+        const envAdmins = import.meta.env.VITE_INITIAL_ADMINS;
+        const DEFAULT_ADMINS = envAdmins ? envAdmins.split(',').map((e: string) => e.trim().toLowerCase()) : [];
+        if (
+          fireUser.email && 
+          DEFAULT_ADMINS.includes(fireUser.email.toLowerCase())
+        ) {
+          bootstrapFirstAdmin(fireUser.uid, fireUser.email)
+            .catch(e => console.warn("Bootstrap skipped:", e));
+        }
 
-      callback({
-        uid: fireUser.uid,
-        email: fireUser.email || "",
-        displayName: fireUser.displayName || fireUser.email?.split("@")[0] || "User",
-        photoURL: fireUser.photoURL || undefined,
-        isAdmin: isAdmin || fireUser.email?.toLowerCase() === "divansh0027@gmail.com"
-      });
-    } else {
+        callback({
+          uid: fireUser.uid,
+          email: fireUser.email || "",
+          displayName: fireUser.displayName || fireUser.email?.split("@")[0] || "User",
+          photoURL: fireUser.photoURL || undefined,
+          isAdmin: isAdmin
+        });
+      } else {
+        callback(null);
+      }
+    } catch (err) {
+      console.error('Auth subscription error:', err);
       callback(null);
     }
   };
 
   if (authInstance) {
-    const unsubscribe = onAuthStateChanged(authInstance, handleUserChange);
+    const unsubscribe = onAuthStateChanged(authInstance, (user) => {
+      handleUserChange(user);
+    });
     
     const listener = (user: ClientUser | null) => {
       if (!authInstance.currentUser) {
@@ -506,13 +511,13 @@ export const isAdminUser = (user: ClientUser | null | undefined): boolean => {
 
 // Real-time Database Config synchronizers (Issue 3, 8 & 11)
 export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (() => void) => {
-  const getMergedAdmins = () => {
+  const getMergedAdmins = (): string[] => {
     try {
       const stored = localStorage.getItem("ssp_admin_emails");
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch (_) {}
+      if (!stored) return [];
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.every(x => typeof x === 'string')) return parsed;
+    } catch { /* ignore */ }
     return [];
   };
 
@@ -525,7 +530,7 @@ export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (()
   }
 
   try {
-    const unsub = onSnapshot(collection(dbInstance, "admins"), (snapshot) => {
+    const unsub = onSnapshot(collection(dbInstance as Firestore, "admins"), (snapshot) => {
       const list: string[] = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
@@ -557,7 +562,7 @@ export const addRemoteAdmin = async (email: string): Promise<boolean> => {
   if (!dbInstance) return false;
   
   try {
-    const q = query(collection(dbInstance, "users"), where("email", "==", cleanEmail));
+    const q = query(collection(dbInstance as Firestore, "users"), where("email", "==", cleanEmail));
     const snap = await getDocs(q);
     if (snap.empty) {
       // User has not signed up yet. Store as a
@@ -565,7 +570,7 @@ export const addRemoteAdmin = async (email: string): Promise<boolean> => {
       // When they sign up, Fix 3 migration will
       // convert it to a UID-keyed doc automatically.
       await setDoc(
-        doc(dbInstance, "admins", cleanEmail),
+        doc(dbInstance as Firestore, "admins", cleanEmail),
         {
           email: cleanEmail,
           addedAt: new Date().toISOString(),
@@ -576,9 +581,10 @@ export const addRemoteAdmin = async (email: string): Promise<boolean> => {
       console.log("Pending admin email registered:", cleanEmail);
       return true;
     }
-    const uid = snap.docs[0].id;
+    const docData = snap.docs[0].data();
+    const uid = docData.uid || snap.docs[0].id;
 
-    await setDoc(doc(dbInstance, "admins", uid), {
+    await setDoc(doc(dbInstance as Firestore, "admins", uid), {
       email: cleanEmail,
       uid,
       addedAt: new Date().toISOString()
@@ -595,13 +601,17 @@ export const removeRemoteAdmin = async (email: string): Promise<boolean> => {
   if (!dbInstance) return false;
   
   try {
-    const q = query(collection(dbInstance, "users"), where("email", "==", cleanEmail));
+    const q = query(collection(dbInstance as Firestore, "users"), where("email", "==", cleanEmail));
     const snap = await getDocs(q);
     if (!snap.empty) {
-      await deleteDoc(doc(dbInstance, "admins", snap.docs[0].id));
+      const docData = snap.docs[0].data();
+      const uid = docData.uid || snap.docs[0].id;
+      await deleteDoc(doc(dbInstance as Firestore, "admins", uid));
       return true;
     }
-    return false;
+    // Also try checking the pending admins keyed by email
+    await deleteDoc(doc(dbInstance as Firestore, "admins", cleanEmail));
+    return true;
   } catch (err) {
     console.warn("Failed removing remote admin", err);
     return false;
@@ -619,7 +629,7 @@ export const subscribeRemoteControls = (callback: (controls: any) => void): (() 
   }
   
   try {
-    const unsub = onSnapshot(doc(dbInstance, "controls", "site_controls"), (docSnap) => {
+    const unsub = onSnapshot(doc(dbInstance as Firestore, "controls", "site_controls"), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         callback(data);
@@ -642,7 +652,7 @@ export const updateRemoteControls = async (controls: any): Promise<boolean> => {
   localStorage.setItem("ssp_controls", JSON.stringify(controls));
   if (!dbInstance) return false;
   try {
-    await setDoc(doc(dbInstance, "controls", "site_controls"), cleanForFirestore(controls), { merge: true });
+    await setDoc(doc(dbInstance as Firestore, "controls", "site_controls"), cleanForFirestore(controls), { merge: true });
     return true;
   } catch (err) {
     console.warn("Failed updating remote controls", err);
@@ -661,7 +671,7 @@ export const subscribeRemoteSettings = (callback: (settings: any) => void): (() 
   }
   
   try {
-    const unsub = onSnapshot(doc(dbInstance, "settings", "business_settings"), (docSnap) => {
+    const unsub = onSnapshot(doc(dbInstance as Firestore, "settings", "business_settings"), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         callback(data);
@@ -686,7 +696,7 @@ export const updateRemoteSettings = async (settings: any): Promise<boolean> => {
   localStorage.setItem("ssp_settings", JSON.stringify(settings));
   if (!dbInstance) return false;
   try {
-    await setDoc(doc(dbInstance, "settings", "business_settings"), cleanForFirestore(settings), { merge: true });
+    await setDoc(doc(dbInstance as Firestore, "settings", "business_settings"), cleanForFirestore(settings), { merge: true });
     return true;
   } catch (err) {
     console.warn("Failed updating remote settings", err);
@@ -694,16 +704,24 @@ export const updateRemoteSettings = async (settings: any): Promise<boolean> => {
   }
 };
 
-export const loginWithGoogle = async (): Promise<ClientUser | null> => {
+export const loginWithGoogle = async (): Promise<AuthResult> => {
+  if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("placeholder")) {
+    return { success: false, error: "Missing VITE_FIREBASE_API_KEY. Please set this in the AI Studio secret manager / .env." };
+  }
+  if (!firebaseConfig.authDomain || firebaseConfig.authDomain.includes("placeholder")) {
+    return { success: false, error: "Missing VITE_FIREBASE_AUTH_DOMAIN." };
+  }
+
   if (authInstance) {
     try {
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
       const result = await signInWithPopup(authInstance, provider);
       if (result.user) {
         let isBanned = false;
         let banMsg = "Your account has been suspended. Contact support@shivsayaproperties.com.";
         try {
-          const docRef = doc(dbInstance, "users", result.user.uid);
+          const docRef = doc(dbInstance as Firestore, "users", result.user.uid);
           const uDoc = await getDoc(docRef);
           if (uDoc.exists() && uDoc.data()?.banned === true) {
             isBanned = true;
@@ -717,70 +735,98 @@ export const loginWithGoogle = async (): Promise<ClientUser | null> => {
 
         if (isBanned) {
           await signOut(authInstance);
-          throw new Error(banMsg);
+          return { success: false, error: banMsg, banned: true };
         }
 
-                return {
-          uid: result.user.uid,
-          email: result.user.email || "",
-          displayName: result.user.displayName || "User",
-          photoURL: result.user.photoURL || undefined
+        return {
+          success: true,
+          user: {
+            uid: result.user.uid,
+            email: result.user.email || "",
+            displayName: result.user.displayName || "User",
+            photoURL: result.user.photoURL || undefined
+          }
         };
       }
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof Error && error.message.includes("suspended")) {
-        throw error;
+        return { success: false, error: error.message, banned: true };
       }
-      throw error;
+      if (error?.code === "auth/internal-error" || error?.message?.includes("internal-error")) {
+        return { success: false, error: "Firebase Error (auth/internal-error): Google Sign-in failed. Please verify in your Firebase Console that 'Google' is enabled under Authentication -> Sign-in Method, AND that you have selected a 'Support Email'. Ensure VITE_FIREBASE_AUTH_DOMAIN is correctly set."};
+      }
+      if (error?.code === "auth/popup-blocked") {
+        return { success: false, error: "Google Sign-in popup was blocked. Please open this app in a new tab to sign in, or allow popups." };
+      }
+      if (error?.code === "auth/popup-closed-by-user") {
+        return { success: false, error: "Sign-in was cancelled." };
+      }
+      return { success: false, error: error instanceof Error ? error.message : "Authentication failed" };
     }
   }
 
-  throw new Error("Authentication service is unavailable. Please check your internet connection and refresh the page. If the issue persists, contact support@shivsayaproperties.com");
+  return { success: false, error: "Authentication service is unavailable. Please check your internet connection and refresh the page. If the issue persists, contact support@shivsayaproperties.com" };
 };
 
 
 
-export const loginWithEmailPassword = async (email: string, password: string): Promise<ClientUser> => {
+export const loginWithEmailPassword = async (email: string, password: string): Promise<AuthResult> => {
+  if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("placeholder")) {
+    return { success: false, error: "Missing VITE_FIREBASE_API_KEY. Please set this in the AI Studio secret manager / .env." };
+  }
   if (authInstance) {
-    const result = await signInWithEmailAndPassword(authInstance, email, password);
-    let isBanned = false;
-    let banMsg = "Your account has been suspended. Contact support@shivsayaproperties.com.";
     try {
-      const uDoc = await getDoc(doc(dbInstance, "users", result.user.uid));
-      if (uDoc.exists() && uDoc.data()?.banned === true) {
-        isBanned = true;
-        if (uDoc.data()?.bannedMessage) {
-          banMsg = uDoc.data().bannedMessage;
+      const result = await signInWithEmailAndPassword(authInstance, email, password);
+      let isBanned = false;
+      let banMsg = "Your account has been suspended. Contact support@shivsayaproperties.com.";
+      try {
+        const uDoc = await getDoc(doc(dbInstance as Firestore, "users", result.user.uid));
+        if (uDoc.exists() && uDoc.data()?.banned === true) {
+          isBanned = true;
+          if (uDoc.data()?.bannedMessage) {
+            banMsg = uDoc.data().bannedMessage;
+          }
         }
+      } catch (err) {
+        console.warn("Banned check failed on Firebase:", err);
       }
-    } catch (err) {
-      console.warn("Banned check failed on Firebase:", err);
-    }
 
-    if (isBanned) {
-      await signOut(authInstance);
-      throw new Error(banMsg);
-    }
+      if (isBanned) {
+        await signOut(authInstance);
+        return { success: false, error: banMsg, banned: true };
+      }
 
-    return {
-      uid: result.user.uid,
-      email: result.user.email || "",
-      displayName: result.user.displayName || result.user.email?.split("@")[0] || "User",
-      photoURL: result.user.photoURL || undefined
-    };
+      return {
+        success: true,
+        user: {
+          uid: result.user.uid,
+          email: result.user.email || "",
+          displayName: result.user.displayName || result.user.email?.split("@")[0] || "User",
+          photoURL: result.user.photoURL || undefined
+        }
+      };
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("suspended")) {
+        return { success: false, error: error.message, banned: true };
+      }
+      return { success: false, error: error instanceof Error ? error.message : "Authentication failed" };
+    }
   }
 
-  throw new Error("Authentication service is unavailable. Please check your internet connection and refresh the page. If the issue persists, contact support@shivsayaproperties.com");
+  return { success: false, error: "Authentication service is unavailable. Please check your internet connection and refresh the page. If the issue persists, contact support@shivsayaproperties.com" };
 };
 
 export const signUpWithEmailPassword = async (name: string, email: string, phone: string, password: string): Promise<ClientUser> => {
+  if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("placeholder")) {
+    throw new Error("Missing VITE_FIREBASE_API_KEY. Please set this in the AI Studio secret manager / .env.");
+  }
   if (authInstance) {
     try {
       const result = await createUserWithEmailAndPassword(authInstance, email, password);
       await updateProfile(result.user, { displayName: name });
 
       try {
-        await setDoc(doc(dbInstance, "users", result.user.uid), {
+        await setDoc(doc(dbInstance as Firestore, "users", result.user.uid), {
           uid: result.user.uid,
           email,
           displayName: name,
@@ -824,6 +870,12 @@ export const logoutUser = async (): Promise<void> => {
   if (authInstance) {
     await signOut(authInstance);
   }
+  
+  // Clear sensitive local caches on logout
+  localStorage.removeItem("ssp_local_favorites");
+  localStorage.removeItem("ssp_local_enquiries");
+  localStorage.removeItem("ssp_property_draft_v2");
+  
   authListeners.forEach(cb => cb(null));
 };
 
@@ -831,7 +883,7 @@ export const updateUserProfileDetails = async (name: string, email: string, phon
   if (authInstance?.currentUser) {
     try {
       await updateProfile(authInstance.currentUser, { displayName: name });
-      const docRef = doc(dbInstance, "users", authInstance.currentUser.uid);
+      const docRef = doc(dbInstance as Firestore, "users", authInstance.currentUser.uid);
       await setDoc(docRef, {
         uid: authInstance.currentUser.uid,
         displayName: name,
@@ -853,11 +905,11 @@ export const addProperty = async (property: Property): Promise<boolean> => {
   
 
   try {
-    const docRef = doc(dbInstance, "properties", property.id);
+    const docRef = doc(dbInstance as Firestore, "properties", property.id);
     await setDoc(docRef, cleanForFirestore(property));
     return true;
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `properties/${property.id}`);
+    console.error('addProperty failed:', error);
     return false;
   }
 };
@@ -869,23 +921,7 @@ export const subscribeProperties = (callback: (props: Property[]) => void): (() 
   let isCancelled = false;
 
   const init = async () => {
-    const q = collection(dbInstance, "properties");
-    try {
-      const snapshot = await getDocs(q);
-      
-      if (snapshot.empty && !isCancelled) {
-        // Seed sequentially to avoid individual onSnapshot emission flashes
-        for (const prop of SAMPLE_PROPERTIES) {
-          try {
-            await setDoc(doc(dbInstance, "properties", prop.id), prop);
-          } catch (e) {
-            console.log("Info: Properties seeding skipped/restricted.", e);
-          }
-        }
-      }
-    } catch (err) {
-      console.log("Info: Properties offline/seeding pass complete, proceeding with listener:", err instanceof Error ? err.message : err);
-    }
+    const q = collection(dbInstance as Firestore, "properties");
 
     if (isCancelled) return;
 
@@ -895,18 +931,12 @@ export const subscribeProperties = (callback: (props: Property[]) => void): (() 
         snap.forEach((docSnap) => {
           list.push(docSnap.data() as Property);
         });
-        if (list.length === 0) {
-          callback(SAMPLE_PROPERTIES);
-        } else {
-          callback(list);
-        }
+        callback(list);
       }, (error) => {
-        console.log("Info: Live stream offline fallback active. Using local properties list:", error instanceof Error ? error.message : error);
-        callback(SAMPLE_PROPERTIES);
+        console.warn("Error subscribing to properties:", error);
       });
     } catch (snapErr) {
-      console.log("Info: Reading properties dynamic stream active with local fallback:", snapErr instanceof Error ? snapErr.message : snapErr);
-      callback(SAMPLE_PROPERTIES);
+      console.warn("Failed to subscribe properties:", snapErr);
     }
   };
 
@@ -923,23 +953,39 @@ export const subscribeProperties = (callback: (props: Property[]) => void): (() 
 export const updatePropertyInDb = async (property: Property): Promise<boolean> => {
   
   try {
-    const docRef = doc(dbInstance, "properties", property.id);
+    const docRef = doc(dbInstance as Firestore, "properties", property.id);
     await setDoc(docRef, cleanForFirestore(property), { merge: true });
     return true;
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `properties/${property.id}`);
+    console.error('updatePropertyInDb failed:', error);
     return false;
+  }
+};
+
+export const logAdminAction = async (action: string, targetId: string, adminEmail: string, details?: any) => {
+  if (!dbInstance) return;
+  try {
+    const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+    await addDoc(collection(dbInstance as Firestore, 'audit_logs'), {
+      action,
+      targetId,
+      adminEmail,
+      details: cleanForFirestore(details || {}),
+      timestamp: serverTimestamp()
+    });
+  } catch (err) {
+    console.error("Failed to write audit log:", err);
   }
 };
 
 export const deletePropertyFromDb = async (id: string): Promise<boolean> => {
   
   try {
-    const docRef = doc(dbInstance, "properties", id);
+    const docRef = doc(dbInstance as Firestore, "properties", id);
     await deleteDoc(docRef);
     return true;
   } catch (error) {
-    handleFirestoreError(error, OperationType.DELETE, `properties/${id}`);
+    console.error('deletePropertyFromDb failed:', error);
     return false;
   }
 };
@@ -948,15 +994,20 @@ export const isStorageConnected = (): boolean => {
   return !!storageInstance;
 };
 
-export const uploadPropertyImage = async (userId: string, file: File, fileName: string): Promise<string> => {
-  if (!storageInstance) {
-    throw new Error("Storage is not activated or placeholder configuration detected");
-  }
+export async function uploadPropertyImage(userId: string, file: File, fileName: string): Promise<{ url: string }> {
+  if (!storageInstance) throw new Error("Storage not initialized");
   const timestamp = Date.now();
   const cleanName = fileName.replace(/[^a-zA-Z0-9.]/g, "_");
   const storageRef = ref(storageInstance, `properties/${userId}/${timestamp}_${cleanName}`);
-  const snapshot = await uploadBytes(storageRef, file);
-  return await getDownloadURL(snapshot.ref);
-};
+  try {
+    const snapshot = await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(snapshot.ref);
+    return { url };
+  } catch (err) {
+    console.error("Upload failed:", err);
+    throw new Error("Image upload failed. Please try again.");
+  }
+}
+
 
 

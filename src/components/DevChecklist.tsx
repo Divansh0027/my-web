@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Settings, X, CheckSquare, Server, FileText, Globe, Users, Check } from "lucide-react";
 
@@ -185,17 +185,19 @@ export default function DevChecklist() {
                             const isChecked = !!checkedState[item.id];
                             return (
                               <label
+                                htmlFor={`checklist-item-${item.id}`}
                                 key={item.id}
                                 className="flex items-start gap-3 p-2 bg-slate-950/30 hover:bg-slate-950/60 border border-white/5 rounded-xl transition-all cursor-pointer select-none"
                               >
                                 <input
+                                  id={`checklist-item-${item.id}`}
                                   type="checkbox"
                                   checked={isChecked}
                                   onChange={() => handleToggle(item.id)}
                                   className="hidden"
                                 />
                                 <div
-                                  className={`h-4.5 w-4.5 rounded border flex items-center justify-center shrink-0 mt-0.5 transition-all ${
+                                  className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 mt-0.5 transition-all ${
                                     isChecked
                                       ? "border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37]"
                                       : "border-white/15 bg-slate-950"
@@ -219,9 +221,24 @@ export default function DevChecklist() {
                   })}
                 </div>
 
-                {/* Footer status quote */}
-                <div className="p-4 bg-slate-950 border-t border-white/5 text-[10px] text-slate-500 font-medium text-center">
-                  Local Dev Session Checklist &bull; Persisting in Sandbox
+                {/* Footer status quote & Links */}
+                <div className="p-4 bg-slate-950 border-t border-white/5 flex flex-col gap-3">
+                  <div className="flex gap-2 justify-center">
+                     <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-[10px] text-[#D4AF37] hover:underline flex items-center gap-1">
+                       <Server className="h-3 w-3" /> Firebase
+                     </a>
+                     <span className="text-slate-600">&bull;</span>
+                     <a href="https://vercel.com/dashboard" target="_blank" rel="noreferrer" className="text-[10px] text-white hover:underline flex items-center gap-1">
+                       <Globe className="h-3 w-3" /> Vercel
+                     </a>
+                     <span className="text-slate-600">&bull;</span>
+                     <a href="https://github.com" target="_blank" rel="noreferrer" className="text-[10px] text-slate-300 hover:underline flex items-center gap-1">
+                       <Globe className="h-3 w-3" /> GitHub
+                     </a>
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-medium text-center">
+                    Local Dev Session Checklist &bull; Persisting in Sandbox
+                  </div>
                 </div>
               </div>
             </motion.div>

@@ -6,17 +6,17 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Eye, EyeOff, Mail, Lock, User, Phone, CheckCircle, AlertCircle } from "lucide-react";
+import FocusLock from "react-focus-lock";
 import { loginWithGoogle, loginWithEmailPassword, signUpWithEmailPassword, sendPasswordReset } from "../firebase";
 import { BUSINESS_CONFIG } from "../config";
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (user: any, message: string) => void;
   initialTab?: "login" | "signup";
 }
 
-export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "login" }: LoginModalProps) {
+export default function LoginModal({ isOpen, onClose, initialTab = "login" }: LoginModalProps) {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   
   // Login State
@@ -47,6 +47,29 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
   
   // Validation Errors
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Helper to calculate password strength (0-4)
+  const getPasswordStrength = (pass: string) => {
+    let score = 0;
+    if (!pass) return 0;
+    if (pass.length > 5) score += 1;
+    if (pass.length >= 8) score += 1;
+    if (/[A-Z]/.test(pass) && /[a-z]/.test(pass)) score += 1;
+    if (/[0-9]/.test(pass) && /[^A-Za-z0-9]/.test(pass)) score += 1;
+    return score;
+  };
+  const passwordStrength = getPasswordStrength(signupPassword);
+
+  useEffect(() => {
+    if (forgotSuccess) {
+      const timeoutId = setTimeout(() => {
+        onClose();
+        setShowForgotForm(false);
+        setForgotSuccess("");
+      }, 5000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [forgotSuccess, onClose]);
 
   useEffect(() => {
     if (isOpen) {
@@ -134,10 +157,11 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
     setAuthError("");
     setIsSubmitting(true);
     try {
-      const user = await loginWithGoogle();
-      if (user) {
-        onSuccess(user, `Welcome back, ${user.displayName}!`);
+      const result = await loginWithGoogle();
+      if (result.success) {
         onClose();
+      } else {
+        setAuthError(result.error);
       }
     } catch (err: any) {
       let friendlyMessage = err.message || "Failed to log in with Google.";
@@ -157,9 +181,12 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
     setAuthError("");
     setIsSubmitting(true);
     try {
-      const user = await loginWithEmailPassword(loginEmail, loginPassword);
-      onSuccess(user, `Welcome back, ${user.displayName}!`);
-      onClose();
+      const result = await loginWithEmailPassword(loginEmail, loginPassword);
+      if (result.success) {
+        onClose();
+      } else {
+        setAuthError(result.error);
+      }
     } catch (err: any) {
       let friendlyMessage = err.message || "Failed to login. Please try again.";
       if (friendlyMessage.includes("auth/user-not-found") || friendlyMessage.includes("user-not-found")) {
@@ -189,8 +216,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
     const formattedPhone = `+91 ${cleanPhone.slice(0, 5)} ${cleanPhone.slice(5)}`;
 
     try {
-      const user = await signUpWithEmailPassword(signupName, signupEmail, formattedPhone, signupPassword);
-      onSuccess(user, "Account created successfully! Welcome to Shiv Saya Properties.");
+      await signUpWithEmailPassword(signupName, signupEmail, formattedPhone, signupPassword);
       onClose();
     } catch (err: any) {
       let friendlyMessage = err.message || "Failed to sign up. Please try again.";
@@ -244,13 +270,14 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
           />
 
           {/* Modal Container */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 50 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 50 }}
-            transition={{ type: "spring", damping: 25, stiffness: 350 }}
-            className="bg-[#0F172A] border-0 sm:border border-white/10 w-full sm:max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-3xl shadow-2xl flex flex-col justify-between overflow-y-auto relative z-10"
-          >
+          <FocusLock>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 50 }}
+              transition={{ type: "spring", damping: 25, stiffness: 350 }}
+              className="bg-[#0F172A] border-0 sm:border border-white/10 w-full sm:max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-3xl shadow-2xl flex flex-col justify-between overflow-y-auto relative z-10"
+            >
             {/* Header */}
             <div>
               <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-slate-900/60 sticky top-0 z-10 backdrop-blur-sm">
@@ -273,7 +300,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
                 {/* Auth Screen Errors */}
                 {authError && (
                   <div className="p-3.5 bg-red-500/10 border border-red-500/25 rounded-xl text-red-400 text-xs flex gap-2.5 items-start">
-                    <AlertCircle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                     <span>{authError}</span>
                   </div>
                 )}
@@ -314,7 +341,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
                     <form onSubmit={handleLoginSubmit} className="space-y-4">
                       {/* Email */}
                       <div className="space-y-1.5 animate-fadeIn">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
+                        <label htmlFor="login-email-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
                         <div className="relative">
                           <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
                           <input
@@ -339,7 +366,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
                       {/* Password */}
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                          <label htmlFor="login-password-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
                           <button
                             type="button"
                             onClick={() => setShowForgotForm(true)}
@@ -374,7 +401,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
                         id="login-submit-btn"
                         disabled={isLoginDisabled}
                         type="submit"
-                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 text-xs font-black uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-98 transition-all disabled:opacity-40 select-none cursor-pointer flex items-center justify-center gap-1"
+                        className="w-full py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 text-xs font-black uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-98 transition-all disabled:opacity-40 select-none cursor-pointer flex items-center justify-center gap-1"
                       >
                         {isSubmitting ? "Authenticating Session..." : "Secure Sign-In"}
                       </button>
@@ -385,7 +412,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
                     <form onSubmit={handleSignupSubmit} className="space-y-4">
                       {/* Name */}
                       <div className="space-y-1.5 animate-fadeIn">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name</label>
+                        <label htmlFor="signup-name-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name</label>
                         <div className="relative">
                           <User className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
                           <input
@@ -409,7 +436,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
 
                       {/* Email */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
+                        <label htmlFor="signup-email-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
                         <div className="relative">
                           <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
                           <input
@@ -433,7 +460,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
 
                       {/* Phone */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Verified Contact Number</label>
+                        <label htmlFor="signup-phone-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Verified Contact Number</label>
                         <div className="relative">
                           <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
                           <span className="absolute left-9.5 top-3.5 text-xs text-slate-500 select-none font-bold">+91</span>
@@ -462,7 +489,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
                       {/* Password */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                          <label htmlFor="signup-password-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
                           <div className="relative">
                             <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
                             <input
@@ -484,10 +511,26 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
                               {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </button>
                           </div>
+                          {signupPassword.length > 0 && (
+                            <div className="flex gap-1 mt-1.5 h-1">
+                              {[0, 1, 2, 3].map((idx) => {
+                                let color = "bg-slate-800";
+                                if (idx < passwordStrength) {
+                                  if (passwordStrength < 2) color = "bg-red-500";
+                                  else if (passwordStrength < 3) color = "bg-orange-500";
+                                  else if (passwordStrength < 4) color = "bg-[#D4AF37]";
+                                  else color = "bg-emerald-500";
+                                }
+                                return (
+                                  <div key={idx} className={`flex-1 rounded-full ${color} transition-all duration-300`} />
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Confirm</label>
+                          <label htmlFor="signup-confirm-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Confirm</label>
                           <div className="relative">
                             <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
                             <input
@@ -524,7 +567,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
                       )}
 
                       {/* Agree T&C checkbox */}
-                      <label className="flex items-start gap-2.5 text-[11px] text-slate-400 hover:text-slate-300 cursor-pointer pt-1 select-none">
+                      <label htmlFor="signup-agree-checkbox" className="flex items-start gap-2.5 text-[11px] text-slate-400 hover:text-slate-300 cursor-pointer pt-1 select-none">
                         <input
                           id="signup-agree-checkbox"
                           type="checkbox"
@@ -540,7 +583,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
                         id="signup-submit-btn"
                         disabled={isSignupDisabled}
                         type="submit"
-                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 text-xs font-black uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-98 transition-all disabled:opacity-40 select-none cursor-pointer flex items-center justify-center gap-1"
+                        className="w-full py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 text-xs font-black uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-98 transition-all disabled:opacity-40 select-none cursor-pointer flex items-center justify-center gap-1"
                       >
                         {isSubmitting ? "Creating Credentials..." : "Access Account"}
                       </button>
@@ -577,13 +620,13 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
 
                         {forgotError && (
                           <div className="p-3.5 bg-red-500/10 border border-red-500/25 rounded-xl text-red-400 text-xs flex gap-2.5 items-start">
-                            <AlertCircle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
+                            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                             <span>{forgotError}</span>
                           </div>
                         )}
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
+                          <label htmlFor="forgot-email-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
                           <div className="relative">
                             <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
                             <input
@@ -638,7 +681,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
                       className="w-full py-3 flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-900 text-xs font-bold rounded-xl border border-white/10 shadow-lg active:scale-98 transition-all select-none cursor-pointer"
                     >
                       {/* Google G SVG */}
-                      <svg className="h-4.5 w-4.5 shrink-0" viewBox="0 0 24 24">
+                      <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
@@ -679,6 +722,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialTab = "l
               </div>
             )}
           </motion.div>
+          </FocusLock>
         </div>
       )}
     </AnimatePresence>

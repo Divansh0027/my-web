@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import FocusLock from "react-focus-lock";
 import { Menu, X, PhoneCall, User as UserIcon, Heart, LogOut, ChevronDown, Clipboard, Shield } from "lucide-react";
 import { logoutUser, subscribeAuth } from "../firebase";
 import Logo from "./Logo";
@@ -18,10 +19,18 @@ interface NavbarProps {
   isAdmin?: boolean;
 }
 
-export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth, isAdmin = false }: NavbarProps) {
+const navLinks = [
+  { name: "Home", view: "home" },
+  { name: "Properties", view: "properties" },
+  { name: "Services", view: "services_sec" },
+  { name: "About", view: "about_sec" },
+  { name: "Contact", view: "contact_sec" }
+];
+
+export default React.memo(function Navbar({ currentView, onNavigate, savedCount, onOpenAuth, isAdmin = false }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<import("../firebase").ClientUser | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -33,6 +42,7 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
         setIsScrolled(false);
       }
     };
+    
     window.addEventListener("scroll", handleScroll);
     
     // Subscribe to auth state
@@ -65,14 +75,6 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
     onNavigate("home");
   };
 
-  const navLinks = [
-    { name: "Home", view: "home" },
-    { name: "Properties", view: "properties" },
-    { name: "Services", view: "services_sec" },
-    { name: "About", view: "about_sec" },
-    { name: "Contact", view: "contact_sec" }
-  ];
-
   const handleLinkClick = (view: string) => {
     setIsMobileMenuOpen(false);
     if (view === "services_sec" || view === "about_sec" || view === "contact_sec") {
@@ -92,7 +94,7 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
   return (
     <nav
       id="main-navbar"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 font-sans ${
+      className={`absolute top-0 left-0 right-0 z-50 transition-all duration-300 font-sans ${
         isScrolled 
           ? "bg-[#0F172A]/90 backdrop-blur-md border-b border-white/5 py-4 shadow-xl" 
           : "bg-transparent py-5"
@@ -120,6 +122,7 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
                 <button
                   key={link.name}
                   onClick={() => handleLinkClick(link.view)}
+                  aria-current={isSelected ? "page" : undefined}
                   className="relative text-sm font-medium text-slate-300 hover:text-white transition-colors duration-150 py-1"
                 >
                   {link.name}
@@ -168,6 +171,7 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
               href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.general)}`}
               target="_blank"
               rel="noreferrer"
+              aria-label="Chat on WhatsApp"
               className="flex items-center justify-center h-10 w-10 rounded-full bg-[#10B981]/20 hover:bg-[#10B981]/30 text-[#10B981] transition-all relative group"
             >
               <div className="absolute inset-0 rounded-full bg-[#10B981]/10 animate-ping group-hover:animate-none"></div>
@@ -182,7 +186,7 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
                   className="flex items-center gap-2 bg-slate-800/40 border border-white/5 pl-3 pr-2 py-1.5 rounded-full hover:bg-slate-800 transition-colors cursor-pointer select-none"
                 >
                   {user.photoURL ? (
-                    <img src={user.photoURL} alt={user.displayName} referrerPolicy="no-referrer" className="h-6 w-6 rounded-full object-cover" />
+                    <img width={800} height={600} src={user.photoURL} alt={user.displayName} referrerPolicy="no-referrer" className="h-6 w-6 rounded-full object-cover" loading="lazy" />
                   ) : (
                     <div className="h-6 w-6 bg-slate-700 rounded-full flex items-center justify-center text-[#D4AF37] font-bold text-[10px]">
                       {user.displayName?.charAt(0).toUpperCase()}
@@ -281,7 +285,7 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
       {/* Mobile Menu Drawer */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <>
+          <FocusLock>
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -316,7 +320,7 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
                     <div className="space-y-4">
                       <div className="flex items-center gap-3 border-b border-white/5 pb-3.5">
                         {user.photoURL ? (
-                          <img src={user.photoURL} alt={user.displayName} className="h-10 w-10 rounded-full object-cover border border-[#D4AF37]/30" />
+                          <img width={800} height={600} src={user.photoURL} alt={user.displayName} className="h-10 w-10 rounded-full object-cover border border-[#D4AF37]/30" loading="lazy" />
                         ) : (
                           <div className="h-10 w-10 bg-slate-800 rounded-full flex items-center justify-center text-[#D4AF37] font-bold text-sm">
                             {user.displayName?.charAt(0).toUpperCase()}
@@ -379,15 +383,19 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
 
                 {/* Menu items */}
                 <div className="flex flex-col gap-4">
-                  {navLinks.map((link) => (
+                  {navLinks.map((link) => {
+                    const isSelected = currentView === link.view;
+                    return (
                     <button
                       key={link.name}
                       onClick={() => handleLinkClick(link.view)}
+                      aria-current={isSelected ? "page" : undefined}
                       className="text-left py-2 text-base font-medium text-slate-300 hover:text-white border-b border-white/5"
                     >
                       {link.name}
                     </button>
-                  ))}
+                    )
+                  })}
 
                   {isAdmin && (
                     <button
@@ -413,6 +421,7 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
                   href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.general)}`}
                   target="_blank"
                   rel="noreferrer"
+                  aria-label="Chat on WhatsApp"
                   className="w-full py-3 rounded-xl bg-[#10B981] text-white text-sm font-bold flex items-center justify-center gap-2"
                 >
                   <PhoneCall className="h-4 w-4" />
@@ -420,9 +429,9 @@ export default function Navbar({ currentView, onNavigate, savedCount, onOpenAuth
                 </a>
               </div>
             </motion.div>
-          </>
+          </FocusLock>
         )}
       </AnimatePresence>
     </nav>
   );
-}
+});

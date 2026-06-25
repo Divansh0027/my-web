@@ -3,18 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+export type ModerationStatus = "live" | "pending" | "rejected";
+export type AvailabilityStatus = "Ready to Move" | "Under Construction" | "New Launch";
+export type City = "Gurugram" | "Noida" | "Greater Noida West" | "Delhi" | "Faridabad" | "Ghaziabad";
+
 export interface Property {
   id: string;
   title: string;
   description: string;
   price: number; // in Rupees, e.g. 8500000 for 85 Lakhs
-  priceString: string; // e.g. "₹85 Lakhs" or "₹2.8 Crore"
-  location: string;
+    location: string;
   locality: string; // e.g. "Dwarka Sector 10" or "Noida Sector 18"
-  city: "Gurugram" | "Noida" | "Greater Noida West" | "South Delhi" | "Dwarka" | "Aerocity" | "Faridabad" | "Rohini" | "Pitampura" | "Vasant Kunj" | "Saket" | string;
+  city: City;
   type: "Flat" | "Villa" | "Plot" | "Builder Floor" | "Commercial" | string;
   category: "Buy" | "Rent" | "Commercial" | "Plots" | string;
-  bhk: number | string | null; // e.g. 3, or null for commercial/plot
+  bhk: number | null; // e.g. 3, or null for commercial/plot
   area: number; // in sqft or sqyd
   areaUnit: "sqft" | "sqyd" | string;
   floor: string | number; // e.g. "5th" or "Ground Floor" or "1st"
@@ -27,10 +30,11 @@ export interface Property {
   featured: boolean;
   newLaunch: boolean;
   verified: boolean;
-  status?: "live" | "pending" | "rejected" | "featured" | string;
-  listingStatus?: "Ready to Move" | "Under Construction" | "New Launch" | string;
+  moderationStatus?: ModerationStatus;
+  availabilityStatus?: AvailabilityStatus;
   postedDate: string;
-  postedBy: "Owner" | "Builder" | "Agent" | string;
+  postedBy: "Owner" | "Builder" | "Agent";
+  customPostedBy?: string;
   bathrooms?: number;
   totalFloors?: number;
   possession?: string;
@@ -43,6 +47,7 @@ export interface Property {
   userEmail?: string;
   userName?: string;
   rejectionReason?: string;
+  auditLog?: { action: string; reason: string; timestamp: string; user: string }[];
   videoUrl?: string;
   imageUrls?: string[];
 }
@@ -85,6 +90,8 @@ export interface ListingFilters {
   statuses: string[];
   postedBy: string[];
 }
+
+export type View = "home" | "properties" | "saved" | "list_property" | "profile" | "admin" | string;
 
 export type AdminTab = "overview" | "properties" | "pending_approvals" | "enquiries" | "users" | "analytics" | "settings" | "checklist";
 

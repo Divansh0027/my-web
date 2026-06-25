@@ -6,13 +6,13 @@
 import { Phone, Mail, MapPin, Instagram, Facebook, Linkedin, ArrowUp } from "lucide-react";
 import Logo from "./Logo";
 import { BUSINESS_CONFIG } from "../config";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 interface FooterProps {
   onNavigate: (view: string) => void;
 }
 
-export default function Footer({ onNavigate }: FooterProps) {
+export default React.memo(function Footer({ onNavigate }: FooterProps) {
   const [showWhatsappBtn, setShowWhatsappBtn] = useState(true);
 
   useEffect(() => {
@@ -80,13 +80,13 @@ export default function Footer({ onNavigate }: FooterProps) {
 
             <div className="flex items-center gap-3">
               <a href="#" className="h-9 w-9 bg-slate-800/60 hover:bg-[#D4AF37] hover:text-slate-950 rounded-full flex items-center justify-center text-slate-400 transition-all">
-                <Facebook className="h-4.5 w-4.5" />
+                <Facebook className="h-4 w-4" />
               </a>
               <a href="#" className="h-9 w-9 bg-slate-800/60 hover:bg-[#D4AF37] hover:text-slate-950 rounded-full flex items-center justify-center text-slate-400 transition-all">
-                <Instagram className="h-4.5 w-4.5" />
+                <Instagram className="h-4 w-4" />
               </a>
               <a href="#" className="h-9 w-9 bg-slate-800/60 hover:bg-[#D4AF37] hover:text-slate-950 rounded-full flex items-center justify-center text-slate-400 transition-all">
-                <Linkedin className="h-4.5 w-4.5" />
+                <Linkedin className="h-4 w-4" />
               </a>
             </div>
           </div>
@@ -176,7 +176,7 @@ export default function Footer({ onNavigate }: FooterProps) {
             </div>
 
             <div className="flex gap-3 items-center text-sm">
-              <Phone className="h-4.5 w-4.5 text-[#D4AF37] shrink-0" />
+              <Phone className="h-4 w-4 text-[#D4AF37] shrink-0" />
               <a href={`tel:${BUSINESS_CONFIG.businessPhone}`} className="hover:text-[#D4AF37] transition-colors text-slate-400">
                 {BUSINESS_CONFIG.businessPhone}
               </a>
@@ -188,7 +188,7 @@ export default function Footer({ onNavigate }: FooterProps) {
             </div>
 
             <div className="flex gap-3 items-center text-sm">
-              <Mail className="h-4.5 w-4.5 text-[#D4AF37] shrink-0" />
+              <Mail className="h-4 w-4 text-[#D4AF37] shrink-0" />
               <a href={`mailto:${BUSINESS_CONFIG.businessEmail}`} className="hover:text-[#D4AF37] transition-colors text-slate-400 break-all">
                 {BUSINESS_CONFIG.businessEmail}
               </a>
@@ -218,7 +218,7 @@ export default function Footer({ onNavigate }: FooterProps) {
               className="h-9 w-9 bg-slate-800 hover:bg-[#D4AF37] hover:text-slate-950 text-slate-300 rounded-full flex items-center justify-center transition-all shadow-md ml-2"
               title="Return to top"
             >
-              <ArrowUp className="h-4.5 w-4.5" />
+              <ArrowUp className="h-4 w-4" />
             </button>
           </div>
 
@@ -247,4 +247,4 @@ export default function Footer({ onNavigate }: FooterProps) {
       
     </footer>
   );
-}
+});

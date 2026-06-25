@@ -24,13 +24,15 @@ try {
   console.warn("Error reading ssp_settings on boot", e);
 }
 
+export const WHATSAPP_MESSAGES = {
+  general: "Hi Shiv Saya Properties! I'm interested.",
+  propertyEnquiry: (title: string) => `Hi! I'm interested in: ${title}. Please share more details.`,
+  consultation: "Hi! I'd love a free consultation.",
+  investment: "Hi! I'd love to chat with your expert.",
+};
+
 export const BUSINESS_CONFIG = {
   ...defaults,
   ...(storedSettings || {}),
-  whatsappMessages: {
-    general: "Hi Shiv Saya Properties! I'm interested.",
-    propertyEnquiry: (title: string) => `Hi! I'm interested in: ${title}. Please share more details.`,
-    consultation: "Hi! I'd love a free consultation.",
-    investment: "Hi! I'd love to chat with your expert.",
-  }
+  whatsappMessages: WHATSAPP_MESSAGES
 };

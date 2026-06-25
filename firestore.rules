@@ -19,10 +19,8 @@ service cloud.firestore {
     // Admin check: Strict UID-based validation using admins collection.
     function isAdmin() { 
       return isSignedIn() && (
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
-        request.auth.token.email == 'divansh0027@gmail.com' ||
-        request.auth.token.email == 'admin@shivsayaproperties.com' ||
-        request.auth.token.email == 'shivsayaproperties@gmail.com'
+        request.auth.token.email in ["admin@shivsayaproperties.com", "shivsayaproperties@gmail.com", "divansh0027@gmail.com"] ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
 
@@ -47,7 +45,8 @@ service cloud.firestore {
         && data.phone is string && data.phone.size() > 0 && data.phone.size() <= 30
         && data.propertyId is string && data.propertyId.size() > 0 && data.propertyId.size() <= 128
         && data.propertyName is string && data.propertyName.size() > 0 && data.propertyName.size() <= 300
-        && (data.type == 'enquiry' || data.type == 'visit');
+        && (data.type == 'enquiry' || data.type == 'visit')
+        && (!data.keys().hasAny(['message']) || (data.message is string && data.message.size() <= 1000));
     }
 
     // Users collection
@@ -65,48 +64,52 @@ service cloud.firestore {
 
     // Properties collection
     match /properties/{propertyId} {
-      allow read: if true;
+      allow read: if resource.data.moderationStatus == 'live' ||
+        (request.auth != null && (
+          resource.data.userId == request.auth.uid ||
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        ));
       
-      allow create: if (isSignedIn() && incoming().status == 'pending' && incoming().userId == request.auth.uid && isValidProperty(incoming())) || isAdmin();
+      allow create: if (isSignedIn() && incoming().moderationStatus == 'pending' && incoming().userId == request.auth.uid && isValidProperty(incoming())) || isAdmin();
       
       allow update: if isAdmin() || (
         isSignedIn() && 
-        existing().status == 'pending' && 
+        existing().moderationStatus == 'pending' && 
         existing().userId == request.auth.uid && 
-        incoming().status == 'pending' &&
+        incoming().moderationStatus == 'pending' &&
         incoming().userId == existing().userId &&
         isValidProperty(incoming())
       );
       
       allow delete: if isAdmin() || (
         isSignedIn() && 
-        existing().status == 'pending' && 
+        existing().moderationStatus == 'pending' && 
         existing().userId == request.auth.uid
       );
     }
 
     // Enquiries collection
     match /enquiries/{enquiryId} {
-      allow create: if isValidId(enquiryId) && isValidEnquiry(incoming());
+      allow create: if isSignedIn() && isValidId(enquiryId) && isValidEnquiry(incoming());
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow update, delete: if isAdmin();
     }
 
     match /controls/{controlId} {
-      allow read: if true;
+      allow read: if isSignedIn();
       allow write: if isAdmin();
     }
     match /settings/{settingId} {
-      allow read: if true;
+      allow read: if true; // settings are public for UI (business phone, etc.)
       allow write: if isAdmin();
+    }
+    match /audit_logs/{logId} {
+      allow read, write: if isAdmin();
     }
 
     match /admins/{adminUid} {
-      allow read: if true;
-      allow write: if isAdmin() || 
-        (isSignedIn() && request.auth.token.email == 'admin@shivsayaproperties.com') || 
-        (isSignedIn() && request.auth.token.email == 'divansh0027@gmail.com') || 
-        (isSignedIn() && request.auth.token.email == 'shivsayaproperties@gmail.com');
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == adminUid);
+      allow write: if isAdmin();
     }
   }
 }

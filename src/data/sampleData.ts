@@ -11,10 +11,9 @@ export const SAMPLE_PROPERTIES: Property[] = [
     title: "Premium 3 BHK Apartment in Dwarka",
     description: "Experience luxury living in one of Dwarka's most sought-after residential sectors. This carefully designed 3 BHK home features high ceilings, premium Italian marble flooring, pre-installed split ACs, and a sprawling modular kitchen with chimney. Located in a secured, gated high-rise society with 24/7 power backup, high-speed automated elevators, a state-of-the-art gym, and professional multi-tier security. Perfect for families looking for a mixture of comfort, elegance, and stellar connectivity to Dwarka Expressway and Delhi Metro.",
     price: 8500000,
-    priceString: "₹85 Lakhs",
-    location: "Sector 10, Dwarka, Delhi",
+        location: "Sector 10, Dwarka, Delhi",
     locality: "Dwarka Sector 10",
-    city: "Dwarka",
+    city: "Delhi",
     type: "Flat",
     category: "Buy",
     bhk: 3,
@@ -40,9 +39,9 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: true,
     newLaunch: false,
     verified: true,
-    listingStatus: "Ready to Move",
-    status: "live",
-    postedBy: "Agent",
+    availabilityStatus: "Ready to Move",
+    moderationStatus: "live",
+    postedBy: "Owner",
     postedDate: "2026-06-01"
   },
   {
@@ -50,10 +49,9 @@ export const SAMPLE_PROPERTIES: Property[] = [
     title: "Modern 2 BHK Builder Floor",
     description: "A beautifully constructed independent builder floor situated in the leafy avenues of Pitampura. Designed with premium modern aesthetics, this ground-floor unit offers maximum privacy and excellent natural lighting. Built on a freehold plot with dedicated covered car parking, stylish False-ceilings with smart LED coves, a state-of-the-art modular kitchen, and luxury Jaguar bathroom fittings. Direct walking access to local parks and the bustling high-street markets, offering an unmatched private-residence lifestyle in North Delhi.",
     price: 5500000,
-    priceString: "₹55 Lakhs",
-    location: "Block RU, Pitampura, North Delhi",
+        location: "Block RU, Pitampura, North Delhi",
     locality: "Pitampura",
-    city: "Pitampura",
+    city: "Delhi",
     type: "Builder Floor",
     category: "Buy",
     bhk: 2,
@@ -77,8 +75,8 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: true,
     newLaunch: false,
     verified: true,
-    listingStatus: "Ready to Move",
-    status: "live",
+    availabilityStatus: "Ready to Move",
+    moderationStatus: "live",
     postedBy: "Owner",
     postedDate: "2026-06-05"
   },
@@ -87,8 +85,7 @@ export const SAMPLE_PROPERTIES: Property[] = [
     title: "Premium Commercial Shop in Sector 18",
     description: "High-exposure retail space located directly in Noida's primary commercial hub, Sector 18. This ground-floor commercial showroom features an expansive double-height glass frontage, offering ultimate visibility and maximum customer footfall. Located just a minute's walk from the Metro station, surrounded by top national banks, food courts, and premium outlets. Equipped with heavy load power allocation, separate wet-point provision, and centralized VRV air conditioning. Best suited for high-end retail, designer clothing boutiques, jewelry stores, or quick-service premium cafes.",
     price: 12000000,
-    priceString: "₹1.2 Crore",
-    location: "Sector 18 Hub, Noida",
+        location: "Sector 18 Hub, Noida",
     locality: "Noida Sector 18",
     city: "Noida",
     type: "Commercial",
@@ -113,9 +110,9 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: true,
     newLaunch: false,
     verified: true,
-    listingStatus: "Ready to Move",
-    status: "live",
-    postedBy: "Builder",
+    availabilityStatus: "Ready to Move",
+    moderationStatus: "live",
+    postedBy: "Owner",
     postedDate: "2026-05-28"
   },
   {
@@ -123,8 +120,7 @@ export const SAMPLE_PROPERTIES: Property[] = [
     title: "RERA Approved Residential Plot",
     description: "Invest in your future with this premium residential plot located in a fast-appreciating avenue of Greater Noida West. This plot is 100% RERA approved, completely clear title, and part of a luxury secured gated township featuring 30ft wide internal concrete roads, boundary wall, green parks, and modern sewage structures. Highly lucrative for self-construction or investment growth. Exceptional connectivity to NH-24 and Noida main sectors.",
     price: 2800000,
-    priceString: "₹28 Lakhs",
-    location: "Sector 2, Greater Noida West",
+        location: "Sector 2, Greater Noida West",
     locality: "Greater Noida West",
     city: "Greater Noida West",
     type: "Plot",
@@ -149,9 +145,9 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: false,
     newLaunch: true,
     verified: true,
-    listingStatus: "New Launch",
-    status: "live",
-    postedBy: "Builder",
+    availabilityStatus: "New Launch",
+    moderationStatus: "live",
+    postedBy: "Owner",
     postedDate: "2026-06-08"
   },
   {
@@ -159,8 +155,7 @@ export const SAMPLE_PROPERTIES: Property[] = [
     title: "Luxury 4 BHK Sovereign Villa",
     description: "An architectural masterpiece in the heart of Millennium City. This bespoke under-construction 4 BHK luxury villa offers double-height lounge ceilings, an ultra-modern private plunge pool, and expansive landscaped rooftop decks. Perfectly finished with high-end fixtures, internal marble architecture, triple-tier intelligent home automation, and dedicated rooms for domestic staff. Set inside a highly secure premier township in Gurugram Sector 57, offering deep tranquility alongside instant access to Sector 56 Metro and Golf Course Road.",
     price: 28000000,
-    priceString: "₹2.8 Crore",
-    location: "Sovereign Enclave, Sector 57, Gurugram",
+        location: "Sovereign Enclave, Sector 57, Gurugram",
     locality: "Gurugram Sector 57",
     city: "Gurugram",
     type: "Villa",
@@ -187,9 +182,9 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: true,
     newLaunch: true,
     verified: true,
-    listingStatus: "Under Construction",
-    status: "live",
-    postedBy: "Builder",
+    availabilityStatus: "Under Construction",
+    moderationStatus: "live",
+    postedBy: "Owner",
     postedDate: "2026-06-03"
   },
   {
@@ -197,8 +192,7 @@ export const SAMPLE_PROPERTIES: Property[] = [
     title: "Elegant 2 BHK High-Rise Flat",
     description: "An elegant, highly affordable 2 BHK apartment designed for optimal space utilization. Strategically located right on Neharpar bypass road in Faridabad Sector 86. This flat offers gorgeous panoramic views of the landscaped central parks from its double-balconies. Complete with high-quality tile work, a semi-modular layout kitchen, and complete safety grills. Secured society living with CCTV monitoring, designated children's slides/playgrounds, and highly affordable maintenance. Excellent choice for nuclear families and salary professionals.",
     price: 3800000,
-    priceString: "₹38 Lakhs",
-    location: "Greenwood Society, Sector 86, Faridabad",
+        location: "Greenwood Society, Sector 86, Faridabad",
     locality: "Faridabad Sector 86",
     city: "Faridabad",
     type: "Flat",
@@ -223,9 +217,9 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: false,
     newLaunch: false,
     verified: true,
-    listingStatus: "Ready to Move",
-    status: "live",
-    postedBy: "Agent",
+    availabilityStatus: "Ready to Move",
+    moderationStatus: "live",
+    postedBy: "Owner",
     postedDate: "2026-05-15"
   },
   {
@@ -233,10 +227,9 @@ export const SAMPLE_PROPERTIES: Property[] = [
     title: "Corporate 1 BHK Studio Apartment",
     description: "Indulge in a premium, ultra-convenient high-life lifestyle right next to Delhi's prestigious hospitality hub, Aerocity. This modern 1 BHK Studio Apartment is designed carefully with smart spaces, perfect soundproof dual-glazed windows to block runway noise, beautiful premium granite kitchen, and false ceilings. Enjoys 24-hr multi-level manned gate security, luxury lobby, and close walking access to Worldmark Food corridors and the Delhi Airport Metro line. Perfect high-demand asset for corporate delegates and frequent flyers.",
     price: 4200000,
-    priceString: "₹42 Lakhs",
-    location: "Aerocity Heights, Aerocity, New Delhi",
+        location: "Aerocity Heights, Aerocity, New Delhi",
     locality: "Aerocity",
-    city: "Aerocity",
+    city: "Delhi",
     type: "Flat",
     category: "Rent",
     bhk: 1,
@@ -259,9 +252,9 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: false,
     newLaunch: false,
     verified: true,
-    listingStatus: "Ready to Move",
-    status: "live",
-    postedBy: "Agent",
+    availabilityStatus: "Ready to Move",
+    moderationStatus: "live",
+    postedBy: "Owner",
     postedDate: "2026-05-20"
   },
   {
@@ -269,10 +262,9 @@ export const SAMPLE_PROPERTIES: Property[] = [
     title: "Elegant 3 BHK Builder Floor",
     description: "Ultra-modern freehold builder floor in a upscale residential sector of Rohini. Crafted with beautiful high-end stone elevation, modern semi-modular kitchen cabinetry, double-size bedrooms and high-grade anti-skid wardrobes. Comes with high-strength structural pillars, private stilt parking space, single point electrical wiring and separate drinking water connection. Enjoys great location proximity to direct public transport and local parks.",
     price: 7200000,
-    priceString: "₹72 Lakhs",
-    location: "Sector 24, Rohini, New Delhi",
+        location: "Sector 24, Rohini, New Delhi",
     locality: "Rohini Sector 24",
-    city: "Rohini",
+    city: "Delhi",
     type: "Builder Floor",
     category: "Buy",
     bhk: 3,
@@ -295,9 +287,9 @@ export const SAMPLE_PROPERTIES: Property[] = [
     featured: false,
     newLaunch: false,
     verified: true,
-    listingStatus: "Ready to Move",
-    status: "live",
-    postedBy: "Agent",
+    availabilityStatus: "Ready to Move",
+    moderationStatus: "live",
+    postedBy: "Owner",
     postedDate: "2026-06-04"
   }
 ];
@@ -330,15 +322,15 @@ export const TESTIMONIALS: Testimonial[] = [
 ];
 
 export const SERVICES = [
-  { id: "s-1", title: "Residential Properties", description: "Explore premium Apartments, luxury villas, and private builder floors across prime neighborhoods." },
-  { id: "s-2", title: "Commercial Properties", description: "Invest in high-footfall retail shops, Grade-A office spaces, and commercial showrooms." },
-  { id: "s-3", title: "Rental Solutions", description: "Hassle-free corporate rentals, family apartments, and luxury stays with strict agreement verification." },
-  { id: "s-4", title: "Investment Advisory", description: "Maximize your portfolio with RERA approved, high-growth prospective markets in Delhi NCR." },
-  { id: "s-5", title: "Builder Floors", description: "Secure modern independent floor properties with private staircases, stilt parking, and premium building." },
-  { id: "s-6", title: "Plots & Land", description: "Invest in freehold residential or industrial plots inside secure gated residential societies." },
-  { id: "s-7", title: "Property Documentation", description: "End-to-end guidance through title deed registry, conversion certificates, RERA forms, and sales deeds." },
-  { id: "s-8", title: "Property Valuation", description: "Accurate comparative market analysis of your land, apartment, or commercial setups." },
-  { id: "s-9", title: "Home Loan Assistance", description: "Fast-track documentation for bank loans matching with India's leading banks at the lowest interest rates." }
+  { id: "s-1", icon: "Building", title: "Residential Properties", description: "Explore premium Apartments, luxury villas, and private builder floors across prime neighborhoods." },
+  { id: "s-2", icon: "Building", title: "Commercial Properties", description: "Invest in high-footfall retail shops, Grade-A office spaces, and commercial showrooms." },
+  { id: "s-3", icon: "Layers", title: "Rental Solutions", description: "Hassle-free corporate rentals, family apartments, and luxury stays with strict agreement verification." },
+  { id: "s-4", icon: "Compass", title: "Investment Advisory", description: "Maximize your portfolio with RERA approved, high-growth prospective markets in Delhi NCR." },
+  { id: "s-5", icon: "Building", title: "Builder Floors", description: "Secure modern independent floor properties with private staircases, stilt parking, and premium building." },
+  { id: "s-6", icon: "MapPin", title: "Plots & Land", description: "Invest in freehold residential or industrial plots inside secure gated residential societies." },
+  { id: "s-7", icon: "Sliders", title: "Property Documentation", description: "End-to-end guidance through title deed registry, conversion certificates, RERA forms, and sales deeds." },
+  { id: "s-8", icon: "Award", title: "Property Valuation", description: "Accurate comparative market analysis of your land, apartment, or commercial setups." },
+  { id: "s-9", icon: "ShieldCheck", title: "Home Loan Assistance", description: "Fast-track documentation for bank loans matching with India's leading banks at the lowest interest rates." }
 ];
 
 export const WHY_CHOOSE_US = [
@@ -349,16 +341,10 @@ export const WHY_CHOOSE_US = [
 ];
 
 export const COVERED_AREAS = [
+  "Delhi",
   "Gurugram",
   "Noida",
   "Greater Noida West",
-  "South Delhi",
-  "Dwarka",
-  "Aerocity",
   "Faridabad",
-  "Ghaziabad",
-  "Rohini",
-  "Pitampura",
-  "Vasant Kunj",
-  "Saket"
+  "Ghaziabad"
 ];

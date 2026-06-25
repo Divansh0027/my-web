@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   LayoutDashboard, Building, Mail, Users, BarChart3, Settings,
-  Plus, Search, Filter, Trash2, Edit, Shield, Ban, UserCheck, 
+  Plus, Search, Trash2, Edit, Shield, 
   Download, RefreshCw, Check, X, Phone, Mail as MailIcon, 
-  ExternalLink, Eye, EyeOff, CheckSquare, Square, MoreVertical,
+  ExternalLink, Eye, EyeOff, CheckSquare,
   Sliders, AlertTriangle, ShieldCheck, Power, HelpCircle, AlertCircle, MapPin,
   Database
 } from "lucide-react";
@@ -22,6 +22,7 @@ import {
   updateRemoteControls, 
   updateRemoteSettings 
 } from "../firebase";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 
 interface AdminViewProps {
   currentView: string;
@@ -35,8 +36,8 @@ interface AdminViewProps {
 }
 
 export default function AdminView({
-  currentView,
-  onNavigate,
+  currentView: _currentView,
+  onNavigate: _onNavigate,
   properties,
   onToggleApproval,
   onDeleteProperty,
@@ -327,7 +328,7 @@ export default function AdminView({
     const finalReason = rejectReason + (rejectNotes ? `: ${rejectNotes}` : "");
     const updated = {
       ...rejectingProperty,
-      status: "rejected",
+      moderationStatus: "rejected" as const,
       rejectionReason: finalReason
     };
     executeOperation(() => {
@@ -379,7 +380,6 @@ export default function AdminView({
   // USER / BAN ACTIONS
   // ----------------------------------------------------
   const handleToggleBanUser = (uid: string, currentBanState: boolean) => {
-    const actionText = currentBanState ? "unban" : "suspend";
     const userObj = dbUsers.find(u => u.uid === uid);
     if (!userObj) return;
 
@@ -401,10 +401,10 @@ export default function AdminView({
           if (!currentBanState && userObj.email) {
             properties.forEach(prop => {
               if (prop.postedBy?.toLowerCase() === userObj.email.toLowerCase()) {
-                if (prop.status !== "rejected") {
+                if (prop.moderationStatus !== "rejected") {
                   onUpdateProperty({
                     ...prop,
-                    status: "rejected"
+                    moderationStatus: "rejected"
                   });
                 }
               }
@@ -465,7 +465,8 @@ export default function AdminView({
   };
 
   const handleRemoveAdminEmail = (emailToRemove: string) => {
-    if (emailToRemove.toLowerCase() === "admin@shivsayaproperties.com") {
+    const rootAdmin = import.meta.env.VITE_INITIAL_ADMINS?.split(',')[0].trim().toLowerCase();
+    if (rootAdmin && emailToRemove.toLowerCase() === rootAdmin) {
       onShowNotification("The supreme root master administrator account cannot be expunged!", "info");
       return;
     }
@@ -512,7 +513,7 @@ export default function AdminView({
   // ----------------------------------------------------
   // PROPERTY DISMISS / APPROVAL CONSTRAINTS
   // ----------------------------------------------------
-  const handlePropertyApprovalToggle = (id: string, currentStatus: string) => {
+  const handlePropertyApprovalToggle = (id: string, currentStatus: string | undefined) => {
     if (currentStatus === "pending") {
       setConfirmDialog({
         isOpen: true,
@@ -546,7 +547,7 @@ export default function AdminView({
   };
 
   const handlePropertyHideToggle = (prop: Property) => {
-    if (prop.status === "rejected") {
+    if (prop.moderationStatus === "rejected") {
       setConfirmDialog({
         isOpen: true,
         title: "Restore Property",
@@ -556,7 +557,7 @@ export default function AdminView({
           executeOperation(() => {
             onUpdateProperty({
               ...prop,
-              status: "pending"
+              moderationStatus: "pending"
             });
           }, "Listing is now pending review");
         }
@@ -607,28 +608,46 @@ export default function AdminView({
 
   const handleBulkApprove = () => {
     if (selectedProperties.length === 0) return;
-    executeOperation(() => {
-      selectedProperties.forEach(id => {
-        const found = properties.find(p => p.id === id);
-        if (found && found.status !== "live") {
-          onToggleApproval(id);
-        }
-      });
-      setSelectedProperties([]);
-    }, `Bulk approved ${selectedProperties.length} listings successfully`);
+    setConfirmDialog({
+      isOpen: true,
+      title: `Bulk Approve ${selectedProperties.length} Listings`,
+      message: `You are about to approve ${selectedProperties.length} selected listings. They will become immediately visible to the public. Proceed?`,
+      isDanger: false,
+      onConfirm: () => {
+        executeOperation(() => {
+          selectedProperties.forEach(id => {
+            const found = properties.find(p => p.id === id);
+            if (found && found.moderationStatus !== "live") {
+              onToggleApproval(id);
+            }
+          });
+          setSelectedProperties([]);
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        }, `Bulk approved ${selectedProperties.length} listings successfully`);
+      }
+    });
   };
 
   const handleBulkHide = () => {
     if (selectedProperties.length === 0) return;
-    executeOperation(() => {
-      selectedProperties.forEach(id => {
-        const found = properties.find(p => p.id === id);
-        if (found && found.status !== "rejected") {
-          onUpdateProperty({ ...found, status: "rejected" });
-        }
-      });
-      setSelectedProperties([]);
-    }, `Successfully rejected ${selectedProperties.length} selected listings`);
+    setConfirmDialog({
+      isOpen: true,
+      title: `Bulk Reject ${selectedProperties.length} Listings`,
+      message: `You are about to reject/hide ${selectedProperties.length} selected listings. They will no longer be visible to the public. Proceed?`,
+      isDanger: true,
+      onConfirm: () => {
+        executeOperation(() => {
+          selectedProperties.forEach(id => {
+            const found = properties.find(p => p.id === id);
+            if (found && found.moderationStatus !== "rejected") {
+              onUpdateProperty({ ...found, moderationStatus: "rejected" });
+            }
+          });
+          setSelectedProperties([]);
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        }, `Successfully rejected ${selectedProperties.length} selected listings`);
+      }
+    });
   };
 
   const handleBulkDelete = () => {
@@ -677,16 +696,15 @@ export default function AdminView({
       title,
       description,
       price,
-      priceString: price >= 10000000 ? `₹${(price / 10000000).toFixed(2)} Crore` : `₹${(price / 100000).toFixed(0)} Lakhs`,
-      locality: location,
-      city: "Delhi NCR",
-      category: transactionType === "Rent" ? "Rent" : "Buy",
+            locality: location,
+      city: "Noida",
+      category: type === "Commercial" ? "Commercial" : type === "Plot" ? "Plots" : transactionType === "Rent" ? "Rent" : "Buy",
       featured: false,
       newLaunch: true,
       verified: true,
       postedDate: new Date().toISOString().split("T")[0],
       location,
-      bhk: bhkStr,
+      bhk: bhkStr ? Number(bhkStr) : null,
       type,
       area,
       areaUnit: areaUnit || "Sq.Ft.",
@@ -694,10 +712,11 @@ export default function AdminView({
       floor: Number(data.get("floor")) || 0,
       totalFloors: Number(data.get("totalFloors")) || 4,
       possession: data.get("possession") as string || "Ready to Move",
-      postedBy: settings.businessEmail,
+      postedBy: "Agent",
+      customPostedBy: settings.businessEmail,
       postedByUid: "admin-system",
       createdAt: new Date().toISOString(),
-      status: controls.autoApproveListings ? "live" : "pending",
+      moderationStatus: controls.autoApproveListings ? "live" : "pending",
       images: [imageUrl],
       amenities: ["Water Storage", "Security Ward", "Spacious Balcony"],
       isPremium: data.get("isPremium") === "true",
@@ -707,7 +726,7 @@ export default function AdminView({
     executeOperation(() => {
       onAddProperty(newProp);
       setIsAddModalOpen(false);
-    }, `New direct listing added! status: ${newProp.status}`);
+    }, `New direct listing added! status: ${newProp.moderationStatus}`);
   };
 
   const handleUpdateEditProperty = (e: React.FormEvent<HTMLFormElement>) => {
@@ -723,7 +742,6 @@ export default function AdminView({
     const description = data.get("description") as string;
     const area = Number(data.get("area"));
     const areaUnit = data.get("areaUnit") as string;
-    const transactionType = data.get("transactionType") as "Buy" | "Rent";
     const imageUrl = data.get("imageUrl") as string;
 
     const updated: Property = {
@@ -732,14 +750,14 @@ export default function AdminView({
       description,
       price,
       location,
-      bhk: bhkStr,
+      bhk: bhkStr ? Number(bhkStr) : null,
       type,
       area,
       areaUnit,
-      bathrooms: Number(data.get("bathrooms")) || editingProperty.bathrooms,
-      floor: Number(data.get("floor")) || editingProperty.floor,
-      totalFloors: Number(data.get("totalFloors")) || editingProperty.totalFloors,
-      possession: data.get("possession") as string || editingProperty.possession,
+      bathrooms: Number(data.get("bathrooms")) || editingProperty.bathrooms || 0,
+      floor: Number(data.get("floor")) || editingProperty.floor || 0,
+      totalFloors: Number(data.get("totalFloors")) || editingProperty.totalFloors || 0,
+      possession: data.get("possession") as string || editingProperty.possession || "Ready to Move",
       images: imageUrl ? [imageUrl] : editingProperty.images,
       isPremium: data.get("isPremium") === "true",
       reraApproved: data.get("reraApproved") === "true"
@@ -756,31 +774,34 @@ export default function AdminView({
   // COMPUTED METRICS AND FILTERS
   // ----------------------------------------------------
   // 1. Properties filters
-  const filteredPropertiesings = properties.filter(p => {
+  const filteredPropertiesings = useMemo(() => properties.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(propertySearch.toLowerCase()) || 
                           p.location.toLowerCase().includes(propertySearch.toLowerCase());
     
     if (propertyStatusFilter !== "All") {
       let targetStatus = propertyStatusFilter.toLowerCase();
+      if (targetStatus === "featured") {
+        return matchesSearch && p.featured === true;
+      }
       if (targetStatus === "approved") {
         targetStatus = "live";
       } else if (targetStatus === "hidden") {
         targetStatus = "rejected";
       }
-      return matchesSearch && p.status === targetStatus;
+      return matchesSearch && p.moderationStatus === targetStatus;
     }
     return matchesSearch;
-  });
+  }), [properties, propertySearch, propertyStatusFilter]);
 
-  const sortedListings = [...filteredPropertiesings].sort((a, b) => {
+  const sortedListings = useMemo(() => [...filteredPropertiesings].sort((a, b) => {
     if (propertySort === "price-asc") return a.price - b.price;
     if (propertySort === "price-desc") return b.price - a.price;
     if (propertySort === "newest") return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
     return 0; // Default
-  });
+  }), [filteredPropertiesings, propertySort]);
 
   // 2. Enquiries filters
-  const filteredEnquiries = enquiries.filter(e => {
+  const filteredEnquiries = useMemo(() => enquiries.filter(e => {
     const matchesSearch = e.name.toLowerCase().includes(enquirySearch.toLowerCase()) ||
                           e.email.toLowerCase().includes(enquirySearch.toLowerCase()) ||
                           e.propertyName.toLowerCase().includes(enquirySearch.toLowerCase());
@@ -788,26 +809,37 @@ export default function AdminView({
       return matchesSearch && e.status === enquiryFilter;
     }
     return matchesSearch;
-  });
+  }), [enquiries, enquirySearch, enquiryFilter]);
 
   // 3. User filters
-  const filteredUsers = dbUsers.filter(u => {
+  const filteredUsers = useMemo(() => dbUsers.filter(u => {
     return u.displayName.toLowerCase().includes(userSearch.toLowerCase()) || 
            u.email.toLowerCase().includes(userSearch.toLowerCase());
-  });
+  }), [dbUsers, userSearch]);
 
   // 4. Stat counting variables
-  const approvedListingsCount = properties.filter(p => p.status === "live").length;
-  const pendingApprovalsCount = properties.filter(p => p.status === "pending").length;
+  const pendingProperties = useMemo(() => properties.filter(p => p.moderationStatus === "pending"), [properties]);
+  const approvedListingsCount = useMemo(() => properties.filter(p => p.moderationStatus === "live").length, [properties]);
+  const pendingApprovalsCount = pendingProperties.length;
   
   // FLAT RATE of 1% commission on all approved "Buy" (sale) properties for "Estimated Revenue"
-  const totalApprovedSalesValue = properties
-    .filter(p => p.status === "live" && (!p.transactionType || p.transactionType === "Buy"))
-    .reduce((sum, p) => sum + p.price, 0);
+  const totalApprovedSalesValue = useMemo(() => properties
+    .filter(p => p.moderationStatus === "live" && (!p.transactionType || p.transactionType === "Buy"))
+    .reduce((sum, p) => sum + p.price, 0), [properties]);
   const estimatedRevenue = Math.round(totalApprovedSalesValue * 0.01);
 
+  // Derived metrics for analytics tab
+  const threeBhkCount = useMemo(() => properties.filter(p => String(p.bhk || "").includes("3 BHK") || String(p.bhk || "").includes("3")).length, [properties]);
+  const villaCount = useMemo(() => properties.filter(p => String(p.type || "").toLowerCase().includes("villa")).length, [properties]);
+  const commercialCount = useMemo(() => properties.filter(p => String(p.type || "").toLowerCase().includes("plot") || String(p.type || "").toLowerCase().includes("office") || String(p.type || "").toLowerCase().includes("commercial")).length, [properties]);
+  const standardFlatsCount = useMemo(() => properties.filter(p => String(p.bhk || "").includes("1 BHK") || String(p.bhk || "").includes("2 BHK") || String(p.bhk || "").includes("1") || String(p.bhk || "").includes("2")).length, [properties]);
+  const newEnquiriesCount = useMemo(() => enquiries.filter(e => e.status === "New").length, [enquiries]);
+  const contactedEnquiriesCount = useMemo(() => enquiries.filter(e => e.status === "Contacted").length, [enquiries]);
+  const resolvedEnquiriesCount = useMemo(() => enquiries.filter(e => e.status === "Resolved").length, [enquiries]);
+  const unverifiedActivePropertiesCount = useMemo(() => properties.filter(p => !p.verified && p.moderationStatus !== "rejected").length, [properties]);
+
   // Formatting currency in Rupee (Cr / Lakh) formats beautifully
-  const formatIndianCurrency = (amount: number) => {
+  const _formatIndianCurrency = (amount: number) => {
     if (amount >= 10000000) {
       return `₹${(amount / 10000000).toFixed(2)} Cr`;
     }
@@ -816,6 +848,9 @@ export default function AdminView({
     }
     return `₹${amount.toLocaleString()}`;
   };
+
+  const formatCurrency = (val: number) => _formatIndianCurrency?.(val) ?? `₹${val.toLocaleString('en-IN')}`;
+
 
   return (
     <div className="font-sans text-slate-200 bg-[#0F172A] min-h-screen pt-24 pb-16 flex flex-col md:flex-row">
@@ -836,7 +871,7 @@ export default function AdminView({
             { id: "overview", label: "Dashboard", Icon: LayoutDashboard },
             { id: "properties", label: "Properties", Icon: Building },
             { id: "pending_approvals", label: "Pending Approvals", Icon: Shield, badge: pendingApprovalsCount > 0 ? pendingApprovalsCount : undefined },
-            { id: "enquiries", label: "Enquiries", Icon: Mail, badge: enquiries.filter(e => e.status === "New").length },
+            { id: "enquiries", label: "Enquiries", Icon: Mail, badge: newEnquiriesCount },
             { id: "users", label: "Users", Icon: Users },
             { id: "analytics", label: "Analytics", Icon: BarChart3 },
             { id: "settings", label: "Settings", Icon: Settings },
@@ -854,7 +889,7 @@ export default function AdminView({
                     : "text-slate-400 hover:bg-slate-800 hover:text-white border border-transparent"
                 }`}
               >
-                <TabIcon className={`h-4.5 w-4.5 ${isSelected ? "text-[#D4AF37]" : "text-slate-400"}`} />
+                <TabIcon className={`h-4 w-4 ${isSelected ? "text-[#D4AF37]" : "text-slate-400"}`} />
                 <span>{tab.label}</span>
                 {tab.badge && tab.badge > 0 ? (
                   <span className="ml-auto px-2 py-0.5 rounded-full bg-red-500 text-white font-bold text-[9px] min-w-4 text-center">
@@ -928,7 +963,7 @@ export default function AdminView({
                       { title: "Pending Approvals", value: pendingApprovalsCount.toString(), color: "border-l-amber-500", desc: "Awaiting physical check", warning: pendingApprovalsCount > 0 },
                       { title: "Client Enquiries", value: enquiries.length.toString(), color: "border-l-purple-500", desc: "Awaiting resolution callback" },
                       { title: "Registered Users", value: dbUsers.length.toString(), color: "border-l-rose-500", desc: "Simulated database logins" },
-                      { title: "Est. Revenue (1%)", value: formatIndianCurrency(estimatedRevenue), color: "border-l-[#D4AF37]", desc: "Scale value generated" }
+                      { title: "Est. Revenue (1%)", value: formatCurrency(estimatedRevenue), color: "border-l-[#D4AF37]", desc: "Scale value generated" }
                     ].map((metric, i) => (
                       <motion.div
                         key={metric.title}
@@ -955,7 +990,7 @@ export default function AdminView({
                     <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl flex flex-col">
                       <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
                         <div className="flex items-center gap-2">
-                          <AlertTriangle className="h-4.5 w-4.5 text-amber-500" />
+                          <AlertTriangle className="h-4 w-4 text-amber-500" />
                           <h3 className="font-extrabold text-white text-sm">Pending Approvals</h3>
                         </div>
                         <span className="text-[10px] text-slate-400 font-bold bg-slate-950 px-2 py-0.5 rounded-md">
@@ -964,29 +999,29 @@ export default function AdminView({
                       </div>
 
                       <div className="space-y-3.5 max-h-[340px] overflow-y-auto pr-1 scrollbar-thin">
-                        {properties.filter(p => p.status === "pending").length === 0 ? (
+                        {pendingProperties.length === 0 ? (
                           <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
                             <ShieldCheck className="h-10 w-10 text-emerald-500" />
                             <p className="text-xs text-slate-400 font-semibold">All property records verified!</p>
                             <p className="text-[10px] text-slate-500">Every direct submit has been physically audited.</p>
                           </div>
                         ) : (
-                          properties.filter(p => p.status === "pending").map((prop) => (
+                          pendingProperties.map((prop) => (
                             <div 
                               key={prop.id}
-                              className="p-3.5 bg-slate-950/40 rounded-xl border border-white/5 flex items-center justify-between gap-4.5 hover:border-white/10 transition-all"
+                              className="p-3.5 bg-slate-950/40 rounded-xl border border-white/5 flex items-center justify-between gap-4 hover:border-white/10 transition-all"
                             >
                               <div className="min-w-0">
                                 <h4 className="font-bold text-white text-xs truncate leading-snug">{prop.title}</h4>
                                 <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1.5 font-semibold">
                                   <MapPin className="h-3 w-3 text-[#D4AF37] shrink-0" /> {prop.location}
                                 </p>
-                                <p className="text-[10px] text-[#D4AF37] font-black mt-0.5">{formatIndianCurrency(prop.price)}</p>
+                                <p className="text-[10px] text-[#D4AF37] font-black mt-0.5">{formatCurrency(prop.price)}</p>
                               </div>
 
                               <div className="flex items-center gap-2 shrink-0">
                                 <button
-                                  onClick={() => handlePropertyApprovalToggle(prop.id, prop.status)}
+                                  onClick={() => handlePropertyApprovalToggle(prop.id, prop.moderationStatus)}
                                   className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-[10px] flex items-center gap-1 cursor-pointer transition-all active:scale-95"
                                   title="Audit Approved & Publish"
                                 >
@@ -1010,7 +1045,7 @@ export default function AdminView({
                     <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl flex flex-col">
                       <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
                         <div className="flex items-center gap-2">
-                          <Mail className="h-4.5 w-4.5 text-[#D4AF37]" />
+                          <Mail className="h-4 w-4 text-[#D4AF37]" />
                           <h3 className="font-extrabold text-white text-sm">Recent Client Inquiries</h3>
                         </div>
                         <button 
@@ -1051,6 +1086,32 @@ export default function AdminView({
                       </div>
                     </div>
                   </div>
+
+                  {/* Quick Activity Chart Reference */}
+                  <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
+                    <h3 className="font-extrabold text-white text-xs uppercase tracking-wider">Indexed Actions (Overview)</h3>
+                    <div className="h-44 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={[
+                          { name: 'Approved', count: approvedListingsCount, fill: '#10b981' },
+                          { name: 'Pending', count: pendingApprovalsCount, fill: '#f59e0b' },
+                          { name: 'Enquiries', count: enquiries.length, fill: '#f43f5e' },
+                          { name: 'Users', count: dbUsers.length, fill: '#3b82f6' }
+                        ]} margin={{ top: 10, right: 30, left: -20, bottom: 0 }} layout="vertical">
+                          <XAxis type="number" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                          <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} width={80} />
+                          <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', padding: '10px', borderRadius: '8px' }}
+                            itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
+                            labelStyle={{ color: '#94a3b8', fontSize: '10px', marginBottom: '4px' }}
+                            cursor={{fill: '#1e293b'}}
+                          />
+                          <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={20} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -1080,7 +1141,8 @@ export default function AdminView({
                   <div className="bg-slate-900 border border-white/5 rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-3.5 shadow-xl">
                     <div className="flex-1 relative">
                       <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
-                      <input
+                      <label htmlFor="search-listings-input" className="sr-only">Search Listings</label>
+                      <input id="search-listings-input"
                         type="text"
                         placeholder="Search listings by title, locality name..."
                         value={propertySearch}
@@ -1122,12 +1184,12 @@ export default function AdminView({
                   {/* BULK ACTIONS BANNER */}
                   {selectedProperties.length > 0 && (
                     <motion.div 
-                      className="bg-slate-800/80 border border-[#D4AF37]/30 rounded-2xl px-5 py-3.5 flex items-center justify-between gap-4 shadow-xl"
+                      className="bg-slate-800/80 border border-[#D4AF37]/30 rounded-2xl px-5 py-3 flex items-center justify-between gap-4 shadow-xl"
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
                     >
                       <div className="flex items-center gap-2">
-                        <CheckSquare className="h-4.5 w-4.5 text-[#D4AF37]" />
+                        <CheckSquare className="h-4 w-4 text-[#D4AF37]" />
                         <span className="text-xs text-white font-bold">{selectedProperties.length} properties selected</span>
                       </div>
                       
@@ -1160,18 +1222,19 @@ export default function AdminView({
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-slate-950 border-b border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            <th className="py-4.5 px-4 w-12 text-center">
-                              <input
+                            <th className="py-4 px-4 w-12 text-center">
+                              <label htmlFor="select-all-props" className="sr-only">Select All Properties</label>
+                              <input id="select-all-props"
                                 type="checkbox"
                                 checked={selectedProperties.length === filteredPropertiesings.length && filteredPropertiesings.length > 0}
                                 onChange={handleSelectAllProps}
                                 className="rounded border-white/10 text-[#D4AF37] focus:ring-[#D4AF37]/30 h-4 w-4 bg-slate-950 cursor-pointer"
                               />
                             </th>
-                            <th className="py-4.5 px-4">Title & Locality</th>
-                            <th className="py-4.5 px-4 w-32">Price Scale</th>
-                            <th className="py-4.5 px-4 w-28 text-center">Audit Status</th>
-                            <th className="py-4.5 px-4 w-48 text-center">Panel Actions</th>
+                            <th className="py-4 px-4">Title & Locality</th>
+                            <th className="py-4 px-4 w-32">Price Scale</th>
+                            <th className="py-4 px-4 w-28 text-center">Audit Status</th>
+                            <th className="py-4 px-4 w-48 text-center">Panel Actions</th>
                           </tr>
                         </thead>
 
@@ -1189,7 +1252,8 @@ export default function AdminView({
                                 <tr key={prop.id} className={`hover:bg-slate-950/20 transition-all ${isChecked ? "bg-slate-800/10" : ""}`}>
                                   {/* Checkbox column */}
                                   <td className="py-4 px-4 text-center">
-                                    <input
+                                    <label htmlFor={`select-prop-${prop.id}`} className="sr-only">Select Property</label>
+                                    <input id={`select-prop-${prop.id}`}
                                       type="checkbox"
                                       checked={isChecked}
                                       onChange={(e) => handleSelectProp(prop.id, e.target.checked)}
@@ -1210,21 +1274,21 @@ export default function AdminView({
 
                                   {/* Price column */}
                                   <td className="py-4 px-4 font-bold text-[#D4AF37]">
-                                    {formatIndianCurrency(prop.price)}
+                                    {formatCurrency(prop.price)}
                                   </td>
 
                                   {/* Status tag */}
                                   <td className="py-4 px-4 text-center">
                                     <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold border leading-none uppercase ${
-                                      prop.status === "live"
+                                      prop.moderationStatus === "live"
                                         ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20"
-                                        : prop.status === "pending"
+                                        : prop.moderationStatus === "pending"
                                         ? "bg-amber-500/15 text-amber-400 border-amber-500/20 animate-pulse"
-                                        : prop.status === "rejected"
+                                        : prop.moderationStatus === "rejected"
                                         ? "bg-red-500/15 text-red-400 border-red-500/20"
                                         : "bg-slate-800 text-slate-400 border-white/5"
                                     }`}>
-                                      {prop.status}
+                                      {prop.moderationStatus}
                                     </span>
                                   </td>
 
@@ -1232,9 +1296,9 @@ export default function AdminView({
                                   <td className="py-4 px-4">
                                     <div className="flex items-center justify-center gap-2.5">
                                       {/* Approve Toggle */}
-                                      {prop.status === "pending" ? (
+                                      {prop.moderationStatus === "pending" ? (
                                         <button
-                                          onClick={() => handlePropertyApprovalToggle(prop.id, prop.status)}
+                                          onClick={() => handlePropertyApprovalToggle(prop.id, prop.moderationStatus)}
                                           className="p-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-[9px] flex items-center gap-0.5 cursor-pointer transition-all"
                                           title="Audit Approve"
                                         >
@@ -1242,7 +1306,7 @@ export default function AdminView({
                                         </button>
                                       ) : (
                                         <button
-                                          onClick={() => handlePropertyApprovalToggle(prop.id, prop.status)}
+                                          onClick={() => handlePropertyApprovalToggle(prop.id, prop.moderationStatus)}
                                           className="p-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 border border-white/5 text-slate-400 hover:text-[#D4AF37] text-[9px] flex items-center gap-0.5 cursor-pointer"
                                           title="Revoke Verification"
                                         >
@@ -1254,13 +1318,13 @@ export default function AdminView({
                                       <button
                                         onClick={() => handlePropertyHideToggle(prop)}
                                         className={`p-2 rounded-lg bg-slate-850 border border-white/5 transition-colors cursor-pointer ${
-                                          prop.status === "rejected"
+                                          prop.moderationStatus === "rejected"
                                             ? "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/20"
                                             : "text-slate-400 hover:text-red-400 hover:bg-red-950/20"
                                         }`}
-                                        title={prop.status === "rejected" ? "Restore Visibility" : "Reject Listing"}
+                                        title={prop.moderationStatus === "rejected" ? "Restore Visibility" : "Reject Listing"}
                                       >
-                                        {prop.status === "rejected" ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                                        {prop.moderationStatus === "rejected" ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                                       </button>
 
                                       {/* Edit */}
@@ -1312,16 +1376,16 @@ export default function AdminView({
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-slate-950 border-b border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            <th className="py-4.5 px-4 w-12 text-center">#</th>
-                            <th className="py-4.5 px-4">Title & Locality</th>
-                            <th className="py-4.5 px-4 w-32">Price Scale</th>
-                            <th className="py-4.5 px-4 w-28 text-center">Audit Status</th>
-                            <th className="py-4.5 px-4 w-48 text-center">Panel Actions</th>
+                            <th className="py-4 px-4 w-12 text-center">#</th>
+                            <th className="py-4 px-4">Title & Locality</th>
+                            <th className="py-4 px-4 w-32">Price Scale</th>
+                            <th className="py-4 px-4 w-28 text-center">Audit Status</th>
+                            <th className="py-4 px-4 w-48 text-center">Panel Actions</th>
                           </tr>
                         </thead>
 
                         <tbody className="divide-y divide-white/5 text-xs text-slate-300">
-                          {properties.filter(p => p.status === "pending").length === 0 ? (
+                          {pendingProperties.length === 0 ? (
                             <tr>
                               <td colSpan={5} className="py-16 text-center text-slate-500 font-medium">
                                 <div className="flex flex-col items-center justify-center gap-2">
@@ -1332,7 +1396,7 @@ export default function AdminView({
                               </td>
                             </tr>
                           ) : (
-                            properties.filter(p => p.status === "pending").map((prop, idx) => (
+                            pendingProperties.map((prop, idx) => (
                               <tr key={prop.id} className="hover:bg-slate-950/20 transition-all text-xs font-sans">
                                 {/* Index column */}
                                 <td className="py-4 px-4 text-center font-bold text-slate-500">{idx + 1}</td>
@@ -1347,13 +1411,13 @@ export default function AdminView({
 
                                 {/* Price column */}
                                 <td className="py-4 px-4 font-bold text-[#D4AF37]">
-                                  {formatIndianCurrency(prop.price)}
+                                  {formatCurrency(prop.price)}
                                 </td>
 
                                 {/* Status tag */}
                                 <td className="py-4 px-4 text-center">
                                   <span className="inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold border leading-none uppercase bg-amber-500/15 text-amber-400 border-amber-500/20 animate-pulse">
-                                    {prop.status}
+                                    {prop.moderationStatus}
                                   </span>
                                 </td>
 
@@ -1361,7 +1425,7 @@ export default function AdminView({
                                 <td className="py-4 px-4">
                                   <div className="flex items-center justify-center gap-2">
                                     <button
-                                      onClick={() => handlePropertyApprovalToggle(prop.id, prop.status)}
+                                      onClick={() => handlePropertyApprovalToggle(prop.id, prop.moderationStatus)}
                                       className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-[10px] flex items-center gap-1 cursor-pointer transition-all focus:ring-2 ring-emerald-500/50"
                                       title="Audit Approve"
                                     >
@@ -1412,7 +1476,8 @@ export default function AdminView({
                   <div className="bg-slate-900 border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row gap-3.5 shadow-xl">
                     <div className="flex-1 relative">
                       <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
-                      <input
+                      <label htmlFor="search-enquiries-input" className="sr-only">Search Enquiries</label>
+                      <input id="search-enquiries-input"
                         type="text"
                         placeholder="Search enquiries by name, email, or property title..."
                         value={enquirySearch}
@@ -1561,7 +1626,8 @@ export default function AdminView({
 
                   <div className="bg-slate-900 border border-white/5 rounded-2xl p-4 shadow-xl relative">
                     <Search className="absolute left-7 top-7 h-4 w-4 text-slate-500" />
-                    <input
+                    <label htmlFor="search-accounts-input" className="sr-only">Search Accounts</label>
+                    <input id="search-accounts-input"
                       type="text"
                       placeholder="Search accounts catalog by first/last display name or registration email..."
                       value={userSearch}
@@ -1576,11 +1642,11 @@ export default function AdminView({
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-slate-950 border-b border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            <th className="py-4.5 px-4">Account User Name</th>
-                            <th className="py-4.5 px-4 w-48">Verified Email</th>
-                            <th className="py-4.5 px-4 w-44">Contact Record</th>
-                            <th className="py-4.5 px-4 w-28 text-center">Platform Status</th>
-                            <th className="py-4.5 px-4 w-36 text-center">Status Action</th>
+                            <th className="py-4 px-4">Account User Name</th>
+                            <th className="py-4 px-4 w-48">Verified Email</th>
+                            <th className="py-4 px-4 w-44">Contact Record</th>
+                            <th className="py-4 px-4 w-28 text-center">Platform Status</th>
+                            <th className="py-4 px-4 w-36 text-center">Status Action</th>
                           </tr>
                         </thead>
 
@@ -1673,21 +1739,23 @@ export default function AdminView({
                       
                       <div className="space-y-4 pt-3.5">
                         {[
-                          { name: "3 BHK Builder Floors", count: properties.filter(p => String(p.bhk || "").includes("3 BHK") || String(p.bhk || "").includes("3")).length, pct: 45, color: "bg-[#D4AF37]" },
-                          { name: "Luxury Heritage Villas", count: properties.filter(p => String(p.type || "").toLowerCase().includes("villa")).length, pct: 20, color: "bg-teal-500" },
-                          { name: "Commercial Office / Land Plots", count: properties.filter(p => String(p.type || "").toLowerCase().includes("plot") || String(p.type || "").toLowerCase().includes("office") || String(p.type || "").toLowerCase().includes("commercial")).length, pct: 15, color: "bg-blue-500" },
-                          { name: "Standard 1 / 2 BHK Flats", count: properties.filter(p => String(p.bhk || "").includes("1 BHK") || String(p.bhk || "").includes("2 BHK") || String(p.bhk || "").includes("1") || String(p.bhk || "").includes("2")).length, pct: 20, color: "bg-purple-500" }
-                        ].map(stat => (
+                          { name: "3 BHK Builder Floors", count: threeBhkCount, color: "bg-[#D4AF37]" },
+                          { name: "Luxury Heritage Villas", count: villaCount, color: "bg-teal-500" },
+                          { name: "Commercial Office / Land Plots", count: commercialCount, color: "bg-blue-500" },
+                          { name: "Standard 1 / 2 BHK Flats", count: standardFlatsCount, color: "bg-purple-500" }
+                        ].map(stat => {
+                          const pctValue = Math.round((stat.count / Math.max(1, properties.length)) * 100);
+                          return (
                           <div key={stat.name} className="space-y-1.5 font-sans">
                             <div className="flex justify-between text-xs font-semibold">
                               <span className="text-slate-300">{stat.name}</span>
-                              <span className="text-white font-bold">{stat.count} properties</span>
+                              <span className="text-white font-bold">{stat.count} properties ({pctValue}%)</span>
                             </div>
                             <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden">
-                              <div className={`${stat.color} h-1.5 rounded-full`} style={{ width: `${Math.max(5, (stat.count / Math.max(1, properties.length)) * 100)}%` }}></div>
+                              <div className={`${stat.color} h-1.5 rounded-full`} style={{ width: `${Math.max(5, pctValue)}%` }}></div>
                             </div>
                           </div>
-                        ))}
+                        )})}
                       </div>
                     </div>
 
@@ -1697,9 +1765,9 @@ export default function AdminView({
                       
                       <div className="grid grid-cols-3 gap-3 pt-4">
                         {[
-                          { title: "New Callback", count: enquiries.filter(e => e.status === "New").length, pct: "30%", color: "border-red-500/20 text-red-400 bg-red-500/5" },
-                          { title: "Contacted Agent", count: enquiries.filter(e => e.status === "Contacted").length, pct: "50%", color: "border-amber-500/20 text-amber-400 bg-amber-500/5" },
-                          { title: "Successful Deal", count: enquiries.filter(e => e.status === "Resolved").length, pct: "20%", color: "border-emerald-500/20 text-emerald-400 bg-emerald-500/5" }
+                          { title: "New Callback", count: newEnquiriesCount, pct: "30%", color: "border-red-500/20 text-red-400 bg-red-500/5" },
+                          { title: "Contacted Agent", count: contactedEnquiriesCount, pct: "50%", color: "border-amber-500/20 text-amber-400 bg-amber-500/5" },
+                          { title: "Successful Deal", count: resolvedEnquiriesCount, pct: "20%", color: "border-emerald-500/20 text-emerald-400 bg-emerald-500/5" }
                         ].map(f => (
                           <div key={f.title} className={`p-4 border rounded-xl text-center flex flex-col justify-center ${f.color}`}>
                             <span className="text-[17.5px] font-black">{f.count}</span>
@@ -1713,6 +1781,46 @@ export default function AdminView({
                       </div>
                     </div>
 
+                  </div>
+
+                  {/* Activity Chart Area */}
+                  <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
+                    <h3 className="font-extrabold text-white text-xs uppercase tracking-wider">Property Views & Listing Activity (Past 7 Days)</h3>
+                    <div className="h-64 w-full pt-4">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={[
+                          { name: 'Mon', views: 400, properties: 240 },
+                          { name: 'Tue', views: 300, properties: 139 },
+                          { name: 'Wed', views: 200, properties: 980 },
+                          { name: 'Thu', views: 278, properties: 390 },
+                          { name: 'Fri', views: 189, properties: 480 },
+                          { name: 'Sat', views: 239, properties: 380 },
+                          { name: 'Sun', views: 349, properties: 430 },
+                        ]} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.8}/>
+                              <stop offset="95%" stopColor="#D4AF37" stopOpacity={0}/>
+                            </linearGradient>
+                            <linearGradient id="colorProps" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                          <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                          <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', padding: '10px', borderRadius: '8px' }}
+                            itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
+                            labelStyle={{ color: '#94a3b8', fontSize: '10px', marginBottom: '4px' }}
+                          />
+                          <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} iconType="circle" />
+                          <Area type="monotone" dataKey="views" name="Platform Views" stroke="#D4AF37" fillOpacity={1} fill="url(#colorViews)" />
+                          <Area type="monotone" dataKey="properties" name="Properties Active" stroke="#3b82f6" fillOpacity={1} fill="url(#colorProps)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
 
                 </div>
@@ -1735,14 +1843,14 @@ export default function AdminView({
                     {/* SECTION 1: EDIT CONFIG */}
                     <form onSubmit={handleSaveSettings} className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
                       <div className="flex items-center gap-2 pb-2.5 border-b border-white/5">
-                        <Sliders className="h-4.5 w-4.5 text-[#D4AF37]" />
+                        <Sliders className="h-4 w-4 text-[#D4AF37]" />
                         <h3 className="font-extrabold text-white text-sm">Site Business Information</h3>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Business Name</label>
-                          <input
+                          <label htmlFor="auto-adminview-1744" className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Business Name</label>
+                          <input id="auto-adminview-1744"
                             type="text"
                             value={settings.businessName}
                             onChange={(e) => setSettings({ ...settings, businessName: e.target.value })}
@@ -1751,8 +1859,8 @@ export default function AdminView({
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">RERA Number</label>
-                          <input
+                          <label htmlFor="admin-settings-rera" className="text-[10px] uppercase font-bold tracking-wider text-slate-400">RERA Number</label>
+                          <input id="admin-settings-rera"
                             type="text"
                             value={settings.reraNumber}
                             onChange={(e) => setSettings({ ...settings, reraNumber: e.target.value })}
@@ -1763,8 +1871,8 @@ export default function AdminView({
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Consultant Lead</label>
-                          <input
+                          <label htmlFor="admin-settings-consultant" className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Consultant Lead</label>
+                          <input id="admin-settings-consultant"
                             type="text"
                             value={settings.consultantName}
                             onChange={(e) => setSettings({ ...settings, consultantName: e.target.value })}
@@ -1773,8 +1881,8 @@ export default function AdminView({
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">WhatsApp Target</label>
-                          <input
+                          <label htmlFor="admin-settings-whatsapp" className="text-[10px] uppercase font-bold tracking-wider text-slate-400">WhatsApp Target</label>
+                          <input id="admin-settings-whatsapp"
                             type="text"
                             value={settings.whatsappNumber}
                             onChange={(e) => setSettings({ ...settings, whatsappNumber: e.target.value })}
@@ -1785,8 +1893,8 @@ export default function AdminView({
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Official Email</label>
-                          <input
+                          <label htmlFor="admin-settings-email" className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Official Email</label>
+                          <input id="admin-settings-email"
                             type="email"
                             value={settings.businessEmail}
                             onChange={(e) => setSettings({ ...settings, businessEmail: e.target.value })}
@@ -1795,8 +1903,8 @@ export default function AdminView({
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Office Phone</label>
-                          <input
+                          <label htmlFor="admin-settings-phone" className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Office Phone</label>
+                          <input id="admin-settings-phone"
                             type="text"
                             value={settings.businessPhone}
                             onChange={(e) => setSettings({ ...settings, businessPhone: e.target.value })}
@@ -1806,8 +1914,8 @@ export default function AdminView({
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Office Headquarters Physical Address</label>
-                        <input
+                        <label htmlFor="admin-settings-addr" className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Office Headquarters Physical Address</label>
+                        <input id="admin-settings-addr"
                           type="text"
                           value={settings.businessAddress}
                           onChange={(e) => setSettings({ ...settings, businessAddress: e.target.value })}
@@ -1829,12 +1937,13 @@ export default function AdminView({
                       {/* SECTION 2: ADMIN ACCESS EMAILS */}
                       <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                          <ShieldCheck className="h-4.5 w-4.5 text-[#D4AF37]" />
+                          <ShieldCheck className="h-4 w-4 text-[#D4AF37]" />
                           <h3 className="font-extrabold text-white text-sm">Admin Access list</h3>
                         </div>
 
                         <form onSubmit={handleAddAdminEmail} className="flex gap-2">
-                          <input
+                          <label htmlFor="new-admin-email" className="sr-only">Add new admin email</label>
+                          <input id="new-admin-email"
                             type="email"
                             placeholder="Add new admin email (e.g. ritik@shivsaya...)"
                             value={newAdminEmail}
@@ -1872,7 +1981,7 @@ export default function AdminView({
                       {/* SECTION 3: SYSTEM CONTROLS/TOGGLES */}
                       <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                          <Power className="h-4.5 w-4.5 text-[#D4AF37]" />
+                          <Power className="h-4 w-4 text-[#D4AF37]" />
                           <h3 className="font-extrabold text-white text-sm">System Controls</h3>
                         </div>
 
@@ -1923,7 +2032,7 @@ export default function AdminView({
                       {/* DATA MANAGEMENT SECTION */}
                       <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                          <Database className="h-4.5 w-4.5 text-[#D4AF37]" />
+                          <Database className="h-4 w-4 text-[#D4AF37]" />
                           <h3 className="font-extrabold text-white text-sm">Data Management</h3>
                         </div>
 
@@ -1977,7 +2086,7 @@ export default function AdminView({
                       <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
                         <div className="flex items-center justify-between pb-3 border-b border-white/5">
                           <div className="flex items-center gap-2">
-                            <CheckSquare className="h-4.5 w-4.5 text-[#D4AF37]" />
+                            <CheckSquare className="h-4 w-4 text-[#D4AF37]" />
                             <h3 className="font-extrabold text-white text-sm">Haryana RERA Verification Checks</h3>
                           </div>
                           <span className="text-[10px] font-mono text-slate-500">Standards: HRERA-2026</span>
@@ -2030,7 +2139,7 @@ export default function AdminView({
                           {/* Item 3: Pending verification audits queue */}
                           <div className="flex items-start gap-3 p-3 bg-slate-950/40 border border-white/5 rounded-xl">
                             <div className="mt-0.5">
-                              {!properties.some(p => !p.verified && p.status !== "rejected") ? (
+                              {!properties.some(p => !p.verified && p.moderationStatus !== "rejected") ? (
                                 <Check className="h-4 w-4 text-emerald-400" />
                               ) : (
                                 <AlertTriangle className="h-4 w-4 text-amber-400" />
@@ -2042,7 +2151,7 @@ export default function AdminView({
                                 Flags any property listings waiting for verification review that are not yet approved or rejected.
                               </p>
                               <span className="inline-block mt-1 font-mono text-[9px] text-slate-400 font-semibold bg-white/5 px-2 py-0.5 rounded">
-                                Pending Audit Queue: {properties.filter(p => !p.verified && p.status !== "rejected").length} Listings
+                                Pending Audit Queue: {unverifiedActivePropertiesCount} Listings
                               </span>
                             </div>
                           </div>
@@ -2050,7 +2159,7 @@ export default function AdminView({
                           {/* Item 4: Enquiry response index */}
                           <div className="flex items-start gap-3 p-3 bg-slate-950/40 border border-white/5 rounded-xl">
                             <div className="mt-0.5">
-                              {enquiries.filter(e => e.status === "New").length === 0 ? (
+                              {newEnquiriesCount === 0 ? (
                                 <Check className="h-4 w-4 text-emerald-400" />
                               ) : (
                                 <AlertCircle className="h-4 w-4 text-amber-400 animate-pulse" />
@@ -2062,7 +2171,7 @@ export default function AdminView({
                                 Screens for completely unaddressed "New" scheduled tour interest submissions.
                               </p>
                               <span className="inline-block mt-1 font-mono text-[9px] text-slate-400 font-semibold bg-white/5 px-2 py-0.5 rounded">
-                                New Submissions: {enquiries.filter(e => e.status === "New").length} Tickets
+                                New Submissions: {newEnquiriesCount} Tickets
                               </span>
                             </div>
                           </div>
@@ -2203,17 +2312,17 @@ export default function AdminView({
                 onClick={() => setIsAddModalOpen(false)}
                 className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white border border-white/5 transition-colors cursor-pointer"
               >
-                <X className="h-4.5 w-4.5" />
+                <X className="h-4 w-4" />
               </button>
 
               <h3 className="text-base font-extrabold text-[#D4AF37] uppercase tracking-wide border-b border-white/5 pb-3.5 mb-5 flex items-center gap-1.5">
-                <Plus className="h-4.5 w-4.5" /> Direct manual property addition
+                <Plus className="h-4 w-4" /> Direct manual property addition
               </h3>
 
               <form onSubmit={handleAddNewManualProperty} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-300">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Property Title</label>
-                  <input
+                  <label htmlFor="add-prop-title" className="text-[10px] uppercase font-bold text-slate-400">Property Title</label>
+                  <input id="add-prop-title"
                     type="text"
                     name="title"
                     placeholder="e.g. Luxury Penthouse duplex Rajnagar"
@@ -2223,8 +2332,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Price in Rupees (Raw Integer)</label>
-                  <input
+                  <label htmlFor="add-prop-price" className="text-[10px] uppercase font-bold text-slate-400">Price in Rupees (Raw Integer)</label>
+                  <input id="add-prop-price"
                     type="number"
                     name="price"
                     placeholder="e.g. 7500000 (75 Lakhs)"
@@ -2234,8 +2343,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Locality / Area Name</label>
-                  <input
+                  <label htmlFor="add-prop-locality" className="text-[10px] uppercase font-bold text-slate-400">Locality / Area Name</label>
+                  <input id="add-prop-locality"
                     type="text"
                     name="location"
                     placeholder="e.g. Rajnagar Extension, Ghaziabad"
@@ -2245,8 +2354,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Asset Type</label>
-                  <select
+                  <label htmlFor="add-prop-type" className="text-[10px] uppercase font-bold text-slate-400">Asset Type</label>
+                  <select id="add-prop-type"
                     name="type"
                     className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white cursor-pointer"
                   >
@@ -2258,8 +2367,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">BHK configuration</label>
-                  <select
+                  <label htmlFor="add-prop-bhk" className="text-[10px] uppercase font-bold text-slate-400">BHK configuration</label>
+                  <select id="add-prop-bhk"
                     name="bhk"
                     className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white cursor-pointer"
                   >
@@ -2272,8 +2381,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Area size (Number)</label>
-                  <input
+                  <label htmlFor="add-prop-area" className="text-[10px] uppercase font-bold text-slate-400">Area size (Number)</label>
+                  <input id="add-prop-area"
                     type="number"
                     name="area"
                     placeholder="e.g. 1560 SQ FT"
@@ -2283,8 +2392,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Area Unit</label>
-                  <input
+                  <label htmlFor="add-prop-unit" className="text-[10px] uppercase font-bold text-slate-400">Area Unit</label>
+                  <input id="add-prop-unit"
                     type="text"
                     name="areaUnit"
                     defaultValue="Sq.Ft."
@@ -2293,8 +2402,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Image URL</label>
-                  <input
+                  <label htmlFor="add-prop-img" className="text-[10px] uppercase font-bold text-slate-400">Image URL</label>
+                  <input id="add-prop-img"
                     type="url"
                     name="imageUrl"
                     placeholder="e.g. https://images.unsplash.com/photo-..."
@@ -2304,8 +2413,8 @@ export default function AdminView({
 
                 <div className="grid grid-cols-2 gap-3 md:col-span-2">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">RERA Approved Status</label>
-                    <select
+                    <label htmlFor="add-prop-rera" className="text-[10px] uppercase font-bold text-slate-400">RERA Approved Status</label>
+                    <select id="add-prop-rera"
                       name="reraApproved"
                       className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white cursor-pointer"
                     >
@@ -2315,8 +2424,8 @@ export default function AdminView({
                   </div>
                   
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Is Premium Badge</label>
-                    <select
+                    <label htmlFor="add-prop-premium" className="text-[10px] uppercase font-bold text-slate-400">Is Premium Badge</label>
+                    <select id="add-prop-premium"
                       name="isPremium"
                       className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white cursor-pointer"
                     >
@@ -2327,8 +2436,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Property Description</label>
-                  <textarea
+                  <label htmlFor="add-prop-desc" className="text-[10px] uppercase font-bold text-slate-400">Property Description</label>
+                  <textarea id="add-prop-desc"
                     name="description"
                     rows={3.5}
                     placeholder="Enter exhaustive structural information, near RRTS landmarks, and direct price guarantees..."
@@ -2374,17 +2483,17 @@ export default function AdminView({
                 onClick={() => setRejectingProperty(null)}
                 className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white border border-white/5 transition-colors cursor-pointer"
               >
-                <X className="h-4.5 w-4.5" />
+                <X className="h-4 w-4" />
               </button>
 
               <h3 className="text-sm font-extrabold text-red-400 uppercase tracking-wide border-b border-white/5 pb-3 mb-5 flex items-center gap-1.5 font-sans">
-                <AlertTriangle className="h-4.5 w-4.5 text-red-550" /> Reject Property Listing
+                <AlertTriangle className="h-4 w-4 text-red-550" /> Reject Property Listing
               </h3>
 
               <div className="space-y-4 text-xs text-slate-300 font-sans">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Reason for rejection (Required)</label>
-                  <select
+                  <label htmlFor="reject-reason" className="text-[10px] uppercase font-bold text-slate-400">Reason for rejection (Required)</label>
+                  <select id="reject-reason"
                     value={rejectReason}
                     onChange={(e) => setRejectReason(e.target.value)}
                     className="w-full bg-slate-950 border border-white/5 focus:border-red-500/40 rounded-xl px-3 py-2.5 text-xs text-white outline-none cursor-pointer"
@@ -2399,8 +2508,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Additional notes for submitter (Optional)</label>
-                  <textarea
+                  <label htmlFor="reject-notes" className="text-[10px] uppercase font-bold text-slate-400">Additional notes for submitter (Optional)</label>
+                  <textarea id="reject-notes"
                     rows={4}
                     value={rejectNotes}
                     onChange={(e) => setRejectNotes(e.target.value)}
@@ -2449,17 +2558,17 @@ export default function AdminView({
                 }}
                 className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white border border-white/5 transition-colors cursor-pointer"
               >
-                <X className="h-4.5 w-4.5" />
+                <X className="h-4 w-4" />
               </button>
 
               <h3 className="text-base font-extrabold text-[#D4AF37] uppercase tracking-wide border-b border-white/5 pb-3 mb-5 flex items-center gap-1.5">
-                <Edit className="h-4.5 w-4.5" /> Edit Real Estate Credentials
+                <Edit className="h-4 w-4" /> Edit Real Estate Credentials
               </h3>
 
               <form onSubmit={handleUpdateEditProperty} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-300">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Property Title</label>
-                  <input
+                  <label htmlFor="edit-prop-title" className="text-[10px] uppercase font-bold text-slate-400">Property Title</label>
+                  <input id="edit-prop-title"
                     type="text"
                     name="title"
                     defaultValue={editingProperty.title}
@@ -2469,8 +2578,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Price in Rupees</label>
-                  <input
+                  <label htmlFor="edit-prop-price" className="text-[10px] uppercase font-bold text-slate-400">Price in Rupees</label>
+                  <input id="edit-prop-price"
                     type="number"
                     name="price"
                     defaultValue={editingProperty.price}
@@ -2480,8 +2589,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Locality Address</label>
-                  <input
+                  <label htmlFor="edit-prop-locality" className="text-[10px] uppercase font-bold text-slate-400">Locality Address</label>
+                  <input id="edit-prop-locality"
                     type="text"
                     name="location"
                     defaultValue={editingProperty.location}
@@ -2491,8 +2600,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Category Type</label>
-                  <select
+                  <label htmlFor="edit-prop-type" className="text-[10px] uppercase font-bold text-slate-400">Category Type</label>
+                  <select id="edit-prop-type"
                     name="type"
                     defaultValue={editingProperty.type}
                     className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white cursor-pointer"
@@ -2505,10 +2614,10 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">BHK configuration</label>
-                  <select
+                  <label htmlFor="edit-prop-bhk" className="text-[10px] uppercase font-bold text-slate-400">BHK configuration</label>
+                  <select id="edit-prop-bhk"
                     name="bhk"
-                    defaultValue={editingProperty.bhk}
+                    defaultValue={editingProperty.bhk || ""}
                     className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white cursor-pointer"
                   >
                     <option value="3 BHK">3 BHK</option>
@@ -2520,8 +2629,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Area size (Number)</label>
-                  <input
+                  <label htmlFor="edit-prop-area" className="text-[10px] uppercase font-bold text-slate-400">Area size (Number)</label>
+                  <input id="edit-prop-area"
                     type="number"
                     name="area"
                     defaultValue={editingProperty.area}
@@ -2530,8 +2639,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Area Unit</label>
-                  <input
+                  <label htmlFor="edit-prop-unit" className="text-[10px] uppercase font-bold text-slate-400">Area Unit</label>
+                  <input id="edit-prop-unit"
                     type="text"
                     name="areaUnit"
                     defaultValue={editingProperty.areaUnit}
@@ -2540,8 +2649,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Override Main Hero Image URL</label>
-                  <input
+                  <label htmlFor="edit-prop-img" className="text-[10px] uppercase font-bold text-slate-400">Override Main Hero Image URL</label>
+                  <input id="edit-prop-img"
                     type="url"
                     name="imageUrl"
                     placeholder="Keep empty to preserve existing unsplash imagery"
@@ -2551,8 +2660,8 @@ export default function AdminView({
 
                 <div className="grid grid-cols-2 gap-3 md:col-span-2">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">RERA Audit status</label>
-                    <select
+                    <label htmlFor="edit-prop-rera" className="text-[10px] uppercase font-bold text-slate-400">RERA Audit status</label>
+                    <select id="edit-prop-rera"
                       name="reraApproved"
                       defaultValue={editingProperty.reraApproved ? "true" : "false"}
                       className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white cursor-pointer"
@@ -2563,8 +2672,8 @@ export default function AdminView({
                   </div>
                   
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Is Premium Badge</label>
-                    <select
+                    <label htmlFor="edit-prop-premium" className="text-[10px] uppercase font-bold text-slate-400">Is Premium Badge</label>
+                    <select id="edit-prop-premium"
                       name="isPremium"
                       defaultValue={editingProperty.isPremium ? "true" : "false"}
                       className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white cursor-pointer"
@@ -2576,8 +2685,8 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Listing Description</label>
-                  <textarea
+                  <label htmlFor="edit-prop-desc" className="text-[10px] uppercase font-bold text-slate-400">Listing Description</label>
+                  <textarea id="edit-prop-desc"
                     name="description"
                     rows={4}
                     defaultValue={editingProperty.description}
