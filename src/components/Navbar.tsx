@@ -1,3 +1,4 @@
+import { ClientUser } from "../firebase";
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -30,7 +31,7 @@ const navLinks = [
 export default React.memo(function Navbar({ currentView, onNavigate, savedCount, onOpenAuth, isAdmin = false }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<import("../firebase").ClientUser | null>(null);
+  const [user, setUser] = useState<ClientUser | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 

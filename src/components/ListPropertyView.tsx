@@ -1,3 +1,4 @@
+import { ClientUser } from "../firebase";
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -26,7 +27,7 @@ export default function ListPropertyView({
 }: ListPropertyViewProps) {
   
   // Auth listener
-  const [currentUser, setCurrentUser] = useState<import("../firebase").ClientUser | null>(null);
+  const [currentUser, setCurrentUser] = useState<ClientUser | null>(null);
 
   useEffect(() => {
     const unsub = subscribeAuth((user) => {
@@ -384,30 +385,18 @@ export default function ListPropertyView({
                  imgFile.file.name
                );
                uploadedUrls.push(downloadUrl.url);
-             } catch (err: any) {
-               console.warn(`Single file upload failed for ${imgFile.file.name}, using base64`, err);
-               // Base64 single file fallback
-               const base64Url = await new Promise<string>((resolve, reject) => {
-                 const reader = new FileReader();
-                 reader.onload = () => resolve(reader.result as string);
-                 reader.onerror = e => reject(e);
-                 reader.readAsDataURL(imgFile.file);
-               });
-               uploadedUrls.push(base64Url);
+             } catch (err: unknown) {
+               console.error(`Upload failed for ${imgFile.file.name}:`, err);
+               onShowNotification(`Failed to upload ${imgFile.file.name}. Please retry.`, "error");
+               setIsUploading(false);
+               return; // Stop submission
              }
           }
         } else {
-          // Local fallback: convert files to Base64
+          // Local fallback: don't convert files to Base64, use placeholders instead for demo
           onShowNotification("Images saved locally. Connect Firebase Storage for cloud hosting.", "info");
           for (let i = 0; i < imageFiles.length; i++) {
              setUploadProgress({ current: i + 1, total: imageFiles.length });
-             const imgFile = imageFiles[i];
-             await new Promise<string>((resolve, reject) => {
-               const reader = new FileReader();
-               reader.onload = () => resolve(reader.result as string);
-               reader.onerror = e => reject(e);
-               reader.readAsDataURL(imgFile.file);
-             });
              const placeholderImages = [
                "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1200&q=80",
                "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
@@ -417,25 +406,11 @@ export default function ListPropertyView({
           }
         }
       }
-    } catch (uploadError: any) {
-      console.error("Image upload failed, falling back to Base64", uploadError);
-      onShowNotification(`Cloud upload failed. Processing local fallback...`, "error");
-      
-      // Fallback to base64
-      try {
-        for (let i = uploadedUrls.length; i < imageFiles.length; i++) {
-           const imgFile = imageFiles[i];
-           const base64Str = await new Promise<string>((resolve, reject) => {
-             const reader = new FileReader();
-             reader.onload = () => resolve(reader.result as string);
-             reader.onerror = (e) => reject(e);
-             reader.readAsDataURL(imgFile.file);
-           });
-           uploadedUrls.push(base64Str);
-        }
-      } catch (err) {
-        console.error("Base64 fallback failed", err);
-      }
+    } catch (uploadError: unknown) {
+      console.error("Image upload failed", uploadError);
+      onShowNotification(`Cloud upload failed. Please try again.`, "error");
+      setIsUploading(false);
+      return;
     } finally {
       setIsUploading(false);
     }

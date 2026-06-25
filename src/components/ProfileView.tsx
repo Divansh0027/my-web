@@ -1,3 +1,4 @@
+import { ClientUser } from "../firebase";
 import { formatPrice } from "../utils/format";
 /**
  * @license
@@ -32,7 +33,7 @@ export default function ProfileView({
   onToggleSaved,
   onDeleteProperty
 }: ProfileViewProps) {
-  const [user, setUser] = useState<import("../firebase").ClientUser | null>(null);
+  const [user, setUser] = useState<ClientUser | null>(null);
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [activeTab, setActiveTab] = useState<"listings" | "favorites" | "enquiries" | "settings">("listings");
   

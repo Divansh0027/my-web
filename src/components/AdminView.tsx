@@ -839,17 +839,11 @@ export default function AdminView({
   const unverifiedActivePropertiesCount = useMemo(() => properties.filter(p => !p.verified && p.moderationStatus !== "rejected").length, [properties]);
 
   // Formatting currency in Rupee (Cr / Lakh) formats beautifully
-  const _formatIndianCurrency = (amount: number) => {
-    if (amount >= 10000000) {
-      return `₹${(amount / 10000000).toFixed(2)} Cr`;
-    }
-    if (amount >= 100000) {
-      return `₹${(amount / 100000).toFixed(1)} Lakh`;
-    }
-    return `₹${amount.toLocaleString()}`;
+  const formatCurrency = (val: number) => {
+    if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
+    if (val >= 100000) return `₹${(val / 100000).toFixed(1)} Lakh`;
+    return `₹${val.toLocaleString()}`;
   };
-
-  const formatCurrency = (val: number) => _formatIndianCurrency?.(val) ?? `₹${val.toLocaleString('en-IN')}`;
 
 
   return (
@@ -1057,9 +1051,9 @@ export default function AdminView({
                       </div>
 
                       <div className="space-y-3 max-h-[340px] overflow-y-auto pr-1 scrollbar-thin">
-                        {enquiries.slice(0, 5).map((enq) => (
+                        {enquiries.slice(0, 5).map((enq, idx) => (
                           <div 
-                            key={enq.id}
+                            key={enq.id || `enq-short-${idx}`}
                             className="p-3.5 bg-slate-950/40 rounded-xl border border-white/5 space-y-2 hover:border-[#D4AF37]/20 transition-all"
                           >
                             <div className="flex items-center justify-between gap-2.5">
@@ -1525,8 +1519,8 @@ export default function AdminView({
                               </td>
                             </tr>
                           ) : (
-                            filteredEnquiries.map((enq) => (
-                              <tr key={enq.id} className="hover:bg-slate-950/20 transition-all font-sans">
+                            filteredEnquiries.map((enq, index) => (
+                              <tr key={enq.id || `enq-${index}`} className="hover:bg-slate-950/20 transition-all font-sans">
                                 
                                 {/* Client stats */}
                                 <td className="py-4 px-4 space-y-1">

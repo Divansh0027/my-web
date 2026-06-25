@@ -1,3 +1,4 @@
+import { ClientUser } from "./firebase";
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -81,7 +82,7 @@ export default function App() {
   }, []);
 
   // Authenticated Profile User & Savior list
-  const [currentUser, setCurrentUser] = useState<import("./firebase").ClientUser | null>(null);
+  const [currentUser, setCurrentUser] = useState<ClientUser | null>(null);
   const [savedPropertyIds, setSavedPropertyIds] = useState<string[]>([]);
   
   // Auth state modal triggers

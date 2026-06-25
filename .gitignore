@@ -1,6 +1,8 @@
 firebase-applet-config.json
 .env
-.env.local
-.env.production
+.env.*
+!.env.example
+!.env.local.example
+.firebase-blueprint.json
 node_modules
 .DS_Store

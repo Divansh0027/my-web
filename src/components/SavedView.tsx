@@ -1,3 +1,4 @@
+import { ClientUser } from "../firebase";
 import { formatPrice } from "../utils/format";
 /**
  * @license
@@ -29,7 +30,7 @@ export default function SavedView({
   onOpenLogin
 }: SavedViewProps) {
   
-  const [user, setUser] = useState<import("../firebase").ClientUser | null>(null);
+  const [user, setUser] = useState<ClientUser | null>(null);
 
   useEffect(() => {
     const unsub = subscribeAuth(setUser);

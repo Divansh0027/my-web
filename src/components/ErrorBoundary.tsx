@@ -22,15 +22,6 @@ export default class ErrorBoundary extends React.Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught React exception within Shiv Saya Portal:", error, errorInfo);
-    try {
-      fetch('/api/log-error', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: error.message, stack: errorInfo.componentStack }) 
-      }).catch(e => console.warn("Failed to log error telemetry", e));
-    } catch {
-      // suppress
-    }
   }
 
   private handleReload = () => {

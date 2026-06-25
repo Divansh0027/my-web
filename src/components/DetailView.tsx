@@ -1,3 +1,4 @@
+import { ClientUser } from "../firebase";
 import { formatPrice } from "../utils/format";
 /**
  * @license
@@ -54,7 +55,7 @@ export default function DetailView({
   const [isZoomed, setIsZoomed] = useState(false);
 
   // Authenticated User State
-  const [currentUser, setCurrentUser] = useState<import("../firebase").ClientUser | null>(null);
+  const [currentUser, setCurrentUser] = useState<ClientUser | null>(null);
 
   useEffect(() => {
     const unsub = subscribeAuth((user) => {
@@ -111,6 +112,12 @@ export default function DetailView({
 
     if (!senderName || !senderPhone) {
       onShowNotification("Please fill out your Name and Phone number.", "info");
+      return;
+    }
+
+    const cleanPhone = senderPhone.replace(/\D/g, "");
+    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      onShowNotification("Please enter a valid 10-digit Indian phone number.", "error");
       return;
     }
 
