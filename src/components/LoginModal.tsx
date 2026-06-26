@@ -276,19 +276,19 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 50 }}
               transition={{ type: "spring", damping: 25, stiffness: 350 }}
-              className="bg-[#0F172A] border-0 sm:border border-white/10 w-full sm:max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-3xl shadow-2xl flex flex-col justify-between overflow-y-auto relative z-10"
+              className="bg-surface border-0 sm:border border-outline-variant w-full sm:max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-3xl shadow-md flex flex-col justify-between overflow-y-auto relative z-10"
             >
             {/* Header */}
             <div>
-              <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-slate-900/60 sticky top-0 z-10 backdrop-blur-sm">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant/50 bg-surface-container/60 sticky top-0 z-10 backdrop-blur-sm">
                 <div>
-                  <h3 className="text-white text-md font-bold">Secure Gateway</h3>
-                  <p className="text-slate-400 text-[10px] mt-0.5">Access your direct-to-owner panel</p>
+                  <h3 className="text-on-surface text-md font-bold">Secure Gateway</h3>
+                  <p className="text-on-surface-variant text-[10px] mt-0.5">Access your direct-to-owner panel</p>
                 </div>
                 <button
                   id="close-login-modal"
                   onClick={onClose}
-                  className="h-9 w-9 rounded-full bg-slate-800/80 hover:bg-red-500/10 hover:text-red-400 text-slate-300 flex items-center justify-center transition-colors border border-white/5 cursor-pointer"
+                  className="h-9 w-9 rounded-full bg-surface-container-high/80 hover:bg-red-500/10 hover:text-red-400 text-on-surface-variant flex items-center justify-center transition-colors border border-outline-variant/50 cursor-pointer"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -307,14 +307,14 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
 
                 {/* Tabs Switcher */}
                 {!showForgotForm && (
-                  <div className="flex bg-slate-950/80 p-1 rounded-xl border border-white/5">
+                  <div className="flex bg-surface/80 p-1 rounded-xl border border-outline-variant/50">
                     <button
                       id="tab-login-btn"
                       onClick={() => { setActiveTab("login"); setAuthError(""); }}
                       className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         activeTab === "login" 
-                          ? "bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 shadow" 
-                          : "text-slate-400 hover:text-white"
+                          ? "bg-gold-accent text-[#0F172A] shadow" 
+                          : "text-on-surface-variant hover:text-on-surface"
                       }`}
                     >
                       Sign In
@@ -324,8 +324,8 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                       onClick={() => { setActiveTab("signup"); setAuthError(""); }}
                       className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         activeTab === "signup" 
-                          ? "bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 shadow" 
-                          : "text-slate-400 hover:text-white"
+                          ? "bg-gold-accent text-[#0F172A] shadow" 
+                          : "text-on-surface-variant hover:text-on-surface"
                       }`}
                     >
                       Create Account
@@ -341,9 +341,9 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                     <form onSubmit={handleLoginSubmit} className="space-y-4">
                       {/* Email */}
                       <div className="space-y-1.5 animate-fadeIn">
-                        <label htmlFor="login-email-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
+                        <label htmlFor="login-email-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Email Address</label>
                         <div className="relative">
-                          <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+                          <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
                           <input
                             id="login-email-input"
                             type="email"
@@ -351,8 +351,8 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                             placeholder="Enter your email"
                             value={loginEmail}
                             onChange={(e) => setLoginEmail(e.target.value)}
-                            className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-3 text-xs text-white placeholder-slate-600 outline-none focus:border-[#D4AF37]/50 ${
-                              errors.loginEmail ? "border-red-500/50" : "border-white/5"
+                            className={`w-full bg-surface border rounded-xl pl-10 pr-4 py-3 text-xs text-on-surface placeholder-slate-600 outline-none focus:border-gold-accent/50 ${
+                              errors.loginEmail ? "border-red-500/50" : "border-outline-variant/50"
                             }`}
                           />
                         </div>
@@ -366,17 +366,17 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                       {/* Password */}
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <label htmlFor="login-password-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                          <label htmlFor="login-password-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Password</label>
                           <button
                             type="button"
                             onClick={() => setShowForgotForm(true)}
-                            className="text-[10px] text-[#D4AF37] hover:underline font-bold"
+                            className="text-[10px] text-gold-accent hover:underline font-bold"
                           >
                             Forgot Password?
                           </button>
                         </div>
                         <div className="relative">
-                          <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+                          <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
                           <input
                             id="login-password-input"
                             type={showLoginPassword ? "text" : "password"}
@@ -384,12 +384,12 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                             placeholder="••••••••"
                             value={loginPassword}
                             onChange={(e) => setLoginPassword(e.target.value)}
-                            className="w-full bg-slate-950 border border-white/5 rounded-xl pl-10 pr-10 py-3 text-xs text-white placeholder-slate-700 outline-none focus:border-[#D4AF37]/50"
+                            className="w-full bg-surface border border-outline-variant/50 rounded-xl pl-10 pr-10 py-3 text-xs text-on-surface placeholder-slate-700 outline-none focus:border-gold-accent/50"
                           />
                           <button
                             type="button"
                             onClick={() => setShowLoginPassword(!showLoginPassword)}
-                            className="absolute right-3.5 top-3.5 h-5 w-5 text-slate-500 hover:text-slate-300 flex items-center justify-center cursor-pointer"
+                            className="absolute right-3.5 top-3.5 h-5 w-5 text-outline hover:text-on-surface-variant flex items-center justify-center cursor-pointer"
                           >
                             {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
@@ -401,7 +401,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                         id="login-submit-btn"
                         disabled={isLoginDisabled}
                         type="submit"
-                        className="w-full py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 text-xs font-black uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-98 transition-all disabled:opacity-40 select-none cursor-pointer flex items-center justify-center gap-1"
+                        className="w-full py-3 rounded-xl bg-gold-accent text-[#0F172A] text-xs font-black uppercase tracking-wider shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 transition-all disabled:opacity-40 select-none cursor-pointer flex items-center justify-center gap-1"
                       >
                         {isSubmitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Authenticating Session...</> : "Secure Sign-In"}
                       </button>
@@ -412,9 +412,9 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                     <form onSubmit={handleSignupSubmit} className="space-y-4">
                       {/* Name */}
                       <div className="space-y-1.5 animate-fadeIn">
-                        <label htmlFor="signup-name-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name</label>
+                        <label htmlFor="signup-name-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Full Name</label>
                         <div className="relative">
-                          <User className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+                          <User className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
                           <input
                             id="signup-name-input"
                             type="text"
@@ -422,8 +422,8 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                             placeholder={`e.g. ${BUSINESS_CONFIG.consultantName}`}
                             value={signupName}
                             onChange={(e) => setSignupName(e.target.value)}
-                            className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-3 text-xs text-white placeholder-slate-650 outline-none focus:border-[#D4AF37]/50 ${
-                              errors.signupName ? "border-red-500/50" : "border-white/5"
+                            className={`w-full bg-surface border rounded-xl pl-10 pr-4 py-3 text-xs text-on-surface placeholder-slate-650 outline-none focus:border-gold-accent/50 ${
+                              errors.signupName ? "border-red-500/50" : "border-outline-variant/50"
                             }`}
                           />
                         </div>
@@ -436,9 +436,9 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
 
                       {/* Email */}
                       <div className="space-y-1.5">
-                        <label htmlFor="signup-email-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
+                        <label htmlFor="signup-email-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Email Address</label>
                         <div className="relative">
-                          <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+                          <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
                           <input
                             id="signup-email-input"
                             type="email"
@@ -446,8 +446,8 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                             placeholder="email@example.com"
                             value={signupEmail}
                             onChange={(e) => setSignupEmail(e.target.value)}
-                            className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-3 text-xs text-white placeholder-slate-650 outline-none focus:border-[#D4AF37]/50 ${
-                              errors.signupEmail ? "border-red-500/50" : "border-white/5"
+                            className={`w-full bg-surface border rounded-xl pl-10 pr-4 py-3 text-xs text-on-surface placeholder-slate-650 outline-none focus:border-gold-accent/50 ${
+                              errors.signupEmail ? "border-red-500/50" : "border-outline-variant/50"
                             }`}
                           />
                         </div>
@@ -460,10 +460,10 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
 
                       {/* Phone */}
                       <div className="space-y-1.5">
-                        <label htmlFor="signup-phone-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Verified Contact Number</label>
+                        <label htmlFor="signup-phone-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Verified Contact Number</label>
                         <div className="relative">
-                          <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
-                          <span className="absolute left-9.5 top-3.5 text-xs text-slate-500 select-none font-bold">+91</span>
+                          <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
+                          <span className="absolute left-9.5 top-3.5 text-xs text-outline select-none font-bold">+91</span>
                           <input
                             id="signup-phone-input"
                             type="tel"
@@ -472,8 +472,8 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                             placeholder="99116 XXXXX"
                             value={signupPhone}
                             onChange={(e) => setSignupPhone(e.target.value.replace(/\D/g, ""))}
-                            className={`w-full bg-slate-950 border rounded-xl pl-19 pr-4 py-3 text-xs text-white placeholder-slate-650 outline-none focus:border-[#D4AF37]/50 ${
-                              errors.signupPhone ? "border-red-500/50" : "border-[#D4AF37]/20"
+                            className={`w-full bg-surface border rounded-xl pl-19 pr-4 py-3 text-xs text-on-surface placeholder-slate-650 outline-none focus:border-gold-accent/50 ${
+                              errors.signupPhone ? "border-red-500/50" : "border-gold-accent/20"
                             }`}
                           />
                         </div>
@@ -482,16 +482,16 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                             <AlertCircle className="h-3.5 w-3.5" /> {errors.signupPhone}
                           </span>
                         ) : (
-                          <p className="text-[9px] text-slate-500">Must be a valid 10-digit Indian mobile number</p>
+                          <p className="text-[9px] text-outline">Must be a valid 10-digit Indian mobile number</p>
                         )}
                       </div>
 
                       {/* Password */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label htmlFor="signup-password-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                          <label htmlFor="signup-password-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Password</label>
                           <div className="relative">
-                            <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+                            <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
                             <input
                               id="signup-password-input"
                               type={showSignupPassword ? "text" : "password"}
@@ -499,14 +499,14 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                               placeholder="Min 8 chars"
                               value={signupPassword}
                               onChange={(e) => setSignupPassword(e.target.value)}
-                              className={`w-full bg-slate-950 border rounded-xl pl-10 pr-10 py-3 text-xs text-white placeholder-slate-700 outline-none focus:border-[#D4AF37]/50 ${
-                                errors.signupPassword ? "border-red-500/50" : "border-white/5"
+                              className={`w-full bg-surface border rounded-xl pl-10 pr-10 py-3 text-xs text-on-surface placeholder-slate-700 outline-none focus:border-gold-accent/50 ${
+                                errors.signupPassword ? "border-red-500/50" : "border-outline-variant/50"
                               }`}
                             />
                             <button
                               type="button"
                               onClick={() => setShowSignupPassword(!showSignupPassword)}
-                              className="absolute right-3.5 top-3.5 h-5 w-5 text-slate-500 hover:text-slate-300 flex items-center justify-center cursor-pointer"
+                              className="absolute right-3.5 top-3.5 h-5 w-5 text-outline hover:text-on-surface-variant flex items-center justify-center cursor-pointer"
                             >
                               {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </button>
@@ -514,11 +514,11 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                           {signupPassword.length > 0 && (
                             <div className="flex gap-1 mt-1.5 h-1">
                               {[0, 1, 2, 3].map((idx) => {
-                                let color = "bg-slate-800";
+                                let color = "bg-surface-container-high";
                                 if (idx < passwordStrength) {
                                   if (passwordStrength < 2) color = "bg-red-500";
                                   else if (passwordStrength < 3) color = "bg-orange-500";
-                                  else if (passwordStrength < 4) color = "bg-[#D4AF37]";
+                                  else if (passwordStrength < 4) color = "bg-gold-accent";
                                   else color = "bg-emerald-500";
                                 }
                                 return (
@@ -530,9 +530,9 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                         </div>
 
                         <div className="space-y-1.5">
-                          <label htmlFor="signup-confirm-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Confirm</label>
+                          <label htmlFor="signup-confirm-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Confirm</label>
                           <div className="relative">
-                            <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+                            <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
                             <input
                               id="signup-confirm-input"
                               type={showConfirmPassword ? "text" : "password"}
@@ -540,14 +540,14 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                               placeholder="Repeat check"
                               value={signupConfirmPassword}
                               onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                              className={`w-full bg-slate-950 border rounded-xl pl-10 pr-10 py-3 text-xs text-white placeholder-slate-700 outline-none focus:border-[#D4AF37]/50 ${
-                                errors.signupConfirm ? "border-red-500/50" : "border-white/5"
+                              className={`w-full bg-surface border rounded-xl pl-10 pr-10 py-3 text-xs text-on-surface placeholder-slate-700 outline-none focus:border-gold-accent/50 ${
+                                errors.signupConfirm ? "border-red-500/50" : "border-outline-variant/50"
                               }`}
                             />
                             <button
                               type="button"
                               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              className="absolute right-3.5 top-3.5 h-5 w-5 text-slate-500 hover:text-slate-300 flex items-center justify-center cursor-pointer"
+                              className="absolute right-3.5 top-3.5 h-5 w-5 text-outline hover:text-on-surface-variant flex items-center justify-center cursor-pointer"
                             >
                               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </button>
@@ -567,13 +567,13 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                       )}
 
                       {/* Agree T&C checkbox */}
-                      <label htmlFor="signup-agree-checkbox" className="flex items-start gap-2.5 text-[11px] text-slate-400 hover:text-slate-300 cursor-pointer pt-1 select-none">
+                      <label htmlFor="signup-agree-checkbox" className="flex items-start gap-2.5 text-[11px] text-on-surface-variant hover:text-on-surface-variant cursor-pointer pt-1 select-none">
                         <input
                           id="signup-agree-checkbox"
                           type="checkbox"
                           checked={signupAgree}
                           onChange={(e) => setSignupAgree(e.target.checked)}
-                          className="mt-0.5 rounded border-white/10 text-[#D4AF37] focus:ring-[#D4AF37]/50 h-4 w-4 bg-slate-950"
+                          className="mt-0.5 rounded border-outline-variant text-gold-accent focus:ring-gold-accent/50 h-4 w-4 bg-surface"
                         />
                         <span>I understand that Shiv Saya Properties performs background physical audits on listings and book consultation schedules under Indian law.</span>
                       </label>
@@ -583,7 +583,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                         id="signup-submit-btn"
                         disabled={isSignupDisabled}
                         type="submit"
-                        className="w-full py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 text-xs font-black uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-98 transition-all disabled:opacity-40 select-none cursor-pointer flex items-center justify-center gap-1"
+                        className="w-full py-3 rounded-xl bg-gold-accent text-[#0F172A] text-xs font-black uppercase tracking-wider shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 transition-all disabled:opacity-40 select-none cursor-pointer flex items-center justify-center gap-1"
                       >
                         {isSubmitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating Credentials...</> : "Access Account"}
                       </button>
@@ -593,7 +593,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                   
                   /* ================= FORGOT PASSWORD WORKFLOW FORM ================= */
                   <form onSubmit={handleForgotSubmit} className="space-y-4 animate-fadeIn">
-                    <div className="flex items-center gap-2 text-slate-300 text-xs font-bold uppercase tracking-wider mb-2">
+                    <div className="flex items-center gap-2 text-on-surface-variant text-xs font-bold uppercase tracking-wider mb-2">
                       <span>Reset Your Password</span>
                     </div>
 
@@ -607,14 +607,14 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                         <button
                           type="button"
                           onClick={() => { setShowForgotForm(false); setForgotSuccess(""); }}
-                          className="w-full py-2 bg-slate-900 border border-white/10 text-[11px] font-bold rounded-lg text-slate-300 hover:text-white"
+                          className="w-full py-2 bg-surface-container border border-outline-variant text-[11px] font-bold rounded-lg text-on-surface-variant hover:text-on-surface"
                         >
                           Return to Sign-In
                         </button>
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        <p className="text-slate-400 text-xs leading-relaxed">
+                        <p className="text-on-surface-variant text-xs leading-relaxed">
                           Enter your email address below, and we will send you a password reset invitation link.
                         </p>
 
@@ -626,9 +626,9 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                         )}
 
                         <div className="space-y-1.5">
-                          <label htmlFor="forgot-email-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
+                          <label htmlFor="forgot-email-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Email Address</label>
                           <div className="relative">
-                            <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+                            <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
                             <input
                               id="forgot-email-input"
                               type="email"
@@ -636,8 +636,8 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                               placeholder="Enter your email"
                               value={forgotEmail}
                               onChange={(e) => setForgotEmail(e.target.value)}
-                              className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-3 text-xs text-white placeholder-slate-655 outline-none focus:border-[#D4AF37]/50 ${
-                                forgotError ? "border-red-500/50" : "border-white/5"
+                              className={`w-full bg-surface border rounded-xl pl-10 pr-4 py-3 text-xs text-on-surface placeholder-slate-655 outline-none focus:border-gold-accent/50 ${
+                                forgotError ? "border-red-500/50" : "border-outline-variant/50"
                               }`}
                             />
                           </div>
@@ -647,7 +647,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                           <button
                             type="button"
                             onClick={() => { setShowForgotForm(false); setForgotError(""); }}
-                            className="flex-1 py-3 border border-white/10 rounded-xl text-center text-slate-400 text-xs font-bold uppercase transition-all hover:bg-white/5 cursor-pointer"
+                            className="flex-1 py-3 border border-outline-variant rounded-xl text-center text-on-surface-variant text-xs font-bold uppercase transition-all hover:bg-white/5 cursor-pointer"
                           >
                             Cancel
                           </button>
@@ -655,7 +655,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                             id="forgot-submit-btn"
                             disabled={isForgotSubmitting || !forgotEmail}
                             type="submit"
-                            className="flex-1 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 text-xs font-bold rounded-xl text-center shadow uppercase hover:brightness-110 disabled:opacity-40 cursor-pointer"
+                            className="flex-1 py-3 bg-gold-accent text-[#0F172A] text-xs font-bold rounded-xl text-center shadow uppercase hover:bg-gold-hover hover:scale-105 shadow-md disabled:opacity-40 cursor-pointer"
                           >
                             {isForgotSubmitting ? "Sending..." : "Send Reset Link"}
                           </button>
@@ -667,11 +667,11 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
 
                 {/* Third Party Divider OR */}
                 {!showForgotForm && (
-                  <div className="space-y-5 pt-1.5 border-t border-white/5">
+                  <div className="space-y-5 pt-1.5 border-t border-outline-variant/50">
                     <div className="relative flex py-2 items-center">
-                      <div className="flex-grow border-t border-white/5"></div>
-                      <span className="flex-shrink mx-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Or Continue With</span>
-                      <div className="flex-grow border-t border-white/5"></div>
+                      <div className="flex-grow border-t border-outline-variant/50"></div>
+                      <span className="flex-shrink mx-4 text-[10px] font-bold text-outline uppercase tracking-widest">Or Continue With</span>
+                      <div className="flex-grow border-t border-outline-variant/50"></div>
                     </div>
 
                     <button
@@ -679,7 +679,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                       type="button"
                       disabled={isSubmitting}
                       onClick={handleGoogleSignIn}
-                      className="w-full py-3 flex items-center justify-center gap-3 bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-900 text-xs font-bold rounded-xl border border-white/10 shadow-lg active:scale-98 transition-all select-none cursor-pointer"
+                      className="w-full py-3 flex items-center justify-center gap-3 bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-900 text-xs font-bold rounded-xl border border-outline-variant shadow active:scale-98 transition-all select-none cursor-pointer"
                     >
                       {isSubmitting ? (
                         <>
@@ -707,23 +707,23 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
 
             {/* Bottom Swapper Footer */}
             {!showForgotForm && (
-              <div className="px-6 py-4 border-t border-white/5 bg-slate-950/40 text-center select-none">
+              <div className="px-6 py-4 border-t border-outline-variant/50 bg-surface/40 text-center select-none">
                 {activeTab === "login" ? (
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-on-surface-variant">
                     Don't have an account yet?{" "}
                     <button
                       onClick={() => { setActiveTab("signup"); setAuthError(""); }}
-                      className="text-[#D4AF37] hover:underline font-bold"
+                      className="text-gold-accent hover:underline font-bold"
                     >
                       Sign Up Free
                     </button>
                   </p>
                 ) : (
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-on-surface-variant">
                     Already have an account?{" "}
                     <button
                       onClick={() => { setActiveTab("login"); setAuthError(""); }}
-                      className="text-[#D4AF37] hover:underline font-bold"
+                      className="text-gold-accent hover:underline font-bold"
                     >
                       Sign In
                     </button>

@@ -49,7 +49,7 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
   };
 
   return (
-    <footer className="bg-[#0b0f19] border-t border-white/5 font-sans relative pt-16 pb-8 text-slate-300">
+    <footer className="bg-[#0b0f19] border-t border-outline-variant/50 font-sans relative pt-16 pb-8 text-on-surface-variant">
       
       {/* Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -59,12 +59,12 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
           <div className="space-y-5">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleLinkClick("home")}>
               <Logo size={36} className="shrink-0" />
-              <span className="text-xl font-bold tracking-tight text-white">
-                Shiv <span className="text-[#D4AF37]">Saya</span> Properties
+              <span className="text-xl font-bold tracking-tight text-on-surface">
+                Shiv <span className="text-gold-accent">Saya</span> Properties
               </span>
             </div>
             
-            <p className="text-sm leading-relaxed text-slate-400">
+            <p className="text-sm leading-relaxed text-on-surface-variant">
               {BUSINESS_CONFIG.businessName} is Delhi NCR's premium real estate advisory. Guided by lead consultant <strong>{BUSINESS_CONFIG.consultantName}</strong>, we combine expert market analytics with transparent client-focused guidance.
             </p>
             
@@ -72,20 +72,20 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
               {BUSINESS_CONFIG.reraNumber &&
                !BUSINESS_CONFIG.reraNumber.includes("Pending") &&
                !BUSINESS_CONFIG.reraNumber.includes("XXXX") && (
-                <span className="inline-block bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-semibold px-3 py-1.5 rounded-md border border-[#D4AF37]/30">
+                <span className="inline-block bg-gold-accent/10 text-gold-accent text-xs font-semibold px-3 py-1.5 rounded-md border border-gold-accent/30">
                   RERA Reg. No: {BUSINESS_CONFIG.reraNumber}
                 </span>
               )}
             </div>
 
             <div className="flex items-center gap-3">
-              <a href="#" className="h-9 w-9 bg-slate-800/60 hover:bg-[#D4AF37] hover:text-slate-950 rounded-full flex items-center justify-center text-slate-400 transition-all">
+              <a href="#" className="h-9 w-9 bg-surface-container-high/60 hover:bg-gold-accent hover:text-[#0F172A] rounded-full flex items-center justify-center text-on-surface-variant transition-all">
                 <Facebook className="h-4 w-4" />
               </a>
-              <a href="#" className="h-9 w-9 bg-slate-800/60 hover:bg-[#D4AF37] hover:text-slate-950 rounded-full flex items-center justify-center text-slate-400 transition-all">
+              <a href="#" className="h-9 w-9 bg-surface-container-high/60 hover:bg-gold-accent hover:text-[#0F172A] rounded-full flex items-center justify-center text-on-surface-variant transition-all">
                 <Instagram className="h-4 w-4" />
               </a>
-              <a href="#" className="h-9 w-9 bg-slate-800/60 hover:bg-[#D4AF37] hover:text-slate-950 rounded-full flex items-center justify-center text-slate-400 transition-all">
+              <a href="#" className="h-9 w-9 bg-surface-container-high/60 hover:bg-gold-accent hover:text-[#0F172A] rounded-full flex items-center justify-center text-on-surface-variant transition-all">
                 <Linkedin className="h-4 w-4" />
               </a>
             </div>
@@ -93,33 +93,33 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
 
           {/* Column 2: Quick Links */}
           <div>
-            <h3 className="text-white font-semibold text-base mb-6 relative pl-3">
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-[#D4AF37] rounded-full"></span>
+            <h3 className="text-on-surface font-semibold text-base mb-6 relative pl-3">
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-gold-accent rounded-full"></span>
               Quick Links
             </h3>
             <ul className="space-y-3.5 text-sm">
               <li>
-                <button onClick={() => handleLinkClick("home")} className="hover:text-[#D4AF37] transition-colors text-left">
+                <button onClick={() => handleLinkClick("home")} className="hover:text-gold-accent transition-colors text-left">
                   Home
                 </button>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("properties")} className="hover:text-[#D4AF37] transition-colors text-left">
+                <button onClick={() => handleLinkClick("properties")} className="hover:text-gold-accent transition-colors text-left">
                   Properties Directory
                 </button>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("services_sec")} className="hover:text-[#D4AF37] transition-colors text-left">
+                <button onClick={() => handleLinkClick("services_sec")} className="hover:text-gold-accent transition-colors text-left">
                   Our Services
                 </button>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("about_sec")} className="hover:text-[#D4AF37] transition-colors text-left">
+                <button onClick={() => handleLinkClick("about_sec")} className="hover:text-gold-accent transition-colors text-left">
                   About the Firm
                 </button>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("contact_sec")} className="hover:text-[#D4AF37] transition-colors text-left">
+                <button onClick={() => handleLinkClick("contact_sec")} className="hover:text-gold-accent transition-colors text-left">
                   Contact Us
                 </button>
               </li>
@@ -128,33 +128,33 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
 
           {/* Column 3: Property Types */}
           <div>
-            <h3 className="text-white font-semibold text-base mb-6 relative pl-3">
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-[#D4AF37] rounded-full"></span>
+            <h3 className="text-on-surface font-semibold text-base mb-6 relative pl-3">
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-gold-accent rounded-full"></span>
               Property Types
             </h3>
             <ul className="space-y-3.5 text-sm">
               <li>
-                <button onClick={() => handleLinkClick("properties")} className="hover:text-[#D4AF37] transition-colors text-left">
+                <button onClick={() => handleLinkClick("properties")} className="hover:text-gold-accent transition-colors text-left">
                   Luxury Apartments & Flats
                 </button>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("properties")} className="hover:text-[#D4AF37] transition-colors text-left">
+                <button onClick={() => handleLinkClick("properties")} className="hover:text-gold-accent transition-colors text-left">
                   Premium Sovereign Villas
                 </button>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("properties")} className="hover:text-[#D4AF37] transition-colors text-left">
+                <button onClick={() => handleLinkClick("properties")} className="hover:text-gold-accent transition-colors text-left">
                   Residential Plots & Land
                 </button>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("properties")} className="hover:text-[#D4AF37] transition-colors text-left">
+                <button onClick={() => handleLinkClick("properties")} className="hover:text-gold-accent transition-colors text-left">
                   Modern Builder Floors
                 </button>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("properties")} className="hover:text-[#D4AF37] transition-colors text-left">
+                <button onClick={() => handleLinkClick("properties")} className="hover:text-gold-accent transition-colors text-left">
                   Grade-A Commercial Retail
                 </button>
               </li>
@@ -163,33 +163,33 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
 
           {/* Column 4: Contact Info */}
           <div className="space-y-4">
-            <h3 className="text-white font-semibold text-base mb-6 relative pl-3">
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-[#D4AF37] rounded-full"></span>
+            <h3 className="text-on-surface font-semibold text-base mb-6 relative pl-3">
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-gold-accent rounded-full"></span>
               Contact Info
             </h3>
             
             <div className="flex gap-3 text-sm">
-              <MapPin className="h-5 w-5 text-[#D4AF37] shrink-0 mt-0.5" />
-              <p className="text-slate-400">
+              <MapPin className="h-5 w-5 text-gold-accent shrink-0 mt-0.5" />
+              <p className="text-on-surface-variant">
                 NH 58, Morta Rajnagar Extension,<br />Ghaziabad, Uttar Pradesh<br />Near Duhai RRTS Metro Station<br />(Pillar Number 711)
               </p>
             </div>
 
             <div className="flex gap-3 items-center text-sm">
-              <Phone className="h-4 w-4 text-[#D4AF37] shrink-0" />
-              <a href={`tel:${BUSINESS_CONFIG.businessPhone}`} className="hover:text-[#D4AF37] transition-colors text-slate-400">
+              <Phone className="h-4 w-4 text-gold-accent shrink-0" />
+              <a href={`tel:${BUSINESS_CONFIG.businessPhone}`} className="hover:text-gold-accent transition-colors text-on-surface-variant">
                 {BUSINESS_CONFIG.businessPhone}
               </a>
             </div>
 
             <div className="flex gap-3 items-center text-sm">
-              <span className="text-[10px] font-bold px-2 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/20 uppercase">Consultant</span>
-              <p className="text-slate-300 font-semibold text-xs">{BUSINESS_CONFIG.consultantName}</p>
+              <span className="text-[10px] font-bold px-2 py-0.5 bg-gold-accent/10 text-gold-accent rounded border border-gold-accent/20 uppercase">Consultant</span>
+              <p className="text-on-surface-variant font-semibold text-xs">{BUSINESS_CONFIG.consultantName}</p>
             </div>
 
             <div className="flex gap-3 items-center text-sm">
-              <Mail className="h-4 w-4 text-[#D4AF37] shrink-0" />
-              <a href={`mailto:${BUSINESS_CONFIG.businessEmail}`} className="hover:text-[#D4AF37] transition-colors text-slate-400 break-all">
+              <Mail className="h-4 w-4 text-gold-accent shrink-0" />
+              <a href={`mailto:${BUSINESS_CONFIG.businessEmail}`} className="hover:text-gold-accent transition-colors text-on-surface-variant break-all">
                 {BUSINESS_CONFIG.businessEmail}
               </a>
             </div>
@@ -198,7 +198,7 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
         </div>
 
         {/* Separator */}
-        <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        <div className="border-t border-outline-variant/50 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-outline">
           
           <div>
             © 2026 {BUSINESS_CONFIG.businessName}. All Rights Reserved. 
@@ -210,12 +210,12 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
           </div>
           
           <div className="flex items-center gap-6">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms & Conditions</a>
+            <a href="#" className="hover:text-on-surface transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-on-surface transition-colors">Terms & Conditions</a>
             
             <button 
               onClick={handleScrollToTop}
-              className="h-9 w-9 bg-slate-800 hover:bg-[#D4AF37] hover:text-slate-950 text-slate-300 rounded-full flex items-center justify-center transition-all shadow-md ml-2"
+              className="h-9 w-9 bg-surface-container-high hover:bg-gold-accent hover:text-[#0F172A] text-on-surface-variant rounded-full flex items-center justify-center transition-all shadow-md ml-2"
               title="Return to top"
             >
               <ArrowUp className="h-4 w-4" />
@@ -231,10 +231,10 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
           href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent("Hi! I'd love to get more details about your premium RERA properties!")}`}
           target="_blank"
           rel="noreferrer"
-          className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-[#10B981] shadow-2xl flex items-center justify-center text-white transition-transform hover:scale-110 active:scale-95 group focus:outline-none"
+          className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-success-green shadow-md flex items-center justify-center text-on-surface transition-transform hover:scale-110 active:scale-95 group focus:outline-none"
           title="Chat with property specialists"
         >
-          <span className="absolute inset-0 rounded-full bg-[#10B981] opacity-50 animate-ping group-hover:animate-none"></span>
+          <span className="absolute inset-0 rounded-full bg-success-green opacity-50 animate-ping group-hover:animate-none"></span>
           <svg
             className="h-7 w-7 relative fill-current"
             viewBox="0 0 24 24"

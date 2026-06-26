@@ -444,15 +444,15 @@ export default function App() {
 
   if (!isAppReady) {
     return (
-      <div className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center p-6 text-center select-none font-sans">
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 text-center select-none font-sans">
         <div className="relative h-16 w-16 mb-6">
-          <div className="absolute inset-0 rounded-full border-4 border-[#D4AF37]/20"></div>
-          <div className="absolute inset-0 rounded-full border-4 border-t-[#D4AF37] border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-gold-accent/20"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-t-gold-accent border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
         </div>
-        <h1 className="text-xl font-bold text-white tracking-wide mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+        <h1 className="text-xl font-bold text-on-surface tracking-wide mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
           Shiv Saya Properties
         </h1>
-        <p className="text-xs text-slate-400 font-semibold animate-pulse">
+        <p className="text-xs text-on-surface-variant font-semibold animate-pulse">
           Loading your experience...
         </p>
       </div>
@@ -463,22 +463,22 @@ export default function App() {
 
   if (maintenanceMode && !bypassMaintenance) {
     return (
-      <div className="min-h-screen bg-[#0F172A] text-slate-200 font-sans flex items-center justify-center p-6 select-none relative overflow-hidden">
+      <div className="min-h-screen bg-surface text-on-surface font-sans flex items-center justify-center p-6 select-none relative overflow-hidden">
         {/* Decorative Grid Lines */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:32px_32px]"></div>
         
         <div className="flex flex-col items-center text-center space-y-6 max-w-lg px-4 relative z-10">
           <div className="relative">
-            <div className="absolute inset-x-0 -top-4 bottom-0 rounded-full bg-[#D4AF37]/5 blur-3xl"></div>
-            <div className="relative h-20 w-20 rounded-full border-2 border-dashed border-[#D4AF37] flex items-center justify-center animate-spin-slow">
-              <svg className="h-10 w-10 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+            <div className="absolute inset-x-0 -top-4 bottom-0 rounded-full bg-gold-accent/5 blur-3xl"></div>
+            <div className="relative h-20 w-20 rounded-full border-2 border-dashed border-gold-accent flex items-center justify-center animate-spin-slow">
+              <svg className="h-10 w-10 text-gold-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
           </div>
           <div className="space-y-2">
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">We'll Be Right Back</h1>
-            <p className="text-sm text-slate-300 leading-relaxed max-w-md">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-on-surface tracking-tight">We'll Be Right Back</h1>
+            <p className="text-sm text-on-surface-variant leading-relaxed max-w-md">
               Shiv Saya Properties is currently undergoing scheduled maintenance.
             </p>
             <p className="text-xs text-slate-405 font-semibold max-w-sm">
@@ -490,7 +490,7 @@ export default function App() {
               href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=Hi`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B5942B] hover:brightness-110 text-slate-950 font-bold rounded-xl text-xs transition-all active:scale-98 shadow-lg"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gold-accent hover:bg-gold-hover hover:scale-105 shadow-md text-[#0F172A] font-bold rounded-xl text-xs transition-all active:scale-98 shadow"
             >
               <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
@@ -498,8 +498,8 @@ export default function App() {
               Chat on WhatsApp
             </a>
           </div>
-          <p className="text-[11px] text-slate-500 font-medium">
-            Have questions? Email us at <a href={`mailto:${BUSINESS_CONFIG.businessEmail}`} className="text-[#D4AF37] hover:underline">{BUSINESS_CONFIG.businessEmail}</a>
+          <p className="text-[11px] text-outline font-medium">
+            Have questions? Email us at <a href={`mailto:${BUSINESS_CONFIG.businessEmail}`} className="text-gold-accent hover:underline">{BUSINESS_CONFIG.businessEmail}</a>
           </p>
         </div>
       </div>
@@ -508,8 +508,8 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-[#D4AF37] text-[#0F172A] px-4 py-2 rounded-md z-50 font-bold">Skip to main content</a>
-      <div className="bg-[#0F172A] min-h-screen text-slate-100 font-sans flex flex-col justify-between">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-gold-accent text-surface px-4 py-2 rounded-md z-50 font-bold">Skip to main content</a>
+      <div className="bg-surface min-h-screen text-on-surface font-sans flex flex-col justify-between">
         
         {/* GLOBAL TOAST FLOATING BANNER */}
         <Notification 
@@ -538,10 +538,10 @@ export default function App() {
         {/* MAIN SCREEN WORKSPACE CONTAINER WITH WRAPPED ERROR BOUNDARY */}
         <main id="main-content" className="flex-1 flex flex-col relative w-full">
           <Suspense fallback={
-            <div className="flex-grow bg-[#0F172A] flex flex-col items-center justify-center p-6 text-center shadow-2xl min-h-[50vh]">
+            <div className="flex-grow bg-surface flex flex-col items-center justify-center p-6 text-center shadow-md min-h-[50vh]">
               <div className="relative h-12 w-12 mb-4">
-                <div className="absolute inset-0 rounded-full border-2 border-[#D4AF37]/20"></div>
-                <div className="absolute inset-0 rounded-full border-2 border-t-[#D4AF37] border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
+                <div className="absolute inset-0 rounded-full border-2 border-gold-accent/20"></div>
+                <div className="absolute inset-0 rounded-full border-2 border-t-gold-accent border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
               </div>
             </div>
           }>
@@ -657,13 +657,13 @@ export default function App() {
 
         {/* ================= TOUCH MOBILE BOTTOM TAB BAR ACTIONS ================= */}
         {currentView !== "admin" && (
-          <div className="lg:hidden bg-[#0b0f19] border-t border-white/5 py-4 px-4 flex items-center justify-around text-center select-none w-full pb-8">
+          <div className="lg:hidden bg-surface border-t border-outline-variant/50 py-4 px-4 flex items-center justify-around text-center select-none w-full pb-8">
             
             {/* Tab 1: Home */}
             <button
               onClick={() => handleNavigation("home")}
               className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
-                currentView === "home" ? "text-[#D4AF37]" : "text-slate-400"
+                currentView === "home" ? "text-gold-accent" : "text-on-surface-variant"
               }`}
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -676,7 +676,7 @@ export default function App() {
             <button
               onClick={() => handleNavigation("properties")}
               className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
-                currentView === "properties" ? "text-[#D4AF37]" : "text-slate-400"
+                currentView === "properties" ? "text-gold-accent" : "text-on-surface-variant"
               }`}
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -689,10 +689,10 @@ export default function App() {
             <button
               onClick={() => handleNavigation("list_property")}
               className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
-                currentView === "list_property" ? "text-[#D4AF37]" : "text-slate-400"
+                currentView === "list_property" ? "text-gold-accent" : "text-on-surface-variant"
               }`}
             >
-              <div className="h-4 w-4 bg-gradient-to-br from-[#D4AF37] to-[#B5942B] rounded flex items-center justify-center text-slate-950">
+              <div className="h-4 w-4 bg-gold-accent rounded flex items-center justify-center text-[#0F172A]">
                 <span className="text-sm font-black leading-none">+</span>
               </div>
               <span className="text-[10px] font-bold">Post</span>
@@ -702,7 +702,7 @@ export default function App() {
             <button
               onClick={() => handleNavigation("saved")}
               className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-[42px] relative ${
-                currentView === "saved" ? "text-[#D4AF37]" : "text-slate-400"
+                currentView === "saved" ? "text-gold-accent" : "text-on-surface-variant"
               }`}
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -718,7 +718,7 @@ export default function App() {
             <button
               onClick={() => handleNavigation("profile")}
               className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
-                currentView === "profile" ? "text-[#D4AF37]" : "text-slate-400"
+                currentView === "profile" ? "text-gold-accent" : "text-on-surface-variant"
               }`}
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">

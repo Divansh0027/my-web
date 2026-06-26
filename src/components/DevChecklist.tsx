@@ -106,7 +106,7 @@ export default function DevChecklist() {
       <button
         id="dev-checklist-trigger-btn"
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-26 left-6 z-[9999] h-12 w-12 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-[#D4AF37] hover:bg-slate-800 hover:text-white transition-all shadow-2xl active:scale-95 cursor-pointer group"
+        className="fixed bottom-26 left-6 z-[9999] h-12 w-12 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center text-gold-accent hover:bg-surface-container-high hover:text-on-surface transition-all shadow-md active:scale-95 cursor-pointer group"
         title="Open Pre-Launch Checklist"
       >
         <Settings className="h-5 w-5 animate-spin-slow group-hover:rotate-45 transition-transform duration-500" />
@@ -122,7 +122,7 @@ export default function DevChecklist() {
               animate={{ opacity: 0.5 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-slate-950/80 z-[10000] backdrop-blur-xs"
+              className="fixed inset-0 bg-surface/80 z-[10000] backdrop-blur-xs"
             />
 
             {/* Sidebar drawer */}
@@ -132,36 +132,36 @@ export default function DevChecklist() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="fixed top-0 bottom-0 left-0 w-full sm:w-[420px] bg-slate-900 border-r border-white/5 z-[10001] shadow-2xl flex flex-col justify-between"
+              className="fixed top-0 bottom-0 left-0 w-full sm:w-[420px] bg-surface-container border-r border-outline-variant/50 z-[10001] shadow-md flex flex-col justify-between"
             >
               <div className="flex flex-col h-full overflow-hidden">
                 {/* Header */}
-                <div className="p-6 border-b border-white/5 bg-slate-950 flex items-center justify-between">
+                <div className="p-6 border-b border-outline-variant/50 bg-surface flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <CheckSquare className="h-5 w-5 text-[#D4AF37]" />
-                    <h2 className="text-sm font-black text-white uppercase tracking-wider">
+                    <CheckSquare className="h-5 w-5 text-gold-accent" />
+                    <h2 className="text-sm font-black text-on-surface uppercase tracking-wider">
                       Pre-Launch Checklist
                     </h2>
                   </div>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-1 px-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer text-xs flex items-center gap-1"
+                    className="p-1 px-2 hover:bg-white/10 rounded-lg text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer text-xs flex items-center gap-1"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
 
                 {/* Progress bar info */}
-                <div className="p-6 bg-slate-950/50 border-b border-white/5 space-y-2">
+                <div className="p-6 bg-surface/50 border-b border-outline-variant/50 space-y-2">
                   <div className="flex items-center justify-between text-xs font-bold leading-none">
-                    <span className="text-slate-400 uppercase tracking-widest text-[9px]">Launch Readiness</span>
-                    <span className="text-[#D4AF37] text-[11px] font-mono">
+                    <span className="text-on-surface-variant uppercase tracking-widest text-[9px]">Launch Readiness</span>
+                    <span className="text-gold-accent text-[11px] font-mono">
                       {completedCount} of {TOTAL_ITEMS} complete ({percentage}%)
                     </span>
                   </div>
-                  <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-[#D4AF37] to-amber-500 rounded-full transition-all duration-300"
+                      className="h-full bg-gradient-to-r from-gold-accent to-amber-500 rounded-full transition-all duration-300"
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
@@ -173,9 +173,9 @@ export default function DevChecklist() {
                     const SecIcon = section.icon;
                     return (
                       <div key={section.id} className="space-y-3">
-                        <div className="flex items-center gap-2 pb-1 border-b border-white/5">
-                          <SecIcon className="h-3.5 w-3.5 text-[#D4AF37]" strokeWidth={2.5} />
-                          <h3 className="text-[10px] font-extrabold tracking-widest text-white uppercase">
+                        <div className="flex items-center gap-2 pb-1 border-b border-outline-variant/50">
+                          <SecIcon className="h-3.5 w-3.5 text-gold-accent" strokeWidth={2.5} />
+                          <h3 className="text-[10px] font-extrabold tracking-widest text-on-surface uppercase">
                             {section.title}
                           </h3>
                         </div>
@@ -187,7 +187,7 @@ export default function DevChecklist() {
                               <label
                                 htmlFor={`checklist-item-${item.id}`}
                                 key={item.id}
-                                className="flex items-start gap-3 p-2 bg-slate-950/30 hover:bg-slate-950/60 border border-white/5 rounded-xl transition-all cursor-pointer select-none"
+                                className="flex items-start gap-3 p-2 bg-surface/30 hover:bg-surface/60 border border-outline-variant/50 rounded-xl transition-all cursor-pointer select-none"
                               >
                                 <input
                                   id={`checklist-item-${item.id}`}
@@ -199,15 +199,15 @@ export default function DevChecklist() {
                                 <div
                                   className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 mt-0.5 transition-all ${
                                     isChecked
-                                      ? "border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37]"
-                                      : "border-white/15 bg-slate-950"
+                                      ? "border-gold-accent bg-gold-accent/10 text-gold-accent"
+                                      : "border-outline-variant bg-surface"
                                   }`}
                                 >
                                   {isChecked && <Check className="h-3 w-3 stroke-[3]" />}
                                 </div>
                                 <span
                                   className={`text-[11px] leading-tight font-medium ${
-                                    isChecked ? "text-slate-400 line-through decoration-slate-600" : "text-slate-305"
+                                    isChecked ? "text-on-surface-variant line-through decoration-slate-600" : "text-slate-305"
                                   }`}
                                 >
                                   {item.label}
@@ -222,21 +222,21 @@ export default function DevChecklist() {
                 </div>
 
                 {/* Footer status quote & Links */}
-                <div className="p-4 bg-slate-950 border-t border-white/5 flex flex-col gap-3">
+                <div className="p-4 bg-surface border-t border-outline-variant/50 flex flex-col gap-3">
                   <div className="flex gap-2 justify-center">
-                     <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-[10px] text-[#D4AF37] hover:underline flex items-center gap-1">
+                     <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-[10px] text-gold-accent hover:underline flex items-center gap-1">
                        <Server className="h-3 w-3" /> Firebase
                      </a>
-                     <span className="text-slate-600">&bull;</span>
-                     <a href="https://vercel.com/dashboard" target="_blank" rel="noreferrer" className="text-[10px] text-white hover:underline flex items-center gap-1">
+                     <span className="text-outline-variant">&bull;</span>
+                     <a href="https://vercel.com/dashboard" target="_blank" rel="noreferrer" className="text-[10px] text-on-surface hover:underline flex items-center gap-1">
                        <Globe className="h-3 w-3" /> Vercel
                      </a>
-                     <span className="text-slate-600">&bull;</span>
-                     <a href="https://github.com" target="_blank" rel="noreferrer" className="text-[10px] text-slate-300 hover:underline flex items-center gap-1">
+                     <span className="text-outline-variant">&bull;</span>
+                     <a href="https://github.com" target="_blank" rel="noreferrer" className="text-[10px] text-on-surface-variant hover:underline flex items-center gap-1">
                        <Globe className="h-3 w-3" /> GitHub
                      </a>
                   </div>
-                  <div className="text-[10px] text-slate-500 font-medium text-center">
+                  <div className="text-[10px] text-outline font-medium text-center">
                     Local Dev Session Checklist &bull; Persisting in Sandbox
                   </div>
                 </div>

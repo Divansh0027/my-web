@@ -26,20 +26,20 @@ export default React.memo(function Notification({ message, type, onClose }: Noti
           role={type === 'error' ? 'alert' : 'status'}
           aria-live={type === 'error' ? 'assertive' : 'polite'}
         >
-          <div className={`flex items-center gap-3.5 px-5 py-4 rounded-2xl shadow-2xl border backdrop-blur-md ${
+          <div className={`flex items-center gap-3.5 px-5 py-4 rounded-2xl shadow-md border backdrop-blur-md ${
             type === "success" 
               ? "bg-[#10B981]/15 border-[#10B981]/30 text-emerald-300 shadow-emerald-950/10" 
               : type === "error"
-              ? "bg-[#EF4444] border-[#EF4444]/30 text-white shadow-red-950/20"
-              : "bg-slate-900/95 border-white/10 text-slate-200 shadow-black/30"
+              ? "bg-[#EF4444] border-[#EF4444]/30 text-on-surface shadow-red-950/20"
+              : "bg-surface-container/95 border-outline-variant text-on-surface shadow-black/30"
           }`}>
             
             {type === "success" ? (
               <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
             ) : type === "error" ? (
-              <XCircle className="h-5 w-5 text-white shrink-0" />
+              <XCircle className="h-5 w-5 text-on-surface shrink-0" />
             ) : (
-              <AlertCircle className="h-5 w-5 text-[#D4AF37] shrink-0" />
+              <AlertCircle className="h-5 w-5 text-gold-accent shrink-0" />
             )}
             
             <p className="text-xs font-bold leading-relaxed pr-2 select-none">
@@ -48,7 +48,7 @@ export default React.memo(function Notification({ message, type, onClose }: Noti
 
             <button 
               onClick={onClose} 
-              className="text-slate-400 hover:text-white transition-colors text-xs font-bold font-mono pl-2 border-l border-white/10"
+              className="text-on-surface-variant hover:text-on-surface transition-colors text-xs font-bold font-mono pl-2 border-l border-outline-variant"
             >
               ✕
             </button>

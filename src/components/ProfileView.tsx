@@ -106,18 +106,18 @@ export default function ProfileView({
   const favoriteProperties = allProperties.filter(p => savedPropertyIds.includes(p.id));
 
   return (
-    <div className="font-sans text-slate-200 bg-[#0F172A] pt-24 pb-20 min-h-screen select-none">
+    <div className="font-sans text-on-surface bg-surface pt-24 pb-20 min-h-screen select-none">
       
       {/* HEADER SECTION */}
-      <div className="bg-slate-900 border-b border-white/5 py-10 px-4 sm:px-6 lg:px-8 mb-10">
+      <div className="bg-surface-container border-b border-outline-variant/50 py-10 px-4 sm:px-6 lg:px-8 mb-10">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="text-[#D4AF37] font-semibold text-xs tracking-wider uppercase flex items-center gap-1.5">
+            <div className="text-gold-accent font-semibold text-xs tracking-wider uppercase flex items-center gap-1.5">
               <Sparkles className="h-4 w-4 animate-spin" />
               User Workspace Control
             </div>
-            <h1 className="text-3xl font-extrabold text-white mt-1">My Dashboard Account</h1>
-            <p className="text-slate-400 text-xs mt-2 font-medium leading-relaxed">
+            <h1 className="text-3xl font-extrabold text-on-surface mt-1">My Dashboard Account</h1>
+            <p className="text-on-surface-variant text-xs mt-2 font-medium leading-relaxed">
               Organize your listings, track saved bookmark shortlists, manage scheduled site tours, and adjust contact records.
             </p>
           </div>
@@ -127,17 +127,17 @@ export default function ProfileView({
       <div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-8">
         
         {/* SECTION 1: EDITABLE PROFILE BLOCK CARD */}
-        <div className="bg-slate-900/60 backdrop-blur-md border border-white/5 p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden">
+        <div className="bg-surface-container/60 backdrop-blur-md border border-outline-variant/50 p-6 sm:p-8 rounded-3xl shadow-md relative overflow-hidden">
           {/* Decorative subtle background accents */}
-          <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-gradient-to-tr from-[#D4AF37]/10 to-transparent blur-xl"></div>
+          <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-gradient-to-tr from-gold-accent/10 to-transparent blur-xl"></div>
           
           <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
             <div className="flex flex-col sm:flex-row items-center gap-5 w-full md:w-auto">
-              <div className="h-16 w-16 shrink-0 rounded-full border border-[#D4AF37]/35 overflow-hidden bg-slate-800 flex items-center justify-center">
+              <div className="h-16 w-16 shrink-0 rounded-full border border-gold-accent/35 overflow-hidden bg-surface-container-high flex items-center justify-center">
                 {user?.photoURL ? (
                   <img width={800} height={600} src={user.photoURL} alt={user.displayName} className="h-full w-full object-cover" loading="lazy" />
                 ) : (
-                  <UserCheck className="h-7 w-7 text-[#D4AF37]" />
+                  <UserCheck className="h-7 w-7 text-gold-accent" />
                 )}
               </div>
 
@@ -145,48 +145,48 @@ export default function ProfileView({
               {!isEditing ? (
                 <div className="space-y-1.5 text-center sm:text-left">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <h3 className="text-base font-extrabold text-white">{user?.displayName || "Guest Client"}</h3>
+                    <h3 className="text-base font-extrabold text-on-surface">{user?.displayName || "Guest Client"}</h3>
                     <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider self-center sm:self-auto gap-1 items-center flex">
                       ✓ Active Customer
                     </span>
                   </div>
                   
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-slate-400">
-                    <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-slate-500" /> {user?.email || "guest@shivsayaproperties.com"}</span>
-                    <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-slate-500" /> {editPhone || "Add contact number"}</span>
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-on-surface-variant">
+                    <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-outline" /> {user?.email || "guest@shivsayaproperties.com"}</span>
+                    <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-outline" /> {editPhone || "Add contact number"}</span>
                   </div>
                 </div>
               ) : (
                 <form onSubmit={handleSaveProfile} className="w-full space-y-3.5 pt-1">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                     <div className="space-y-1">
-                      <label htmlFor="auto-profileview-156" className="text-[10px] font-bold uppercase text-slate-400">Display Name</label>
+                      <label htmlFor="auto-profileview-156" className="text-[10px] font-bold uppercase text-on-surface-variant">Display Name</label>
                       <input id="auto-profileview-156" 
                         type="text" 
                         required
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-705 outline-none focus:border-[#D4AF37]/40"
+                        className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-xs text-on-surface placeholder-slate-705 outline-none focus:border-gold-accent/40"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label htmlFor="auto-profileview-166" className="text-[10px] font-bold uppercase text-slate-400">Email Address (Readonly)</label>
+                      <label htmlFor="auto-profileview-166" className="text-[10px] font-bold uppercase text-on-surface-variant">Email Address (Readonly)</label>
                       <input id="auto-profileview-166" 
                         type="email" 
                         disabled
                         value={editEmail}
-                        className="w-full bg-slate-950/60 border border-white/5 rounded-lg px-3 py-2 text-xs text-slate-500 outline-none"
+                        className="w-full bg-surface/60 border border-outline-variant/50 rounded-lg px-3 py-2 text-xs text-outline outline-none"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label htmlFor="auto-profileview-175" className="text-[10px] font-bold uppercase text-slate-400">Contact (+91 Indian)</label>
+                      <label htmlFor="auto-profileview-175" className="text-[10px] font-bold uppercase text-on-surface-variant">Contact (+91 Indian)</label>
                       <input id="auto-profileview-175" 
                         type="tel" 
                         maxLength={10}
                         placeholder="10 digit number"
                         value={editPhone.replace(/\D/g, "")}
                         onChange={(e) => setEditPhone(e.target.value.replace(/\D/g, ""))}
-                        className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-650 outline-none focus:border-[#D4AF37]/40"
+                        className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-xs text-on-surface placeholder-slate-650 outline-none focus:border-gold-accent/40"
                       />
                     </div>
                   </div>
@@ -195,14 +195,14 @@ export default function ProfileView({
                     <button
                       type="button"
                       onClick={() => setIsEditing(false)}
-                      className="px-3.5 py-1.5 border border-white/10 rounded-lg text-xs font-semibold text-slate-400 hover:text-white"
+                      className="px-3.5 py-1.5 border border-outline-variant rounded-lg text-xs font-semibold text-on-surface-variant hover:text-on-surface"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="px-4 py-1.5 bg-[#D4AF37] hover:brightness-110 active:scale-98 transition-all text-slate-950 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-1.5 bg-gold-accent hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 transition-all text-[#0F172A] rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                     >
                       <Save className="h-3.5 w-3.5" />
                       {isSaving ? "Saving..." : "Save Details"}
@@ -215,7 +215,7 @@ export default function ProfileView({
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 hover:bg-slate-800 text-xs text-[#D4AF37] hover:text-white border border-[#D4AF37]/20 rounded-xl transition-all self-stretch md:self-auto flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+                className="px-4 py-2 hover:bg-surface-container-high text-xs text-gold-accent hover:text-on-surface border border-gold-accent/20 rounded-xl transition-all self-stretch md:self-auto flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
               >
                 <Edit3 className="h-4 w-4" />
                 Edit Profile
@@ -225,13 +225,13 @@ export default function ProfileView({
         </div>
 
         {/* SECTION 2: VIEW NAV TABS SYSTEM */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 border-b border-white/5 bg-slate-900/30 p-1.5 rounded-xl">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 border-b border-outline-variant/50 bg-surface-container/30 p-1.5 rounded-xl">
           <button
             onClick={() => setActiveTab("listings")}
             className={`py-2.5 px-1.5 text-[11px] font-bold font-sans rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "listings"
-                ? "bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 shadow"
-                : "text-slate-400 hover:text-white hover:bg-slate-850"
+                ? "bg-gold-accent text-[#0F172A] shadow"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-slate-850"
             }`}
           >
             <Clipboard className="h-3.5 w-3.5" />
@@ -241,8 +241,8 @@ export default function ProfileView({
             onClick={() => setActiveTab("favorites")}
             className={`py-2.5 px-1.5 text-[11px] font-bold font-sans rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "favorites"
-                ? "bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 shadow"
-                : "text-slate-400 hover:text-white hover:bg-slate-850"
+                ? "bg-gold-accent text-[#0F172A] shadow"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-slate-850"
             }`}
           >
             <Heart className="h-3.5 w-3.5" />
@@ -252,8 +252,8 @@ export default function ProfileView({
             onClick={() => setActiveTab("enquiries")}
             className={`py-2.5 px-1.5 text-[11px] font-bold font-sans rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "enquiries"
-                ? "bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 shadow"
-                : "text-slate-400 hover:text-white hover:bg-slate-850"
+                ? "bg-gold-accent text-[#0F172A] shadow"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-slate-850"
             }`}
           >
             <Calendar className="h-3.5 w-3.5" />
@@ -263,8 +263,8 @@ export default function ProfileView({
             onClick={() => setActiveTab("settings")}
             className={`py-2.5 px-1.5 text-[11px] font-bold font-sans rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "settings"
-                ? "bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 shadow"
-                : "text-slate-400 hover:text-white hover:bg-slate-850"
+                ? "bg-gold-accent text-[#0F172A] shadow"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-slate-850"
             }`}
           >
             <Key className="h-3.5 w-3.5" />
@@ -276,21 +276,21 @@ export default function ProfileView({
         
         {/* Tab A: LISTINGS VIEW WITH BADGES */}
         {activeTab === "listings" && (
-          <div className="bg-slate-900 border border-white/5 rounded-3xl p-6 sm:p-8 space-y-6">
-            <h3 className="text-white font-extrabold text-sm border-b border-white/5 pb-2.5 flex items-center gap-2">
-              <Building className="h-4 w-4 text-[#D4AF37]" />
+          <div className="bg-surface-container border border-outline-variant/50 rounded-3xl p-6 sm:p-8 space-y-6">
+            <h3 className="text-on-surface font-extrabold text-sm border-b border-outline-variant/50 pb-2.5 flex items-center gap-2">
+              <Building className="h-4 w-4 text-gold-accent" />
               Property Audit & Approvals
             </h3>
 
             {userProperties.length === 0 ? (
               <div className="text-center py-10 space-y-3">
-                <p className="text-xs text-slate-500 leading-relaxed italic">
+                <p className="text-xs text-outline leading-relaxed italic">
                   No properties registered under this account yet.
                 </p>
                 <button
                   type="button"
                   onClick={() => onNavigate("list_property")}
-                  className="px-4 py-2 bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 text-xs font-bold rounded-lg hover:brightness-110 active:scale-98 cursor-pointer"
+                  className="px-4 py-2 bg-gold-accent text-[#0F172A] text-xs font-bold rounded-lg hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 cursor-pointer"
                 >
                   List your property now
                 </button>
@@ -321,18 +321,18 @@ export default function ProfileView({
                   return (
                     <div 
                       key={prop.id} 
-                      className="p-4 bg-slate-950 border border-white/5 rounded-2xl hover:border-[#D4AF37]/20 transition-all flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4"
+                      className="p-4 bg-surface border border-outline-variant/50 rounded-2xl hover:border-gold-accent/20 transition-all flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4"
                     >
-                      <button className="cursor-pointer flex-1 space-y-1 block text-left outline-none focus:ring-2 focus:ring-[#D4AF37]/50 rounded-lg p-1" onClick={() => onNavigate("properties", prop.id)}>
-                        <h4 className="font-extrabold text-white text-xs hover:text-[#D4AF37] transition-all leading-snug">{prop.title}</h4>
-                        <p className="text-[10px] text-slate-400 font-semibold flex items-center gap-1.5 pt-0.5">
-                          <MapPin className="h-3 w-3 text-slate-500 shrink-0" />
+                      <button className="cursor-pointer flex-1 space-y-1 block text-left outline-none focus:ring-2 focus:ring-gold-accent/50 rounded-lg p-1" onClick={() => onNavigate("properties", prop.id)}>
+                        <h4 className="font-extrabold text-on-surface text-xs hover:text-gold-accent transition-all leading-snug">{prop.title}</h4>
+                        <p className="text-[10px] text-on-surface-variant font-semibold flex items-center gap-1.5 pt-0.5">
+                          <MapPin className="h-3 w-3 text-outline shrink-0" />
                           {prop.locality}, {prop.city}
                         </p>
-                        <p className="text-[10px] text-[#D4AF37] font-black">{formatPrice(prop.price) || `₹${(prop.price/100000).toFixed(0)} Lakhs`}</p>
+                        <p className="text-[10px] text-gold-accent font-black">{formatPrice(prop.price) || `₹${(prop.price/100000).toFixed(0)} Lakhs`}</p>
                       </button>
  
-                      <div className="flex flex-wrap items-center justify-between md:justify-end gap-3 border-t border-white/5 md:border-none pt-3.5 md:pt-0">
+                      <div className="flex flex-wrap items-center justify-between md:justify-end gap-3 border-t border-outline-variant/50 md:border-none pt-3.5 md:pt-0">
                         <div className="flex flex-col items-start md:items-end gap-1.5">
                           {isLive && (
                             <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-wider rounded-full border border-emerald-500/20 flex items-center gap-1.5">
@@ -341,8 +341,8 @@ export default function ProfileView({
                             </span>
                           )}
                           {isPending && (
-                            <span className="px-3 py-1 bg-[#D4AF37]/10 text-[#D4AF37] text-[9px] font-black uppercase tracking-wider rounded-full border border-[#D4AF37]/20 flex items-center gap-1.5 animate-pulse">
-                              <span className="h-1.5 w-1.5 bg-[#D4AF37] rounded-full"></span>
+                            <span className="px-3 py-1 bg-gold-accent/10 text-gold-accent text-[9px] font-black uppercase tracking-wider rounded-full border border-gold-accent/20 flex items-center gap-1.5 animate-pulse">
+                              <span className="h-1.5 w-1.5 bg-gold-accent rounded-full"></span>
                               Audit: Pending review
                             </span>
                           )}
@@ -365,7 +365,7 @@ export default function ProfileView({
                         <button
                           type="button"
                           onClick={handleDeleteClick}
-                          className="p-2.5 bg-slate-900 border border-white/5 hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 text-slate-400 rounded-xl transition-all cursor-pointer"
+                          className="p-2.5 bg-surface-container border border-outline-variant/50 hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 text-on-surface-variant rounded-xl transition-all cursor-pointer"
                           title="Delete Listing permanently"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -381,20 +381,20 @@ export default function ProfileView({
 
         {/* Tab B: SAVED PROPERTIES CARD LISTING */}
         {activeTab === "favorites" && (
-          <div className="bg-slate-900 border border-white/5 rounded-3xl p-6 sm:p-8 space-y-6">
-            <h3 className="text-white font-extrabold text-sm border-b border-white/5 pb-2.5 flex items-center gap-2">
+          <div className="bg-surface-container border border-outline-variant/50 rounded-3xl p-6 sm:p-8 space-y-6">
+            <h3 className="text-on-surface font-extrabold text-sm border-b border-outline-variant/50 pb-2.5 flex items-center gap-2">
               <Heart className="h-4 w-4 text-rose-500 fill-rose-500/20" />
               My Saved Shortlists
             </h3>
 
             {favoriteProperties.length === 0 ? (
               <div className="text-center py-10">
-                <p className="text-xs text-slate-500 leading-relaxed italic">
+                <p className="text-xs text-outline leading-relaxed italic">
                   Your bookmarked properties are empty. Explore our catalog to save items!
                 </p>
                 <button
                   onClick={() => onNavigate("properties")}
-                  className="mt-3 px-4 py-2 bg-slate-800 border border-white/10 text-slate-300 text-xs font-bold rounded-lg hover:text-white"
+                  className="mt-3 px-4 py-2 bg-surface-container-high border border-outline-variant text-on-surface-variant text-xs font-bold rounded-lg hover:text-on-surface"
                 >
                   Browse Listings
                 </button>
@@ -404,10 +404,10 @@ export default function ProfileView({
                 {favoriteProperties.map((prop) => (
                   <div 
                     key={prop.id} 
-                    className="p-4 bg-slate-950 border border-white/5 rounded-2xl hover:border-[#D4AF37]/25 transition-all flex flex-col justify-between h-auto relative overflow-hidden group"
+                    className="p-4 bg-surface border border-outline-variant/50 rounded-2xl hover:border-gold-accent/25 transition-all flex flex-col justify-between h-auto relative overflow-hidden group"
                   >
                     <div className="space-y-2">
-                      <div className="relative h-28 rounded-xl overflow-hidden bg-slate-900">
+                      <div className="relative h-28 rounded-xl overflow-hidden bg-surface-container">
                         <img 
                           src={prop.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=400&q=80"} 
                           alt={prop.title} 
@@ -415,28 +415,28 @@ export default function ProfileView({
                         loading="lazy" />
                         <button
                           onClick={(e) => { e.stopPropagation(); onToggleSaved(prop.id); }}
-                          className="absolute top-2.5 right-2.5 h-8 w-8 rounded-full bg-[#0F172A]/80 backdrop-blur-md text-rose-500 flex items-center justify-center border border-white/10 cursor-pointer shadow-md"
+                          className="absolute top-2.5 right-2.5 h-8 w-8 rounded-full bg-surface/80 backdrop-blur-md text-rose-500 flex items-center justify-center border border-outline-variant cursor-pointer shadow-md"
                           title="Remove bookmark"
                         >
                           <Heart className="h-4 w-4 fill-rose-500" />
                         </button>
                       </div>
 
-                      <button className="cursor-pointer space-y-1.5 block text-left outline-none focus:ring-2 focus:ring-[#D4AF37]/50 rounded-lg" onClick={() => onNavigate("properties", prop.id)}>
-                        <h4 className="font-extrabold text-white text-xs line-clamp-1 group-hover:text-[#D4AF37] transition-all pt-1">{prop.title}</h4>
-                        <p className="text-[10px] text-slate-500 flex items-center gap-1">
+                      <button className="cursor-pointer space-y-1.5 block text-left outline-none focus:ring-2 focus:ring-gold-accent/50 rounded-lg" onClick={() => onNavigate("properties", prop.id)}>
+                        <h4 className="font-extrabold text-on-surface text-xs line-clamp-1 group-hover:text-gold-accent transition-all pt-1">{prop.title}</h4>
+                        <p className="text-[10px] text-outline flex items-center gap-1">
                           <MapPin className="h-3 w-3 shrink-0" />
                           {prop.locality}, {prop.city}
                         </p>
-                        <p className="text-[#D4AF37] font-bold text-xs">{formatPrice(prop.price) || `₹${(prop.price/100000).toFixed(0)} Lakhs`}</p>
+                        <p className="text-gold-accent font-bold text-xs">{formatPrice(prop.price) || `₹${(prop.price/100000).toFixed(0)} Lakhs`}</p>
                       </button>
                     </div>
 
-                    <div className="pt-3 border-t border-white/5 mt-3 flex justify-between items-center">
-                      <span className="text-[9px] font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded uppercase">{prop.type}</span>
+                    <div className="pt-3 border-t border-outline-variant/50 mt-3 flex justify-between items-center">
+                      <span className="text-[9px] font-bold text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded uppercase">{prop.type}</span>
                       <button
                         onClick={() => onNavigate("properties", prop.id)}
-                        className="text-[10px] text-[#D4AF37] font-bold hover:underline"
+                        className="text-[10px] text-gold-accent font-bold hover:underline"
                       >
                         View Property Details →
                       </button>
@@ -450,10 +450,10 @@ export default function ProfileView({
 
         {/* Tab C: SCHEDULED TOUR ENQUIRIES */}
         {activeTab === "enquiries" && (
-          <div className="bg-slate-900 border border-white/5 rounded-3xl p-6 sm:p-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-white/5 pb-3">
-              <h3 className="text-white font-extrabold text-sm flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-[#D4AF37]" />
+          <div className="bg-surface-container border border-outline-variant/50 rounded-3xl p-6 sm:p-8 space-y-6">
+            <div className="flex items-center justify-between border-b border-outline-variant/50 pb-3">
+              <h3 className="text-on-surface font-extrabold text-sm flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-gold-accent" />
                 Scheduled Site Visits & Enquiries
               </h3>
               {enquiries.length > 0 && (
@@ -467,24 +467,24 @@ export default function ProfileView({
             </div>
 
             {enquiries.length === 0 ? (
-              <p className="text-xs text-slate-500 leading-relaxed py-6 text-center italic">
+              <p className="text-xs text-outline leading-relaxed py-6 text-center italic">
                 No callbacks or site tours requested in this browser session. Browse properties to schedule!
               </p>
             ) : (
               <div className="space-y-4">
                 {enquiries.map((enq) => (
-                  <div key={enq.id} className="p-4 bg-slate-950 border border-white/5 rounded-xl space-y-2.5">
+                  <div key={enq.id} className="p-4 bg-surface border border-outline-variant/50 rounded-xl space-y-2.5">
                     <div className="flex justify-between items-center flex-wrap gap-2 text-xs">
                       <span className="text-emerald-400 font-bold uppercase text-[9px] bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
                         🎯 {enq.type === "visit" ? "Site Visit Confirmed" : "Callback Scheduled"}
                       </span>
-                      <span className="text-slate-500 text-[10px]">{enq.dateStr ? new Date(enq.dateStr).toLocaleDateString() : ""}</span>
+                      <span className="text-outline text-[10px]">{enq.dateStr ? new Date(enq.dateStr).toLocaleDateString() : ""}</span>
                     </div>
                     
                     <div>
-                      <h4 className="font-bold text-white text-xs leading-snug">{enq.propertyName}</h4>
+                      <h4 className="font-bold text-on-surface text-xs leading-snug">{enq.propertyName}</h4>
                       <p className="text-[10px] text-slate-450 mt-1.5 whitespace-pre-wrap leading-relaxed">
-                        Message Notes: <span className="text-slate-300 italic">"{enq.message}"</span>
+                        Message Notes: <span className="text-on-surface-variant italic">"{enq.message}"</span>
                       </p>
                     </div>
                   </div>
@@ -496,27 +496,27 @@ export default function ProfileView({
 
         {/* Tab D: ACCOUNT SETTINGS SYSTEM */}
         {activeTab === "settings" && (
-          <div className="bg-slate-900 border border-white/5 rounded-3xl p-6 sm:p-8 space-y-8">
+          <div className="bg-surface-container border border-outline-variant/50 rounded-3xl p-6 sm:p-8 space-y-8">
             <div>
-              <h3 className="text-white font-extrabold text-sm border-b border-white/5 pb-2.5 flex items-center gap-2">
-                <Settings className="h-4 w-4 text-[#D4AF37]" />
+              <h3 className="text-on-surface font-extrabold text-sm border-b border-outline-variant/50 pb-2.5 flex items-center gap-2">
+                <Settings className="h-4 w-4 text-gold-accent" />
                 Account Settings & Preferences
               </h3>
-              <p className="text-slate-400 text-xs mt-2 font-medium leading-relaxed">
+              <p className="text-on-surface-variant text-xs mt-2 font-medium leading-relaxed">
                 Configure your display behavior, toggle system telemetry indicators, and verify legal brokerage credentials.
               </p>
             </div>
 
             {/* Sub-section 1: Platform Credentials */}
             <div className="space-y-3">
-              <h4 className="text-white text-xs font-bold uppercase tracking-wider text-slate-350">Brokerage Verification Details</h4>
-              <div className="p-4 bg-slate-950 border border-white/5 rounded-2xl flex flex-col sm:flex-row items-center gap-4 justify-between">
+              <h4 className="text-on-surface text-xs font-bold uppercase tracking-wider text-slate-350">Brokerage Verification Details</h4>
+              <div className="p-4 bg-surface border border-outline-variant/50 rounded-2xl flex flex-col sm:flex-row items-center gap-4 justify-between">
                 <div className="space-y-1 text-center sm:text-left">
-                  <div className="text-xs font-bold text-white flex items-center justify-center sm:justify-start gap-1.5">
-                    <Shield className="h-4 w-4 text-[#D4AF37]" />
+                  <div className="text-xs font-bold text-on-surface flex items-center justify-center sm:justify-start gap-1.5">
+                    <Shield className="h-4 w-4 text-gold-accent" />
                     Shiv Saya Properties RERA License
                   </div>
-                  <p className="text-[10px] text-slate-400 leading-relaxed font-semibold">
+                  <p className="text-[10px] text-on-surface-variant leading-relaxed font-semibold">
                     Authorized Real Estate Brokerage License No. {BUSINESS_CONFIG.reraNumber || "RERA-HR-REA-2026-X9"}
                   </p>
                 </div>
@@ -528,12 +528,12 @@ export default function ProfileView({
 
             {/* Sub-section 2: Cached Storage Management */}
             <div className="space-y-3">
-              <h4 className="text-white text-xs font-bold uppercase tracking-wider text-slate-350">Browser Storage & Cache Control</h4>
-              <div className="p-4 bg-slate-950 border border-white/5 rounded-2xl space-y-4">
+              <h4 className="text-on-surface text-xs font-bold uppercase tracking-wider text-slate-350">Browser Storage & Cache Control</h4>
+              <div className="p-4 bg-surface border border-outline-variant/50 rounded-2xl space-y-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
-                    <h5 className="text-[11px] font-extrabold text-white">Clear Shortlisted Bookmarks</h5>
-                    <p className="text-[9px] text-slate-400 leading-relaxed mt-0.5 font-semibold">
+                    <h5 className="text-[11px] font-extrabold text-on-surface">Clear Shortlisted Bookmarks</h5>
+                    <p className="text-[9px] text-on-surface-variant leading-relaxed mt-0.5 font-semibold">
                       This will reset your interest flags for any customized real estate listings.
                     </p>
                   </div>
@@ -556,8 +556,8 @@ export default function ProfileView({
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
-                    <h5 className="text-[11px] font-extrabold text-white">Reset Account Cache Record</h5>
-                    <p className="text-[9px] text-slate-400 leading-relaxed mt-0.5 font-semibold">
+                    <h5 className="text-[11px] font-extrabold text-on-surface">Reset Account Cache Record</h5>
+                    <p className="text-[9px] text-on-surface-variant leading-relaxed mt-0.5 font-semibold">
                       Forced log out of this secure real estate terminal and delete temporary session preferences.
                     </p>
                   </div>
@@ -571,7 +571,7 @@ export default function ProfileView({
                         setTimeout(() => window.location.reload(), 1200);
                       }
                     }}
-                    className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-white/5 text-[10px] font-bold rounded-lg cursor-pointer transition-all shrink-0"
+                    className="px-3.5 py-1.5 bg-surface-container-high hover:bg-outline-variant text-on-surface-variant border border-outline-variant/50 text-[10px] font-bold rounded-lg cursor-pointer transition-all shrink-0"
                   >
                     Flush Sessions
                   </button>
@@ -581,10 +581,10 @@ export default function ProfileView({
 
             {/* Sub-section 3: Preferences */}
             <div className="space-y-3">
-              <h4 className="text-white text-xs font-bold uppercase tracking-wider text-slate-350">Display Settings</h4>
-              <div className="p-4 bg-slate-950 border border-white/5 rounded-2xl flex items-center justify-between gap-3">
+              <h4 className="text-on-surface text-xs font-bold uppercase tracking-wider text-slate-350">Display Settings</h4>
+              <div className="p-4 bg-surface border border-outline-variant/50 rounded-2xl flex items-center justify-between gap-3">
                 <div>
-                  <h5 className="text-[11px] font-extrabold text-white">Enable Golden Accent Animations</h5>
+                  <h5 className="text-[11px] font-extrabold text-on-surface">Enable Golden Accent Animations</h5>
                   <p className="text-[9px] text-slate-410 leading-relaxed mt-0.5 font-semibold">
                     Toggle active sparkling effect animations on gold accents.
                   </p>
@@ -601,7 +601,7 @@ export default function ProfileView({
                       onShowNotification(`Effects animations ${enabled ? "enabled" : "muted"}.`, "success");
                     }}
                   />
-                  <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37] peer-checked:after:bg-slate-950"></div>
+                  <div className="w-9 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gold-accent peer-checked:after:bg-surface"></div>
                 </label>
               </div>
             </div>

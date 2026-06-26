@@ -473,25 +473,25 @@ export default function ListPropertyView({
   ];
 
   return (
-    <div className="font-sans text-slate-200 bg-[#0F172A] pt-24 pb-20 min-h-screen">
+    <div className="font-sans text-on-surface bg-surface pt-24 pb-20 min-h-screen">
       {isUploading && (
-        <div id="upload-overlay" className="fixed inset-0 z-50 bg-[#0F172A]/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
-          <div className="bg-slate-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full space-y-6 shadow-2xl">
-            <RefreshCw className="h-10 w-10 text-[#D4AF37] animate-spin mx-auto animate-pulse" />
+        <div id="upload-overlay" className="fixed inset-0 z-50 bg-surface/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
+          <div className="bg-surface-container border border-outline-variant rounded-3xl p-8 max-w-sm w-full space-y-6 shadow-md">
+            <RefreshCw className="h-10 w-10 text-gold-accent animate-spin mx-auto animate-pulse" />
             <div className="space-y-2">
-              <h3 className="text-white font-black text-lg">Uploading Property Media</h3>
-              <p className="text-slate-400 text-xs font-medium">Please wait while we sync physical asset images to secure cluster storage.</p>
+              <h3 className="text-on-surface font-black text-lg">Uploading Property Media</h3>
+              <p className="text-on-surface-variant text-xs font-medium">Please wait while we sync physical asset images to secure cluster storage.</p>
             </div>
             
             {/* Real progress indicators */}
             <div className="space-y-2.5">
-              <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <div className="flex justify-between items-center text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                 <span>Progress Status</span>
-                <span className="text-[#D4AF37]">{uploadProgress.current} / {uploadProgress.total} Files</span>
+                <span className="text-gold-accent">{uploadProgress.current} / {uploadProgress.total} Files</span>
               </div>
-              <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-white/5">
+              <div className="w-full bg-surface rounded-full h-2 overflow-hidden border border-outline-variant/50">
                 <div 
-                  className="bg-[#D4AF37] h-full rounded-full transition-all duration-350"
+                  className="bg-gold-accent h-full rounded-full transition-all duration-350"
                   style={{ width: `${uploadProgress.total > 0 ? (uploadProgress.current / uploadProgress.total) * 100 : 0}%` }}
                 ></div>
               </div>
@@ -501,16 +501,16 @@ export default function ListPropertyView({
       )}
       
       {/* HEADER SECTION */}
-      <div className="bg-slate-900 border-b border-white/5 py-10 px-4 sm:px-6 lg:px-8 mb-8 relative overflow-hidden">
-        <div className="absolute -top-12 -left-12 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-2xl"></div>
+      <div className="bg-surface-container border-b border-outline-variant/50 py-10 px-4 sm:px-6 lg:px-8 mb-8 relative overflow-hidden">
+        <div className="absolute -top-12 -left-12 w-32 h-32 bg-gold-accent/5 rounded-full blur-2xl"></div>
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="text-[#D4AF37] font-bold text-xs tracking-wider uppercase flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-[#D4AF37]" />
+            <div className="text-gold-accent font-bold text-xs tracking-wider uppercase flex items-center gap-1.5">
+              <Sparkles className="h-4 w-4 text-gold-accent" />
               Physical Audit Enabled Gateway
             </div>
-            <h1 className="text-3xl font-black text-white mt-1">List Your Asset</h1>
-            <p className="text-slate-400 text-xs mt-2 font-medium leading-relaxed max-w-2xl">
+            <h1 className="text-3xl font-black text-on-surface mt-1">List Your Asset</h1>
+            <p className="text-on-surface-variant text-xs mt-2 font-medium leading-relaxed max-w-2xl">
               Become a verified direct owner seller. Post builder floors, luxury flats, plots, or shops in Delhi NCR. We perform strict document audits to showcase properties transparently.
             </p>
           </div>
@@ -518,7 +518,7 @@ export default function ListPropertyView({
           {!isDone && (
             <button
               onClick={handleClearDraft}
-              className="py-2 px-3.5 border border-white/10 hover:border-red-500/20 text-slate-400 hover:text-red-400 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors self-start sm:self-center cursor-pointer"
+              className="py-2 px-3.5 border border-outline-variant hover:border-red-500/20 text-on-surface-variant hover:text-red-400 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors self-start sm:self-center cursor-pointer"
               title="Reset the entire multi-step form to empty state"
             >
               <RefreshCw className="h-3.5 w-3.5" />
@@ -532,7 +532,7 @@ export default function ListPropertyView({
         
         {/* PROGRESS STEPPER BAR */}
         {!isDone && (
-          <div className="mb-10 bg-slate-900/60 border border-white/5 p-4 rounded-3xl">
+          <div className="mb-10 bg-surface-container/60 border border-outline-variant/50 p-4 rounded-3xl">
             {/* Step Numbers & Labels */}
             <div className="grid grid-cols-4 gap-2">
               {stepsLabel.map((s) => {
@@ -551,18 +551,18 @@ export default function ListPropertyView({
                     }}
                     className={`flex flex-col sm:flex-row items-center gap-2 py-2 px-2.5 rounded-xl transition-all cursor-pointer ${
                       isActive 
-                        ? "bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 font-bold" 
+                        ? "bg-gold-accent/10 text-gold-accent border border-gold-accent/20 font-bold" 
                         : isCompleted 
                         ? "text-emerald-400 font-semibold" 
-                        : "text-slate-500"
+                        : "text-outline"
                     }`}
                   >
                     <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-black ${
                       isActive 
-                        ? "bg-[#D4AF37] text-slate-950" 
+                        ? "bg-gold-accent text-[#0F172A]" 
                         : isCompleted 
                         ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
-                        : "bg-slate-850 text-slate-500"
+                        : "bg-slate-850 text-outline"
                     }`}>
                       {isCompleted ? <Check className="h-3.5 w-3.5" /> : s.num}
                     </div>
@@ -573,9 +573,9 @@ export default function ListPropertyView({
             </div>
 
             {/* Micro visual progress line */}
-            <div className="relative mt-4 h-1 bg-slate-950 rounded-full overflow-hidden">
+            <div className="relative mt-4 h-1 bg-surface rounded-full overflow-hidden">
               <motion.div 
-                className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#D4AF37] to-[#B5942B]"
+                className="absolute top-0 left-0 h-full bg-gold-accent"
                 initial={{ width: "25%" }}
                 animate={{ width: `${(step / 4) * 100}%` }}
                 transition={{ duration: 0.3 }}
@@ -593,22 +593,22 @@ export default function ListPropertyView({
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="bg-slate-900 border border-white/5 rounded-3xl p-6 sm:p-10 shadow-2xl"
+              className="bg-surface-container border border-outline-variant/50 rounded-3xl p-6 sm:p-10 shadow-md"
             >
               <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
                 
                 {/* ================= STEP 1: GENERAL INFO ================= */}
                 {step === 1 && (
                   <div className="space-y-6 animate-fadeIn">
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-3">
-                      <ClipboardList className="h-5 w-5 text-[#D4AF37]" />
-                      <h3 className="text-white font-extrabold text-sm">Step 1: General Category & Descriptive Assets</h3>
+                    <div className="flex items-center gap-2 border-b border-outline-variant/50 pb-3">
+                      <ClipboardList className="h-5 w-5 text-gold-accent" />
+                      <h3 className="text-on-surface font-extrabold text-sm">Step 1: General Category & Descriptive Assets</h3>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Property Title */}
                       <div className="md:col-span-2 space-y-1.5">
-                        <label htmlFor="step1-title-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <label htmlFor="step1-title-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest flex items-center gap-1.5">
                           Property Listing Title <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -618,16 +618,16 @@ export default function ListPropertyView({
                           placeholder="e.g. Elegant 3 BHK Semi-Furnished Flat with Balcony"
                           value={title}
                           onChange={(e) => setTitle(e.target.value)}
-                          className="w-full bg-slate-950 border border-white/10 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-650 outline-none transition-colors"
+                          className="w-full bg-surface border border-outline-variant focus:border-gold-accent/50 rounded-xl px-4 py-3 text-xs text-on-surface placeholder-slate-650 outline-none transition-colors"
                         />
                         {title && title.trim().length < 10 && (
-                          <p className="text-[10px] text-[#D4AF37] font-semibold">Needs {10 - title.trim().length} more characters.</p>
+                          <p className="text-[10px] text-gold-accent font-semibold">Needs {10 - title.trim().length} more characters.</p>
                         )}
                       </div>
 
                       {/* Description */}
                       <div className="md:col-span-2 space-y-1.5">
-                        <label htmlFor="step1-desc-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <label htmlFor="step1-desc-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                           Detailed Description <span className="text-red-500">*</span>
                         </label>
                         <textarea
@@ -637,21 +637,21 @@ export default function ListPropertyView({
                           placeholder="Provide details of the locality, nearby metro connectivity, builder reputation, balcony vistas, and physical documents checklist..."
                           value={description}
                           onChange={(e) => setDescription(e.target.value)}
-                          className="w-full bg-slate-950 border border-white/10 focus:border-[#D4AF37]/50 rounded-xl p-4 text-xs text-white placeholder-slate-650 outline-none resize-none transition-colors"
+                          className="w-full bg-surface border border-outline-variant focus:border-gold-accent/50 rounded-xl p-4 text-xs text-on-surface placeholder-slate-650 outline-none resize-none transition-colors"
                         />
                         {description && description.trim().length < 30 && (
-                          <p className="text-[10px] text-[#D4AF37] font-semibold">Needs {30 - description.trim().length} more characters for verification.</p>
+                          <p className="text-[10px] text-gold-accent font-semibold">Needs {30 - description.trim().length} more characters for verification.</p>
                         )}
                       </div>
 
                       {/* Type Select */}
                       <div className="space-y-1.5">
-                        <label htmlFor="step1-type-select" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Property Type Asset Class</label>
+                        <label htmlFor="step1-type-select" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Property Type Asset Class</label>
                         <select
                           id="step1-type-select"
                           value={type}
                           onChange={(e) => setType(e.target.value as any)}
-                          className="w-full bg-slate-950 border border-white/15 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white outline-none cursor-pointer"
+                          className="w-full bg-surface border border-outline-variant focus:border-gold-accent/50 rounded-xl px-4 py-3 text-xs text-on-surface outline-none cursor-pointer"
                         >
                           <option value="Flat">Flat / Builder Apartment</option>
                           <option value="Villa">Luxury Villa Estate</option>
@@ -664,12 +664,12 @@ export default function ListPropertyView({
                       {/* BHK Config (Disabled for Commercial/Plots) */}
                       {type !== "Commercial" && type !== "Plot" ? (
                         <div className="space-y-1.5">
-                          <label htmlFor="step1-bhk-select" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">BHK Configuration</label>
+                          <label htmlFor="step1-bhk-select" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">BHK Configuration</label>
                           <select
                             id="step1-bhk-select"
                             value={bhk}
                             onChange={(e) => setBhk(e.target.value)}
-                            className="w-full bg-slate-950 border border-white/15 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white outline-none cursor-pointer"
+                            className="w-full bg-surface border border-outline-variant focus:border-gold-accent/50 rounded-xl px-4 py-3 text-xs text-on-surface outline-none cursor-pointer"
                           >
                             <option value="1">1 BHK</option>
                             <option value="2">2 BHK</option>
@@ -680,24 +680,24 @@ export default function ListPropertyView({
                         </div>
                       ) : (
                         <div className="space-y-1.5 opacity-40">
-                          <label htmlFor="auto-listpropertyview-711" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">BHK Config</label>
+                          <label htmlFor="auto-listpropertyview-711" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">BHK Config</label>
                           <input id="auto-listpropertyview-711"
                             type="text"
                             disabled
                             value="Not Applicable for this asset class"
-                            className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-xs text-slate-500 outline-none"
+                            className="w-full bg-surface/60 border border-outline-variant/50 rounded-xl px-4 py-3 text-xs text-outline outline-none"
                           />
                         </div>
                       )}
 
                       {/* City Select */}
                       <div className="space-y-1.5">
-                        <label htmlFor="step1-city-select" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Delhi NCR City Hub</label>
+                        <label htmlFor="step1-city-select" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Delhi NCR City Hub</label>
                         <select
                           id="step1-city-select"
                           value={city}
                           onChange={(e) => setCity(e.target.value)}
-                          className="w-full bg-slate-950 border border-white/15 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white outline-none cursor-pointer"
+                          className="w-full bg-surface border border-outline-variant focus:border-gold-accent/50 rounded-xl px-4 py-3 text-xs text-on-surface outline-none cursor-pointer"
                         >
                           <option value="Dwarka">Dwarka, Delhi</option>
                           <option value="Gurugram">Gurugram, HR</option>
@@ -712,7 +712,7 @@ export default function ListPropertyView({
 
                       {/* Locality Address */}
                       <div className="space-y-1.5">
-                        <label htmlFor="step1-locality-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <label htmlFor="step1-locality-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                           Locality Sector / Block Address <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -722,7 +722,7 @@ export default function ListPropertyView({
                           placeholder="e.g. Sector 10, Pocket 2 Enclaves"
                           value={locality}
                           onChange={(e) => setLocality(e.target.value)}
-                          className="w-full bg-slate-950 border border-white/10 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-650 outline-none transition-colors"
+                          className="w-full bg-surface border border-outline-variant focus:border-gold-accent/50 rounded-xl px-4 py-3 text-xs text-on-surface placeholder-slate-650 outline-none transition-colors"
                         />
                       </div>
                     </div>
@@ -732,15 +732,15 @@ export default function ListPropertyView({
                 {/* ================= STEP 2: MEASUREMENTS & PRICING ================= */}
                 {step === 2 && (
                   <div className="space-y-6 animate-fadeIn">
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-3">
-                      <FileText className="h-5 w-5 text-[#D4AF37]" />
-                      <h3 className="text-white font-extrabold text-sm">Step 2: Pricing Metrics & Specifications</h3>
+                    <div className="flex items-center gap-2 border-b border-outline-variant/50 pb-3">
+                      <FileText className="h-5 w-5 text-gold-accent" />
+                      <h3 className="text-on-surface font-extrabold text-sm">Step 2: Pricing Metrics & Specifications</h3>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Price input */}
                       <div className="space-y-1.5">
-                        <label htmlFor="step2-price-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <label htmlFor="step2-price-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                           Property Ask price <span className="text-red-500">*</span>
                         </label>
                         <div className="flex gap-2.5">
@@ -752,20 +752,20 @@ export default function ListPropertyView({
                             placeholder="e.g. 85"
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
-                            className="flex-1 bg-slate-950 border border-white/10 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white outline-none placeholder-slate-650 transition-colors"
+                            className="flex-1 bg-surface border border-outline-variant focus:border-gold-accent/50 rounded-xl px-4 py-3 text-xs text-on-surface outline-none placeholder-slate-650 transition-colors"
                           />
                           <select
                             id="step2-price-unit"
                             value={priceUnit}
                             onChange={(e) => setPriceUnit(e.target.value as any)}
-                            className="w-[100px] bg-slate-950 border border-white/15 rounded-xl px-3 py-3 text-xs text-white outline-none cursor-pointer"
+                            className="w-[100px] bg-surface border border-outline-variant rounded-xl px-3 py-3 text-xs text-on-surface outline-none cursor-pointer"
                           >
                             <option value="Lakhs">Lakhs (L)</option>
                             <option value="Crore">Crore (Cr)</option>
                           </select>
                         </div>
                         {price && (
-                          <p className="text-[10px] text-slate-400 font-bold">
+                          <p className="text-[10px] text-on-surface-variant font-bold">
                             Total valuation calculation: ₹{(Number(price) * (priceUnit === "Lakhs" ? 100000 : 10000000)).toLocaleString("en-IN")} INR.
                           </p>
                         )}
@@ -773,7 +773,7 @@ export default function ListPropertyView({
 
                       {/* Area input */}
                       <div className="space-y-1.5">
-                        <label htmlFor="step2-area-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <label htmlFor="step2-area-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                           Super / Built-up Area <span className="text-red-500">*</span>
                         </label>
                         <div className="flex gap-2.5">
@@ -785,13 +785,13 @@ export default function ListPropertyView({
                             placeholder="e.g. 1450"
                             value={area}
                             onChange={(e) => setArea(e.target.value)}
-                            className="flex-1 bg-slate-950 border border-white/10 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white outline-none placeholder-slate-650 transition-colors"
+                            className="flex-1 bg-surface border border-outline-variant focus:border-gold-accent/50 rounded-xl px-4 py-3 text-xs text-on-surface outline-none placeholder-slate-650 transition-colors"
                           />
                           <select
                             id="step2-area-unit"
                             value={areaUnit}
                             onChange={(e) => setAreaUnit(e.target.value as any)}
-                            className="w-[100px] bg-slate-950 border border-white/15 rounded-xl px-3 py-3 text-xs text-white outline-none cursor-pointer"
+                            className="w-[100px] bg-surface border border-outline-variant rounded-xl px-3 py-3 text-xs text-on-surface outline-none cursor-pointer"
                           >
                             <option value="sqft">sqft</option>
                             <option value="sqyd">sqyd</option>
@@ -802,36 +802,36 @@ export default function ListPropertyView({
                       {/* Floor Coordinates (Not applicable for Land plots) */}
                       {type !== "Plot" ? (
                         <div className="space-y-1.5">
-                          <label htmlFor="step2-floor-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Floor Coordinates</label>
+                          <label htmlFor="step2-floor-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Floor Coordinates</label>
                           <input
                             id="step2-floor-input"
                             type="text"
                             placeholder="e.g. Ground Floor, or 5th out of 10"
                             value={floor}
                             onChange={(e) => setFloor(e.target.value)}
-                            className="w-full bg-slate-950 border border-white/10 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white outline-none placeholder-slate-650 transition-colors"
+                            className="w-full bg-surface border border-outline-variant focus:border-gold-accent/50 rounded-xl px-4 py-3 text-xs text-on-surface outline-none placeholder-slate-650 transition-colors"
                           />
                         </div>
                       ) : (
                         <div className="space-y-1.5 opacity-40">
-                          <label htmlFor="auto-listpropertyview-845" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Floor Coordinates</label>
+                          <label htmlFor="auto-listpropertyview-845" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Floor Coordinates</label>
                           <input id="auto-listpropertyview-845"
                             type="text"
                             disabled
                             value="N/A (Plot Class)"
-                            className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-xs text-slate-500 outline-none"
+                            className="w-full bg-surface/60 border border-outline-variant/50 rounded-xl px-4 py-3 text-xs text-outline outline-none"
                           />
                         </div>
                       )}
 
                       {/* Facing aspect */}
                       <div className="space-y-1.5">
-                        <label htmlFor="step2-facing-select" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Facing Aspect Direction</label>
+                        <label htmlFor="step2-facing-select" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Facing Aspect Direction</label>
                         <select
                           id="step2-facing-select"
                           value={facing}
                           onChange={(e) => setFacing(e.target.value)}
-                          className="w-full bg-slate-950 border border-white/15 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white outline-none cursor-pointer"
+                          className="w-full bg-surface border border-outline-variant focus:border-gold-accent/50 rounded-xl px-4 py-3 text-xs text-on-surface outline-none cursor-pointer"
                         >
                           <option value="East">East Facing (Highly Recommended)</option>
                           <option value="North">North Facing</option>
@@ -844,12 +844,12 @@ export default function ListPropertyView({
 
                       {/* Furnishing */}
                       <div className="space-y-1.5">
-                        <label htmlFor="step2-furnishing-select" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Furnishing Standards</label>
+                        <label htmlFor="step2-furnishing-select" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Furnishing Standards</label>
                         <select
                           id="step2-furnishing-select"
                           value={furnishing}
                           onChange={(e) => setFurnishing(e.target.value)}
-                          className="w-full bg-slate-950 border border-white/15 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white outline-none cursor-pointer"
+                          className="w-full bg-surface border border-outline-variant focus:border-gold-accent/50 rounded-xl px-4 py-3 text-xs text-on-surface outline-none cursor-pointer"
                         >
                           <option value="Semi-Furnished">Semi-Furnished (Wardrobes & Kitchen)</option>
                           <option value="Fully Furnished">Fully Furnished (With Sofa & Appliances)</option>
@@ -863,26 +863,26 @@ export default function ListPropertyView({
                 {/* ================= STEP 3: PHOTO URLs & AMENITIES ================= */}
                 {step === 3 && (
                   <div className="space-y-6 animate-fadeIn">
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-3">
-                      <Award className="h-5 w-5 text-[#D4AF37]" />
-                      <h3 className="text-white font-extrabold text-sm">Step 3: Asset Photos & Key Amenities</h3>
+                    <div className="flex items-center gap-2 border-b border-outline-variant/50 pb-3">
+                      <Award className="h-5 w-5 text-gold-accent" />
+                      <h3 className="text-on-surface font-extrabold text-sm">Step 3: Asset Photos & Key Amenities</h3>
                     </div>
 
                     {/* Pre-configured premium presets */}
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pre-attached Professional Presets</p>
+                        <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Pre-attached Professional Presets</p>
                         <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold px-2.5 py-0.5 rounded-full uppercase">Enabled</span>
                       </div>
-                      <p className="text-[10px] text-slate-400 leading-relaxed">
+                      <p className="text-[10px] text-on-surface-variant leading-relaxed">
                         To maintain direct premium visual standards, we auto-attach {presetPhotos[type]?.length || 1} high-resolution architecture images representing a typical <strong>{type}</strong>. You may also add custom links below.
                       </p>
 
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                         {(presetPhotos[type] || presetPhotos.Flat).map((url, i) => (
-                          <div key={i} className="relative h-20 rounded-xl overflow-hidden bg-slate-950 border border-white/5">
+                          <div key={i} className="relative h-20 rounded-xl overflow-hidden bg-surface border border-outline-variant/50">
                             <img width={800} height={600} src={url} alt="Preset visual" className="h-full w-full object-cover" loading="lazy" />
-                            <span className="absolute bottom-1 right-1 bg-[#0F172A]/85 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase">Preset {i+1}</span>
+                            <span className="absolute bottom-1 right-1 bg-surface/85 text-on-surface text-[8px] font-black px-1.5 py-0.5 rounded uppercase">Preset {i+1}</span>
                           </div>
                         ))}
                       </div>
@@ -891,8 +891,8 @@ export default function ListPropertyView({
                     {/* Add Custom Local Upload block */}
                     <div className="space-y-3.5 pt-2">
                       <div className="flex justify-between items-center">
-                        <label htmlFor="property-image-file-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Include Custom Photos</label>
-                        <span className="text-[9px] bg-slate-800 border border-white/10 text-slate-400 font-bold px-2.5 py-0.5 rounded-full uppercase">
+                        <label htmlFor="property-image-file-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Include Custom Photos</label>
+                        <span className="text-[9px] bg-surface-container-high border border-outline-variant text-on-surface-variant font-bold px-2.5 py-0.5 rounded-full uppercase">
                           {imageFiles.length}/10 uploaded
                         </span>
                       </div>
@@ -906,7 +906,7 @@ export default function ListPropertyView({
                           handleFilesAdded(e.dataTransfer.files);
                         }}
                         onClick={() => document.getElementById("property-image-file-input")?.click()}
-                        className="border border-dashed border-white/10 hover:border-[#D4AF37]/50 bg-slate-950 rounded-2xl py-6 px-4 text-center cursor-pointer transition-all hover:bg-slate-950/80 group"
+                        className="border border-dashed border-outline-variant hover:border-gold-accent/50 bg-surface rounded-2xl py-6 px-4 text-center cursor-pointer transition-all hover:bg-surface/80 group"
                       >
                         <input 
                           id="property-image-file-input"
@@ -916,9 +916,9 @@ export default function ListPropertyView({
                           onChange={(e) => handleFilesAdded(e.target.files)}
                           className="hidden"
                         />
-                        <Upload className="h-7 w-7 text-slate-400 group-hover:text-[#D4AF37] mx-auto mb-2.5 transition-colors" />
-                        <h4 className="text-white text-xs font-bold group-hover:text-[#D4AF37] transition-colors mb-1">Click to upload or drag and drop</h4>
-                        <p className="text-[9px] text-slate-400 leading-normal">
+                        <Upload className="h-7 w-7 text-on-surface-variant group-hover:text-gold-accent mx-auto mb-2.5 transition-colors" />
+                        <h4 className="text-on-surface text-xs font-bold group-hover:text-gold-accent transition-colors mb-1">Click to upload or drag and drop</h4>
+                        <p className="text-[9px] text-on-surface-variant leading-normal">
                           JPG, PNG, WebP up to 5MB each. Maximum 10 photos.
                         </p>
                       </div>
@@ -943,8 +943,8 @@ export default function ListPropertyView({
                               : img.file.name;
 
                             return (
-                              <div key={i} className="relative bg-slate-950 border border-white/5 rounded-xl overflow-hidden group p-2 flex flex-col justify-between">
-                                <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-slate-900 border border-white/5">
+                              <div key={i} className="relative bg-surface border border-outline-variant/50 rounded-xl overflow-hidden group p-2 flex flex-col justify-between">
+                                <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-surface-container border border-outline-variant/50">
                                   <img width={800} height={600} src={img.previewUrl} alt={img.file.name} className="h-full w-full object-cover" loading="lazy" />
                                   <button
                                     type="button"
@@ -952,17 +952,17 @@ export default function ListPropertyView({
                                       e.stopPropagation();
                                       handleRemoveImageFile(i);
                                     }}
-                                    className="absolute top-1 right-1 h-5 w-5 bg-red-600 hover:bg-red-700 hover:scale-105 active:scale-95 text-white flex items-center justify-center rounded-full shadow-md transition-all cursor-pointer"
+                                    className="absolute top-1 right-1 h-5 w-5 bg-red-600 hover:bg-red-700 hover:scale-105 active:scale-95 text-on-surface flex items-center justify-center rounded-full shadow-md transition-all cursor-pointer"
                                     title="Delete photo"
                                   >
                                     <Trash2 className="h-3 w-3" />
                                   </button>
                                 </div>
                                 <div className="mt-2 px-0.5 text-left">
-                                  <p className="text-[10px] font-bold text-white truncate" title={img.file.name}>
+                                  <p className="text-[10px] font-bold text-on-surface truncate" title={img.file.name}>
                                     {shortName}
                                   </p>
-                                  <p className="text-[8px] text-slate-400 mt-0.5">
+                                  <p className="text-[8px] text-on-surface-variant mt-0.5">
                                     {formattedSize}
                                   </p>
                                 </div>
@@ -975,20 +975,20 @@ export default function ListPropertyView({
 
                     {/* YouTube Video URL block */}
                     <div className="space-y-1.5 pt-2">
-                      <label htmlFor="step3-video-url-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Optional YouTube Video tour URL</label>
+                      <label htmlFor="step3-video-url-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Optional YouTube Video tour URL</label>
                       <input
                         id="step3-video-url-input"
                         type="url"
                         placeholder="e.g. https://www.youtube.com/watch?v=xxxxxx"
                         value={youtubeUrl}
                         onChange={(e) => setYoutubeUrl(e.target.value)}
-                        className="w-full bg-slate-950 border border-white/10 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-650 outline-none"
+                        className="w-full bg-surface border border-outline-variant focus:border-gold-accent/50 rounded-xl px-4 py-3 text-xs text-on-surface placeholder-slate-650 outline-none"
                       />
                     </div>
 
                     {/* Amenities checkboxes */}
                     <div className="space-y-3 pt-3">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Select Premium Amenities Installed</p>
+                      <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Select Premium Amenities Installed</p>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                         {amenitiesList.map((am) => {
                           const isSelected = amenities.includes(am);
@@ -999,8 +999,8 @@ export default function ListPropertyView({
                               onClick={() => handleAmenityToggle(am)}
                               className={`p-3 rounded-xl border text-[11px] font-bold text-center transition-all cursor-pointer ${
                                 isSelected 
-                                  ? "bg-[#D4AF37]/15 border-[#D4AF37] text-[#D4AF37] shadow-lg shadow-[#D4AF37]/5" 
-                                  : "border-white/5 bg-slate-950 text-slate-400 hover:text-white"
+                                  ? "bg-gold-accent/15 border-gold-accent text-gold-accent shadow shadow-gold-accent/5" 
+                                  : "border-outline-variant/50 bg-surface text-on-surface-variant hover:text-on-surface"
                               }`}
                             >
                               {am}
@@ -1015,35 +1015,35 @@ export default function ListPropertyView({
                 {/* ================= STEP 4: PHYSICAL AUDIT DECLARATION ================= */}
                 {step === 4 && (
                   <div className="space-y-6 animate-fadeIn">
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-3">
-                      <ShieldAlert className="h-5 w-5 text-[#D4AF37]" />
-                      <h3 className="text-white font-extrabold text-sm">Step 4: Owner Authenticity Declaration & Signature</h3>
+                    <div className="flex items-center gap-2 border-b border-outline-variant/50 pb-3">
+                      <ShieldAlert className="h-5 w-5 text-gold-accent" />
+                      <h3 className="text-on-surface font-extrabold text-sm">Step 4: Owner Authenticity Declaration & Signature</h3>
                     </div>
 
                     <div className="p-5 bg-red-500/5 border border-red-500/10 rounded-2xl space-y-3.5">
                       <div className="flex gap-2.5 items-center">
-                        <ShieldAlert className="h-5 w-5 text-[#D4AF37] shrink-0" />
-                        <h4 className="text-xs font-extrabold text-white">RERA Physical Compliance Warning</h4>
+                        <ShieldAlert className="h-5 w-5 text-gold-accent shrink-0" />
+                        <h4 className="text-xs font-extrabold text-on-surface">RERA Physical Compliance Warning</h4>
                       </div>
-                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                      <p className="text-[11px] text-on-surface-variant leading-relaxed">
                         To maintain a fully verified direct-to-owner marketplace at Shiv Saya Properties, we do not support false broker listings. Submitting this form authorizes our local consultants to trigger a structural inspection and coordinate an physically verified property report.
                       </p>
                     </div>
 
                     <div className="space-y-4 pt-2">
                       {/* Legal Signature statement authorization */}
-                      <div className="p-5 bg-slate-950 border border-white/5 rounded-2xl text-[11px] text-slate-400 leading-relaxed font-mono">
-                        "I, <span className="text-[#D4AF37] font-bold">{certifyingName || "Guest Seller"}</span>, under penalty of Indian civil legal action, certify that all ownership documents, title deeds, and dimensions supplied for this property listed at <span className="text-white font-bold">{locality || "[Locality]"}</span>, <span className="text-white font-bold">{city}</span> represent absolute physical truth and that I am authorized to list this asset under RERA guidelines."
+                      <div className="p-5 bg-surface border border-outline-variant/50 rounded-2xl text-[11px] text-on-surface-variant leading-relaxed font-mono">
+                        "I, <span className="text-gold-accent font-bold">{certifyingName || "Guest Seller"}</span>, under penalty of Indian civil legal action, certify that all ownership documents, title deeds, and dimensions supplied for this property listed at <span className="text-on-surface font-bold">{locality || "[Locality]"}</span>, <span className="text-on-surface font-bold">{city}</span> represent absolute physical truth and that I am authorized to list this asset under RERA guidelines."
                       </div>
 
                       {/* ACCEPTANCE CHECKBOX */}
-                      <label htmlFor="step4-agree-checkbox" className="flex items-start gap-3 p-4 bg-slate-950/40 border border-white/5 rounded-2xl hover:border-[#D4AF37]/25 transition-all select-none cursor-pointer">
+                      <label htmlFor="step4-agree-checkbox" className="flex items-start gap-3 p-4 bg-surface/40 border border-outline-variant/50 rounded-2xl hover:border-gold-accent/25 transition-all select-none cursor-pointer">
                         <input
                           id="step4-agree-checkbox"
                           type="checkbox"
                           checked={isAgreedToCheckList}
                           onChange={(e) => setIsAgreedToCheckList(e.target.checked)}
-                          className="mt-0.5 rounded border-white/10 text-[#D4AF37] focus:ring-[#D4AF37]/30 h-4 w-4 bg-slate-950"
+                          className="mt-0.5 rounded border-outline-variant text-gold-accent focus:ring-gold-accent/30 h-4 w-4 bg-surface"
                         />
                         <span className="text-xs text-slate-350 font-semibold leading-relaxed">
                           I accept the physically audited declaration, and I authorize {BUSINESS_CONFIG.consultantName}'s evaluation consultants to contact me directly using verified contact records.
@@ -1052,7 +1052,7 @@ export default function ListPropertyView({
 
                       {/* SIGNATURE NAME FIELD */}
                       <div className="space-y-1.5 pt-2">
-                        <label htmlFor="step4-sig-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Type Full Authorizing Name (Signature Proof)</label>
+                        <label htmlFor="step4-sig-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Type Full Authorizing Name (Signature Proof)</label>
                         <input
                           id="step4-sig-input"
                           type="text"
@@ -1061,7 +1061,7 @@ export default function ListPropertyView({
                           value={currentUser?.displayName || certifyingName}
                           disabled={!!currentUser?.displayName}
                           onChange={(e) => setCertifyingName(e.target.value)}
-                          className="w-full bg-slate-950 border border-white/10 focus:border-[#D4AF37]/50 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-650 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full bg-surface border border-outline-variant focus:border-gold-accent/50 rounded-xl px-4 py-3 text-xs text-on-surface placeholder-slate-650 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       </div>
                     </div>
@@ -1069,13 +1069,13 @@ export default function ListPropertyView({
                 )}
 
                 {/* STEPS PREVIOUS & NEXT ACTION BUTTONS */}
-                <div className="pt-8 border-t border-white/5 flex gap-4">
+                <div className="pt-8 border-t border-outline-variant/50 flex gap-4">
                   {step > 1 && (
                     <button
                       id="wizard-prev-btn"
                       type="button"
                       onClick={handlePrevStep}
-                      className="flex-1 py-3 border border-white/10 hover:bg-white/5 rounded-xl text-center text-slate-400 hover:text-white text-xs font-bold uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="flex-1 py-3 border border-outline-variant hover:bg-white/5 rounded-xl text-center text-on-surface-variant hover:text-on-surface text-xs font-bold uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <ArrowLeft className="h-4 w-4" />
                       Back
@@ -1087,7 +1087,7 @@ export default function ListPropertyView({
                       id="wizard-next-btn"
                       type="button"
                       onClick={handleNextStep}
-                      className="flex-1 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 text-xs font-bold rounded-xl text-center shadow-lg uppercase transition-all hover:brightness-110 flex items-center justify-center gap-1.5 cursor-pointer ml-auto"
+                      className="flex-1 py-3 bg-gold-accent text-[#0F172A] text-xs font-bold rounded-xl text-center shadow uppercase transition-all hover:bg-gold-hover hover:scale-105 shadow-md flex items-center justify-center gap-1.5 cursor-pointer ml-auto"
                     >
                       Next Step
                       <ArrowRight className="h-4 w-4" />
@@ -1098,7 +1098,7 @@ export default function ListPropertyView({
                       type="submit"
                       disabled={!isAgreedToCheckList || !(currentUser?.displayName || certifyingName).trim()}
                       onClick={handleFormSubmit}
-                      className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 text-xs font-black rounded-xl text-center shadow-lg uppercase transition-all hover:brightness-110 disabled:opacity-30 flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-[#0F172A] text-xs font-black rounded-xl text-center shadow uppercase transition-all hover:bg-gold-hover hover:scale-105 shadow-md disabled:opacity-30 flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <CheckCircle2 className="h-4 w-4" />
                       Publish For Audit
@@ -1117,35 +1117,35 @@ export default function ListPropertyView({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-slate-900 border border-[#D4AF37]/30 text-center py-16 px-8 rounded-3xl shadow-xl max-w-lg mx-auto space-y-6"
+              className="bg-surface-container border border-gold-accent/30 text-center py-16 px-8 rounded-3xl shadow-md max-w-lg mx-auto space-y-6"
             >
-              <div className="h-16 w-16 bg-[#D4AF37]/15 text-[#D4AF37] rounded-full flex items-center justify-center mx-auto border border-[#D4AF37]/45 animate-bounce">
+              <div className="h-16 w-16 bg-gold-accent/15 text-gold-accent rounded-full flex items-center justify-center mx-auto border border-gold-accent/45 animate-bounce">
                 <Check className="h-8 w-8" />
               </div>
 
               <div>
-                <span className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest block">Audit Identifier Assigned</span>
-                <p className="font-mono text-[10px] text-slate-500 mt-1">SSP-AUDIT-{Date.now().toString().slice(-6)}</p>
+                <span className="text-gold-accent text-xs font-bold uppercase tracking-widest block">Audit Identifier Assigned</span>
+                <p className="font-mono text-[10px] text-outline mt-1">SSP-AUDIT-{Date.now().toString().slice(-6)}</p>
               </div>
 
-              <h2 className="text-2xl font-black text-white">Listing Submitted!</h2>
+              <h2 className="text-2xl font-black text-on-surface">Listing Submitted!</h2>
               
-              <p className="text-slate-400 text-xs leading-relaxed max-w-sm mx-auto">
-                Excellent work! Your property listing has been successfully saved inside persistent Firestore and queued for verification. Our Ghaziabad/Delhi NCR audit team will coordinate a physical structural assessment in <span className="text-white font-bold">48 hours</span> to publish it live under RERA-Verified.
+              <p className="text-on-surface-variant text-xs leading-relaxed max-w-sm mx-auto">
+                Excellent work! Your property listing has been successfully saved inside persistent Firestore and queued for verification. Our Ghaziabad/Delhi NCR audit team will coordinate a physical structural assessment in <span className="text-on-surface font-bold">48 hours</span> to publish it live under RERA-Verified.
               </p>
 
               <div className="pt-6 flex flex-col sm:flex-row gap-3 items-center justify-center">
                 <button
                   id="celebration-view-btn"
                   onClick={() => onNavigate("profile")}
-                  className="w-full sm:w-auto px-6 py-3 bg-slate-800 text-white font-bold text-xs rounded-xl border border-white/10 cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-3 bg-surface-container-high text-on-surface font-bold text-xs rounded-xl border border-outline-variant cursor-pointer"
                 >
                   My Workspace Dashboard
                 </button>
                 <button
                   id="celebration-home-btn"
                   onClick={() => onNavigate("home")}
-                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 font-bold text-xs rounded-xl flex items-center justify-center gap-2 group shadow-md cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-3 bg-gold-accent text-[#0F172A] font-bold text-xs rounded-xl flex items-center justify-center gap-2 group shadow-md cursor-pointer"
                 >
                   Explore Properties
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />

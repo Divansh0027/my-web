@@ -1,6 +1,23 @@
 @import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
 
 @theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
+
+  --color-surface: var(--surface);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-gold-accent: var(--gold-accent);
+  --color-gold-hover: var(--gold-hover);
+  --color-gold-light: var(--gold-light);
+  --color-success-green: var(--success-green);
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+
   --animate-fadeIn: fadeIn 0.3s ease-out;
 
   @keyframes fadeIn {
@@ -13,4 +30,34 @@
       transform: translateY(0);
     }
   }
+}
+
+:root {
+  --surface: #f8fafc;
+  --surface-container: #ffffff;
+  --surface-container-low: #f1f5f9;
+  --surface-container-high: #e2e8f0;
+  --on-surface: #0f172a;
+  --on-surface-variant: #64748b;
+  --gold-accent: #c9a227;
+  --gold-hover: #d8b541;
+  --gold-light: #f7f0d8;
+  --outline: #e2e8f0;
+  --outline-variant: #e2e8f0;
+  --success-green: #16a34a;
+}
+
+.dark {
+  --surface: #0f172a;
+  --surface-container: #1e293b;
+  --surface-container-low: #0f172a;
+  --surface-container-high: #334155;
+  --on-surface: #f8fafc;
+  --on-surface-variant: #94a3b8;
+  --gold-accent: #c9a227;
+  --gold-hover: #d8b541;
+  --gold-light: #4a3c0e;
+  --outline: #334155;
+  --outline-variant: #1e293b;
+  --success-green: #16a34a;
 }

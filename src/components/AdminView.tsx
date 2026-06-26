@@ -847,15 +847,15 @@ export default function AdminView({
 
 
   return (
-    <div className="font-sans text-slate-200 bg-[#0F172A] min-h-screen pt-24 pb-16 flex flex-col md:flex-row">
+    <div className="font-sans text-on-surface bg-surface min-h-screen pt-24 pb-16 flex flex-col md:flex-row">
       
       {/* ----------------- SIDEBAR CONTAINER ----------------- */}
-      <aside className="w-full md:w-64 shrink-0 bg-slate-900 border-b md:border-b-0 md:border-r border-white/5 p-5 flex flex-col md:sticky md:top-24 md:h-[calc(100vh-140px)]">
+      <aside className="w-full md:w-64 shrink-0 bg-surface-container border-b md:border-b-0 md:border-r border-outline-variant/50 p-5 flex flex-col md:sticky md:top-24 md:h-[calc(100vh-140px)]">
         <div className="flex items-center gap-2 mb-8 px-2">
-          <Shield className="h-6 w-6 text-[#D4AF37]" />
+          <Shield className="h-6 w-6 text-gold-accent" />
           <div>
-            <h2 className="font-bold text-white text-base">Control Hub</h2>
-            <p className="text-[10px] text-slate-400 font-medium tracking-wide">SHIV SAYA ADVISORY</p>
+            <h2 className="font-bold text-on-surface text-base">Control Hub</h2>
+            <p className="text-[10px] text-on-surface-variant font-medium tracking-wide">SHIV SAYA ADVISORY</p>
           </div>
         </div>
 
@@ -879,14 +879,14 @@ export default function AdminView({
                 onClick={() => setActiveTab(tab.id as AdminTab)}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap transition-all ${
                   isSelected 
-                    ? "bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 font-bold" 
-                    : "text-slate-400 hover:bg-slate-800 hover:text-white border border-transparent"
+                    ? "bg-gold-accent/10 text-gold-accent border border-gold-accent/20 font-bold" 
+                    : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border border-transparent"
                 }`}
               >
-                <TabIcon className={`h-4 w-4 ${isSelected ? "text-[#D4AF37]" : "text-slate-400"}`} />
+                <TabIcon className={`h-4 w-4 ${isSelected ? "text-gold-accent" : "text-on-surface-variant"}`} />
                 <span>{tab.label}</span>
                 {tab.badge && tab.badge > 0 ? (
-                  <span className="ml-auto px-2 py-0.5 rounded-full bg-red-500 text-white font-bold text-[9px] min-w-4 text-center">
+                  <span className="ml-auto px-2 py-0.5 rounded-full bg-red-500 text-on-surface font-bold text-[9px] min-w-4 text-center">
                     {tab.badge}
                   </span>
                 ) : null}
@@ -896,12 +896,12 @@ export default function AdminView({
         </nav>
 
         {/* System parameters indicator */}
-        <div className="hidden md:block mt-auto bg-slate-950/50 rounded-xl p-3.5 border border-white/5">
-          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">
+        <div className="hidden md:block mt-auto bg-surface/50 rounded-xl p-3.5 border border-outline-variant/50">
+          <div className="flex items-center justify-between text-[10px] font-bold text-on-surface-variant mb-2 uppercase tracking-wide">
             <span>Container Status</span>
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="h-2 w-2 rounded-full bg-gold-accent animate-pulse"></span>
           </div>
-          <p className="text-[10px] text-slate-500 font-mono leading-relaxed">
+          <p className="text-[10px] text-outline font-mono leading-relaxed">
             API Sync: Active<br />
             SimLoader: {controls.slowOperations ? "1000ms" : "0ms"}<br />
             Admins: {adminsList.length} Accounts
@@ -920,8 +920,8 @@ export default function AdminView({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <RefreshCw className="h-10 w-10 text-[#D4AF37] animate-spin" />
-              <p className="text-xs text-slate-400 font-semibold tracking-wide">Syncing server variables...</p>
+              <RefreshCw className="h-10 w-10 text-gold-accent animate-spin" />
+              <p className="text-xs text-on-surface-variant font-semibold tracking-wide">Syncing server variables...</p>
             </motion.div>
           ) : (
             <motion.div
@@ -941,39 +941,39 @@ export default function AdminView({
                   {/* Top Welcome Title */}
                   <div className="flex justify-between items-center gap-4">
                     <div>
-                      <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Executive Dashboard</h1>
-                      <p className="text-xs text-slate-400">Shiv Saya Properties listing approvals, direct client requests, and operations.</p>
+                      <h1 className="text-xl sm:text-2xl font-extrabold text-on-surface tracking-tight">Executive Dashboard</h1>
+                      <p className="text-xs text-on-surface-variant">Shiv Saya Properties listing approvals, direct client requests, and operations.</p>
                     </div>
-                    <div className="text-xs bg-slate-900 border border-white/5 py-1.5 px-3 rounded-lg text-slate-400 font-medium">
-                      Est. Commission: <span className="text-[#D4AF37] font-bold">1% Scale</span>
+                    <div className="text-xs bg-surface-container border border-outline-variant/50 py-1.5 px-3 rounded-lg text-on-surface-variant font-medium">
+                      Est. Commission: <span className="text-gold-accent font-bold">1% Scale</span>
                     </div>
                   </div>
 
                   {/* 6 Grid Metric Cards */}
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                     {[
-                      { title: "Total Properties", value: properties.length.toString(), color: "border-l-blue-500", desc: "Indexed real estate" },
-                      { title: "Approved Listings", value: approvedListingsCount.toString(), color: "border-l-emerald-500", desc: "Public direct active" },
-                      { title: "Pending Approvals", value: pendingApprovalsCount.toString(), color: "border-l-amber-500", desc: "Awaiting physical check", warning: pendingApprovalsCount > 0 },
-                      { title: "Client Enquiries", value: enquiries.length.toString(), color: "border-l-purple-500", desc: "Awaiting resolution callback" },
-                      { title: "Registered Users", value: dbUsers.length.toString(), color: "border-l-rose-500", desc: "Simulated database logins" },
-                      { title: "Est. Revenue (1%)", value: formatCurrency(estimatedRevenue), color: "border-l-[#D4AF37]", desc: "Scale value generated" }
+                      { title: "Total Properties", value: properties.length.toString(), desc: "Indexed real estate" },
+                      { title: "Approved Listings", value: approvedListingsCount.toString(), desc: "Public direct active" },
+                      { title: "Pending Approvals", value: pendingApprovalsCount.toString(), desc: "Awaiting physical check", warning: pendingApprovalsCount > 0 },
+                      { title: "Client Enquiries", value: enquiries.length.toString(), desc: "Awaiting resolution callback" },
+                      { title: "Registered Users", value: dbUsers.length.toString(), desc: "Simulated database logins" },
+                      { title: "Est. Revenue (1%)", value: formatCurrency(estimatedRevenue), desc: "Scale value generated" }
                     ].map((metric, i) => (
                       <motion.div
                         key={metric.title}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.3, delay: i * 0.05 }}
-                        className={`bg-slate-900 border border-white/5 border-l-4 ${metric.color} rounded-2xl p-4 shadow-xl flex flex-col justify-between`}
+                        className="bg-surface-container border border-outline-variant rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:border-gold-accent transition-colors"
                       >
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{metric.title}</span>
+                        <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest leading-none">{metric.title}</span>
                         <div className="my-2.5 flex items-baseline gap-2">
-                          <span className="text-lg sm:text-2xl font-black text-white">{metric.value}</span>
+                          <span className="text-lg sm:text-2xl font-black text-on-surface">{metric.value}</span>
                           {metric.warning && (
-                            <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-ping"></span>
+                            <span className="flex h-2 w-2 rounded-full bg-gold-accent animate-ping"></span>
                           )}
                         </div>
-                        <span className="text-[10px] text-slate-500 font-medium leading-tight">{metric.desc}</span>
+                        <span className="text-[10px] text-outline font-medium leading-tight">{metric.desc}</span>
                       </motion.div>
                     ))}
                   </div>
@@ -981,13 +981,13 @@ export default function AdminView({
                   {/* Split sections: Left Pending items, Right Recent requests */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* LEFT PANEL: Pending Approvals Queue */}
-                    <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl flex flex-col">
-                      <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
+                    <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md flex flex-col">
+                      <div className="flex items-center justify-between mb-4 pb-3 border-b border-outline-variant/50">
                         <div className="flex items-center gap-2">
                           <AlertTriangle className="h-4 w-4 text-amber-500" />
-                          <h3 className="font-extrabold text-white text-sm">Pending Approvals</h3>
+                          <h3 className="font-extrabold text-on-surface text-sm">Pending Approvals</h3>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-bold bg-slate-950 px-2 py-0.5 rounded-md">
+                        <span className="text-[10px] text-on-surface-variant font-bold bg-surface px-2 py-0.5 rounded-md">
                           {pendingApprovalsCount} Queue
                         </span>
                       </div>
@@ -995,35 +995,35 @@ export default function AdminView({
                       <div className="space-y-3.5 max-h-[340px] overflow-y-auto pr-1 scrollbar-thin">
                         {pendingProperties.length === 0 ? (
                           <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
-                            <ShieldCheck className="h-10 w-10 text-emerald-500" />
-                            <p className="text-xs text-slate-400 font-semibold">All property records verified!</p>
-                            <p className="text-[10px] text-slate-500">Every direct submit has been physically audited.</p>
+                            <ShieldCheck className="h-10 w-10 text-on-surface" />
+                            <p className="text-xs text-on-surface-variant font-semibold">All property records verified!</p>
+                            <p className="text-[10px] text-outline">Every direct submit has been physically audited.</p>
                           </div>
                         ) : (
                           pendingProperties.map((prop) => (
                             <div 
                               key={prop.id}
-                              className="p-3.5 bg-slate-950/40 rounded-xl border border-white/5 flex items-center justify-between gap-4 hover:border-white/10 transition-all"
+                              className="p-3.5 bg-surface/40 rounded-xl border border-outline-variant/50 flex items-center justify-between gap-4 hover:border-outline-variant transition-all"
                             >
                               <div className="min-w-0">
-                                <h4 className="font-bold text-white text-xs truncate leading-snug">{prop.title}</h4>
-                                <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1.5 font-semibold">
-                                  <MapPin className="h-3 w-3 text-[#D4AF37] shrink-0" /> {prop.location}
+                                <h4 className="font-bold text-on-surface text-xs truncate leading-snug">{prop.title}</h4>
+                                <p className="text-[10px] text-on-surface-variant mt-1 flex items-center gap-1.5 font-semibold">
+                                  <MapPin className="h-3 w-3 text-gold-accent shrink-0" /> {prop.location}
                                 </p>
-                                <p className="text-[10px] text-[#D4AF37] font-black mt-0.5">{formatCurrency(prop.price)}</p>
+                                <p className="text-[10px] text-gold-accent font-black mt-0.5">{formatCurrency(prop.price)}</p>
                               </div>
 
                               <div className="flex items-center gap-2 shrink-0">
                                 <button
                                   onClick={() => handlePropertyApprovalToggle(prop.id, prop.moderationStatus)}
-                                  className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-[10px] flex items-center gap-1 cursor-pointer transition-all active:scale-95"
+                                  className="px-3 py-1.5 rounded-lg bg-gold-accent hover:bg-gold-hover text-[#0F172A] font-black text-[10px] flex items-center gap-1 cursor-pointer transition-all active:scale-95"
                                   title="Audit Approved & Publish"
                                 >
                                   <Check className="h-3.5 w-3.5" /> Approve
                                 </button>
                                 <button
                                   onClick={() => handlePropertyHideToggle(prop)}
-                                  className="p-2 rounded-lg bg-slate-800 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 text-slate-400 hover:text-red-400 cursor-pointer transition-all"
+                                  className="p-2 rounded-lg bg-surface-container-high hover:bg-red-500/10 border border-outline-variant/50 hover:border-red-500/20 text-on-surface-variant hover:text-red-400 cursor-pointer transition-all"
                                   title="Reject Listing"
                                 >
                                   <X className="h-3.5 w-3.5" />
@@ -1036,15 +1036,15 @@ export default function AdminView({
                     </div>
 
                     {/* RIGHT PANEL: Recent Enquiries */}
-                    <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl flex flex-col">
-                      <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
+                    <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md flex flex-col">
+                      <div className="flex items-center justify-between mb-4 pb-3 border-b border-outline-variant/50">
                         <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-[#D4AF37]" />
-                          <h3 className="font-extrabold text-white text-sm">Recent Client Inquiries</h3>
+                          <Mail className="h-4 w-4 text-gold-accent" />
+                          <h3 className="font-extrabold text-on-surface text-sm">Recent Client Inquiries</h3>
                         </div>
                         <button 
                           onClick={() => setActiveTab("enquiries")}
-                          className="text-[10px] text-[#D4AF37] font-bold flex items-center gap-0.5 cursor-pointer hover:underline"
+                          className="text-[10px] text-gold-accent font-bold flex items-center gap-0.5 cursor-pointer hover:underline"
                         >
                           View All <ExternalLink className="h-3 w-3" />
                         </button>
@@ -1054,12 +1054,12 @@ export default function AdminView({
                         {enquiries.slice(0, 5).map((enq, idx) => (
                           <div 
                             key={enq.id || `enq-short-${idx}`}
-                            className="p-3.5 bg-slate-950/40 rounded-xl border border-white/5 space-y-2 hover:border-[#D4AF37]/20 transition-all"
+                            className="p-3.5 bg-surface/40 rounded-xl border border-outline-variant/50 space-y-2 hover:border-gold-accent/20 transition-all"
                           >
                             <div className="flex items-center justify-between gap-2.5">
                               <div>
-                                <h4 className="font-extrabold text-white text-xs">{enq.name}</h4>
-                                <span className="text-[9px] text-slate-500 font-medium">{new Date(enq.dateStr).toLocaleString()}</span>
+                                <h4 className="font-extrabold text-on-surface text-xs">{enq.name}</h4>
+                                <span className="text-[9px] text-outline font-medium">{new Date(enq.dateStr).toLocaleString()}</span>
                               </div>
                               
                               <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
@@ -1067,14 +1067,14 @@ export default function AdminView({
                                   ? "bg-red-500/15 text-red-400 border border-red-500/10 animate-pulse"
                                   : enq.status === "Contacted"
                                   ? "bg-amber-500/15 text-amber-400 border border-amber-500/10"
-                                  : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/10"
+                                  : "bg-gold-accent/15 text-gold-accent border border-gold-accent/20"
                               }`}>
                                 {enq.status}
                               </span>
                             </div>
 
-                            <p className="text-[10px] text-[#D4AF37] font-bold truncate">Prop: {enq.propertyName}</p>
-                            <p className="text-[10px] text-slate-400 italic line-clamp-2">"{enq.message}"</p>
+                            <p className="text-[10px] text-gold-accent font-bold truncate">Prop: {enq.propertyName}</p>
+                            <p className="text-[10px] text-on-surface-variant italic line-clamp-2">"{enq.message}"</p>
                           </div>
                         ))}
                       </div>
@@ -1082,14 +1082,14 @@ export default function AdminView({
                   </div>
 
                   {/* Quick Activity Chart Reference */}
-                  <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
-                    <h3 className="font-extrabold text-white text-xs uppercase tracking-wider">Indexed Actions (Overview)</h3>
+                  <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
+                    <h3 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">Indexed Actions (Overview)</h3>
                     <div className="h-44 w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={[
-                          { name: 'Approved', count: approvedListingsCount, fill: '#10b981' },
-                          { name: 'Pending', count: pendingApprovalsCount, fill: '#f59e0b' },
-                          { name: 'Enquiries', count: enquiries.length, fill: '#f43f5e' },
+                          { name: 'Approved', count: approvedListingsCount, fill: 'var(--success-green)' },
+                          { name: 'Pending', count: pendingApprovalsCount, fill: 'var(--gold-accent)' },
+                          { name: 'Enquiries', count: enquiries.length, fill: '#ef4444' },
                           { name: 'Users', count: dbUsers.length, fill: '#3b82f6' }
                         ]} margin={{ top: 10, right: 30, left: -20, bottom: 0 }} layout="vertical">
                           <XAxis type="number" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
@@ -1119,42 +1119,42 @@ export default function AdminView({
                   {/* Top bar controls */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <h1 className="text-xl font-extrabold text-white tracking-tight">Real Estate Master Index ({filteredPropertiesings.length} records)</h1>
-                      <p className="text-xs text-slate-400">Search, filter, edit details manually, or process approvals in bulk.</p>
+                      <h1 className="text-xl font-extrabold text-on-surface tracking-tight">Real Estate Master Index ({filteredPropertiesings.length} records)</h1>
+                      <p className="text-xs text-on-surface-variant">Search, filter, edit details manually, or process approvals in bulk.</p>
                     </div>
 
                     <button
                       onClick={() => setIsAddModalOpen(true)}
-                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-lg active:scale-95 transition-all self-start sm:self-auto"
+                      className="px-4 py-2.5 rounded-xl bg-gold-accent text-[#0F172A] font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow active:scale-95 transition-all self-start sm:self-auto"
                     >
-                      <Plus className="h-4 w-4 text-slate-950 stroke-[3]" /> Add Manual Property
+                      <Plus className="h-4 w-4 text-[#0F172A] stroke-[3]" /> Add Manual Property
                     </button>
                   </div>
 
                   {/* Searching filtering row */}
-                  <div className="bg-slate-900 border border-white/5 rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-3.5 shadow-xl">
+                  <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-3.5 shadow-md">
                     <div className="flex-1 relative">
-                      <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
+                      <Search className="absolute left-3.5 top-3 h-4 w-4 text-outline" />
                       <label htmlFor="search-listings-input" className="sr-only">Search Listings</label>
                       <input id="search-listings-input"
                         type="text"
                         placeholder="Search listings by title, locality name..."
                         value={propertySearch}
                         onChange={(e) => setPropertySearch(e.target.value)}
-                        className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/40 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-600 outline-none transition-all"
+                        className="w-full bg-surface border border-outline-variant/50 focus:border-gold-accent/40 rounded-xl pl-10 pr-4 py-2.5 text-xs text-on-surface placeholder-slate-600 outline-none transition-all"
                       />
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      <div className="flex bg-slate-950 p-1 rounded-xl border border-white/5">
+                      <div className="flex bg-surface p-1 rounded-xl border border-outline-variant/50">
                         {["All", "Live", "Pending", "Rejected", "Featured"].map((fState) => (
                           <button
                             key={fState}
                             onClick={() => setPropertyStatusFilter(fState)}
                             className={`px-3 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all ${
                               propertyStatusFilter === fState
-                                ? "bg-slate-800 text-[#D4AF37]"
-                                : "text-slate-400 hover:text-white"
+                                ? "bg-surface-container-high text-gold-accent"
+                                : "text-on-surface-variant hover:text-on-surface"
                             }`}
                           >
                             {fState}
@@ -1165,7 +1165,7 @@ export default function AdminView({
                       <select
                         value={propertySort}
                         onChange={(e) => setPropertySort(e.target.value)}
-                        className="bg-slate-950 border border-white/5 rounded-xl text-[10px] font-bold text-slate-300 py-2.5 px-3.5 outline-none focus:border-[#D4AF37]/30 cursor-pointer"
+                        className="bg-surface border border-outline-variant/50 rounded-xl text-[10px] font-bold text-on-surface-variant py-2.5 px-3.5 outline-none focus:border-gold-accent/30 cursor-pointer"
                       >
                         <option value="default">Default Sort</option>
                         <option value="price-asc">Price: Low to High</option>
@@ -1178,31 +1178,31 @@ export default function AdminView({
                   {/* BULK ACTIONS BANNER */}
                   {selectedProperties.length > 0 && (
                     <motion.div 
-                      className="bg-slate-800/80 border border-[#D4AF37]/30 rounded-2xl px-5 py-3 flex items-center justify-between gap-4 shadow-xl"
+                      className="bg-surface-container-high/80 border border-gold-accent/30 rounded-2xl px-5 py-3 flex items-center justify-between gap-4 shadow-md"
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
                     >
                       <div className="flex items-center gap-2">
-                        <CheckSquare className="h-4 w-4 text-[#D4AF37]" />
-                        <span className="text-xs text-white font-bold">{selectedProperties.length} properties selected</span>
+                        <CheckSquare className="h-4 w-4 text-gold-accent" />
+                        <span className="text-xs text-on-surface font-bold">{selectedProperties.length} properties selected</span>
                       </div>
                       
                       <div className="flex items-center gap-2">
                         <button
                           onClick={handleBulkApprove}
-                          className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-[10px] cursor-pointer active:scale-95 transition-all"
+                          className="px-3 py-1.5 rounded-lg bg-gold-accent hover:bg-gold-hover text-[#0F172A] font-black text-[10px] cursor-pointer active:scale-95 transition-all"
                         >
                           Approve Batch
                         </button>
                         <button
                           onClick={handleBulkHide}
-                          className="px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-900 text-slate-300 border border-white/10 hover:border-slate-700 font-bold text-[10px] cursor-pointer"
+                          className="px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-container text-on-surface-variant border border-outline-variant hover:border-outline-variant font-bold text-[10px] cursor-pointer"
                         >
                           Hide Batch
                         </button>
                         <button
                           onClick={handleBulkDelete}
-                          className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-[10px] cursor-pointer active:scale-95 transition-all flex items-center gap-1"
+                          className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-on-surface font-bold text-[10px] cursor-pointer active:scale-95 transition-all flex items-center gap-1"
                         >
                           <Trash2 className="h-3 w-3" /> Erase Batch
                         </button>
@@ -1211,18 +1211,18 @@ export default function AdminView({
                   )}
 
                   {/* Database properties list table */}
-                  <div className="bg-slate-900 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+                  <div className="bg-surface-container border border-outline-variant/50 rounded-2xl overflow-hidden shadow-md">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-slate-950 border-b border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          <tr className="bg-surface border-b border-outline-variant/50 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                             <th className="py-4 px-4 w-12 text-center">
                               <label htmlFor="select-all-props" className="sr-only">Select All Properties</label>
                               <input id="select-all-props"
                                 type="checkbox"
                                 checked={selectedProperties.length === filteredPropertiesings.length && filteredPropertiesings.length > 0}
                                 onChange={handleSelectAllProps}
-                                className="rounded border-white/10 text-[#D4AF37] focus:ring-[#D4AF37]/30 h-4 w-4 bg-slate-950 cursor-pointer"
+                                className="rounded border-outline-variant text-gold-accent focus:ring-gold-accent/30 h-4 w-4 bg-surface cursor-pointer"
                               />
                             </th>
                             <th className="py-4 px-4">Title & Locality</th>
@@ -1232,10 +1232,10 @@ export default function AdminView({
                           </tr>
                         </thead>
 
-                        <tbody className="divide-y divide-white/5 text-xs text-slate-300">
+                        <tbody className="divide-y divide-white/5 text-xs text-on-surface-variant">
                           {sortedListings.length === 0 ? (
                             <tr>
-                              <td colSpan={5} className="py-16 text-center text-slate-500 font-medium">
+                              <td colSpan={5} className="py-16 text-center text-outline font-medium">
                                 No properties matching search criteria were found!
                               </td>
                             </tr>
@@ -1243,7 +1243,7 @@ export default function AdminView({
                             sortedListings.map((prop) => {
                               const isChecked = selectedProperties.includes(prop.id);
                               return (
-                                <tr key={prop.id} className={`hover:bg-slate-950/20 transition-all ${isChecked ? "bg-slate-800/10" : ""}`}>
+                                <tr key={prop.id} className={`hover:bg-surface/20 transition-all ${isChecked ? "bg-surface-container-high/10" : ""}`}>
                                   {/* Checkbox column */}
                                   <td className="py-4 px-4 text-center">
                                     <label htmlFor={`select-prop-${prop.id}`} className="sr-only">Select Property</label>
@@ -1251,23 +1251,23 @@ export default function AdminView({
                                       type="checkbox"
                                       checked={isChecked}
                                       onChange={(e) => handleSelectProp(prop.id, e.target.checked)}
-                                      className="rounded border-white/10 text-[#D4AF37] focus:ring-[#D4AF37]/30 h-4 w-4 bg-slate-950 cursor-pointer"
+                                      className="rounded border-outline-variant text-gold-accent focus:ring-gold-accent/30 h-4 w-4 bg-surface cursor-pointer"
                                     />
                                   </td>
 
                                   {/* Title & locality column */}
                                   <td className="py-4 px-4 min-w-0 font-sans">
-                                    <h4 className="font-extrabold text-white leading-normal truncate max-w-sm sm:max-w-md">{prop.title}</h4>
-                                    <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
-                                      <MapPin className="h-3 w-3 text-[#D4AF37]" /> {prop.location}
+                                    <h4 className="font-extrabold text-on-surface leading-normal truncate max-w-sm sm:max-w-md">{prop.title}</h4>
+                                    <p className="text-[10px] text-on-surface-variant mt-1 flex items-center gap-1">
+                                      <MapPin className="h-3 w-3 text-gold-accent" /> {prop.location}
                                     </p>
-                                    <span className="inline-block mt-1 bg-slate-950/60 text-slate-400 text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">
+                                    <span className="inline-block mt-1 bg-surface/60 text-on-surface-variant text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">
                                       {prop.bhk} | {prop.type} | {prop.postedBy || "Owner Direct"}
                                     </span>
                                   </td>
 
                                   {/* Price column */}
-                                  <td className="py-4 px-4 font-bold text-[#D4AF37]">
+                                  <td className="py-4 px-4 font-bold text-gold-accent">
                                     {formatCurrency(prop.price)}
                                   </td>
 
@@ -1275,12 +1275,12 @@ export default function AdminView({
                                   <td className="py-4 px-4 text-center">
                                     <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold border leading-none uppercase ${
                                       prop.moderationStatus === "live"
-                                        ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20"
+                                        ? "bg-gold-accent/15 text-success-green border-emerald-500/20"
                                         : prop.moderationStatus === "pending"
                                         ? "bg-amber-500/15 text-amber-400 border-amber-500/20 animate-pulse"
                                         : prop.moderationStatus === "rejected"
                                         ? "bg-red-500/15 text-red-400 border-red-500/20"
-                                        : "bg-slate-800 text-slate-400 border-white/5"
+                                        : "bg-surface-container-high text-on-surface-variant border-outline-variant/50"
                                     }`}>
                                       {prop.moderationStatus}
                                     </span>
@@ -1293,7 +1293,7 @@ export default function AdminView({
                                       {prop.moderationStatus === "pending" ? (
                                         <button
                                           onClick={() => handlePropertyApprovalToggle(prop.id, prop.moderationStatus)}
-                                          className="p-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-[9px] flex items-center gap-0.5 cursor-pointer transition-all"
+                                          className="p-1.5 rounded-lg bg-gold-accent hover:bg-gold-hover text-[#0F172A] font-bold text-[9px] flex items-center gap-0.5 cursor-pointer transition-all"
                                           title="Audit Approve"
                                         >
                                           <Check className="h-3 w-3" /> Approve
@@ -1301,7 +1301,7 @@ export default function AdminView({
                                       ) : (
                                         <button
                                           onClick={() => handlePropertyApprovalToggle(prop.id, prop.moderationStatus)}
-                                          className="p-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 border border-white/5 text-slate-400 hover:text-[#D4AF37] text-[9px] flex items-center gap-0.5 cursor-pointer"
+                                          className="p-1.5 rounded-lg bg-slate-850 hover:bg-surface-container-high border border-outline-variant/50 text-on-surface-variant hover:text-gold-accent text-[9px] flex items-center gap-0.5 cursor-pointer"
                                           title="Revoke Verification"
                                         >
                                           <RefreshCw className="h-3 w-3" /> Revoke
@@ -1311,10 +1311,10 @@ export default function AdminView({
                                       {/* Reject Toggle */}
                                       <button
                                         onClick={() => handlePropertyHideToggle(prop)}
-                                        className={`p-2 rounded-lg bg-slate-850 border border-white/5 transition-colors cursor-pointer ${
+                                        className={`p-2 rounded-lg bg-slate-850 border border-outline-variant/50 transition-colors cursor-pointer ${
                                           prop.moderationStatus === "rejected"
-                                            ? "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/20"
-                                            : "text-slate-400 hover:text-red-400 hover:bg-red-950/20"
+                                            ? "text-success-green hover:text-emerald-300 hover:bg-emerald-950/20"
+                                            : "text-on-surface-variant hover:text-red-400 hover:bg-red-950/20"
                                         }`}
                                         title={prop.moderationStatus === "rejected" ? "Restore Visibility" : "Reject Listing"}
                                       >
@@ -1327,7 +1327,7 @@ export default function AdminView({
                                           setEditingProperty(prop);
                                           setIsEditModalOpen(true);
                                         }}
-                                        className="p-2 rounded-lg bg-slate-850 hover:bg-slate-800 border border-white/5 text-slate-400 hover:text-white cursor-pointer"
+                                        className="p-2 rounded-lg bg-slate-850 hover:bg-surface-container-high border border-outline-variant/50 text-on-surface-variant hover:text-on-surface cursor-pointer"
                                         title="Modify Details"
                                       >
                                         <Edit className="h-3.5 w-3.5" />
@@ -1336,7 +1336,7 @@ export default function AdminView({
                                       {/* Delete */}
                                       <button
                                         onClick={() => handlePropertyDelete(prop.id)}
-                                        className="p-2 rounded-lg bg-slate-850 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 text-slate-400 hover:text-red-400 cursor-pointer"
+                                        className="p-2 rounded-lg bg-slate-850 hover:bg-red-500/10 border border-outline-variant/50 hover:border-red-500/20 text-on-surface-variant hover:text-red-400 cursor-pointer"
                                         title="Delete Listing"
                                       >
                                         <Trash2 className="h-3.5 w-3.5" />
@@ -1361,15 +1361,15 @@ export default function AdminView({
               {activeTab === "pending_approvals" && (
                 <div className="space-y-6 animate-fadeIn">
                   <div>
-                    <h2 className="text-xl text-white font-extrabold tracking-tight">Pending Approvals Queue</h2>
-                    <p className="text-xs text-slate-400 font-medium">Explicit listing of all records lacking physical validation or compliance audit.</p>
+                    <h2 className="text-xl text-on-surface font-extrabold tracking-tight">Pending Approvals Queue</h2>
+                    <p className="text-xs text-on-surface-variant font-medium">Explicit listing of all records lacking physical validation or compliance audit.</p>
                   </div>
 
-                  <div className="bg-slate-900 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+                  <div className="bg-surface-container border border-outline-variant/50 rounded-2xl overflow-hidden shadow-md">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-slate-950 border-b border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          <tr className="bg-surface border-b border-outline-variant/50 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                             <th className="py-4 px-4 w-12 text-center">#</th>
                             <th className="py-4 px-4">Title & Locality</th>
                             <th className="py-4 px-4 w-32">Price Scale</th>
@@ -1378,33 +1378,33 @@ export default function AdminView({
                           </tr>
                         </thead>
 
-                        <tbody className="divide-y divide-white/5 text-xs text-slate-300">
+                        <tbody className="divide-y divide-white/5 text-xs text-on-surface-variant">
                           {pendingProperties.length === 0 ? (
                             <tr>
-                              <td colSpan={5} className="py-16 text-center text-slate-500 font-medium">
+                              <td colSpan={5} className="py-16 text-center text-outline font-medium">
                                 <div className="flex flex-col items-center justify-center gap-2">
-                                  <ShieldCheck className="h-10 w-10 text-emerald-500" />
-                                  <p className="text-xs text-slate-400 font-semibold">Queue Clear</p>
-                                  <p className="text-[10px] text-slate-500">No properties are currently pending approval.</p>
+                                  <ShieldCheck className="h-10 w-10 text-on-surface" />
+                                  <p className="text-xs text-on-surface-variant font-semibold">Queue Clear</p>
+                                  <p className="text-[10px] text-outline">No properties are currently pending approval.</p>
                                 </div>
                               </td>
                             </tr>
                           ) : (
                             pendingProperties.map((prop, idx) => (
-                              <tr key={prop.id} className="hover:bg-slate-950/20 transition-all text-xs font-sans">
+                              <tr key={prop.id} className="hover:bg-surface/20 transition-all text-xs font-sans">
                                 {/* Index column */}
-                                <td className="py-4 px-4 text-center font-bold text-slate-500">{idx + 1}</td>
+                                <td className="py-4 px-4 text-center font-bold text-outline">{idx + 1}</td>
 
                                 {/* Title & locality column */}
                                 <td className="py-4 px-4 min-w-0">
-                                  <h4 className="font-extrabold text-white leading-normal truncate max-w-sm sm:max-w-md">{prop.title}</h4>
-                                  <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
-                                    <MapPin className="h-3 w-3 text-[#D4AF37]" /> {prop.location}
+                                  <h4 className="font-extrabold text-on-surface leading-normal truncate max-w-sm sm:max-w-md">{prop.title}</h4>
+                                  <p className="text-[10px] text-on-surface-variant mt-1 flex items-center gap-1">
+                                    <MapPin className="h-3 w-3 text-gold-accent" /> {prop.location}
                                   </p>
                                 </td>
 
                                 {/* Price column */}
-                                <td className="py-4 px-4 font-bold text-[#D4AF37]">
+                                <td className="py-4 px-4 font-bold text-gold-accent">
                                   {formatCurrency(prop.price)}
                                 </td>
 
@@ -1420,14 +1420,14 @@ export default function AdminView({
                                   <div className="flex items-center justify-center gap-2">
                                     <button
                                       onClick={() => handlePropertyApprovalToggle(prop.id, prop.moderationStatus)}
-                                      className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-[10px] flex items-center gap-1 cursor-pointer transition-all focus:ring-2 ring-emerald-500/50"
+                                      className="px-3 py-1.5 rounded-lg bg-gold-accent hover:bg-gold-hover text-[#0F172A] font-black text-[10px] flex items-center gap-1 cursor-pointer transition-all focus:ring-2 ring-gold-accent/50"
                                       title="Audit Approve"
                                     >
                                       <Check className="h-3.5 w-3.5" /> Approve
                                     </button>
                                     <button
                                       onClick={() => handlePropertyHideToggle(prop)}
-                                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-white/5 hover:border-red-500/30 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
+                                      className="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-red-500/20 text-on-surface-variant hover:text-red-400 border border-outline-variant/50 hover:border-red-500/30 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
                                       title="Reject Listing"
                                     >
                                       <X className="h-3.5 w-3.5" /> Reject
@@ -1454,41 +1454,41 @@ export default function AdminView({
                   {/* Top bar description */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <h1 className="text-xl font-extrabold text-white tracking-tight">Client Contact Hub ({filteredEnquiries.length} records)</h1>
-                      <p className="text-xs text-slate-400">Direct callbacks from interested buyers. Complete tasks, change statuses, or chat on WhatsApp.</p>
+                      <h1 className="text-xl font-extrabold text-on-surface tracking-tight">Client Contact Hub ({filteredEnquiries.length} records)</h1>
+                      <p className="text-xs text-on-surface-variant">Direct callbacks from interested buyers. Complete tasks, change statuses, or chat on WhatsApp.</p>
                     </div>
 
                     <button
                       onClick={handleExportCSV}
-                      className="px-4 py-2.5 rounded-xl bg-slate-900 border border-white/5 hover:border-[#D4AF37]/30 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-lg active:scale-95 transition-all"
+                      className="px-4 py-2.5 rounded-xl bg-surface-container border border-outline-variant/50 hover:border-gold-accent/30 text-on-surface font-extrabold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow active:scale-95 transition-all"
                     >
-                      <Download className="h-4 w-4 text-[#D4AF37]" /> Export CSV Sheet
+                      <Download className="h-4 w-4 text-gold-accent" /> Export CSV Sheet
                     </button>
                   </div>
 
                   {/* Search bar inside enquiries */}
-                  <div className="bg-slate-900 border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row gap-3.5 shadow-xl">
+                  <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-4 flex flex-col sm:flex-row gap-3.5 shadow-md">
                     <div className="flex-1 relative">
-                      <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
+                      <Search className="absolute left-3.5 top-3 h-4 w-4 text-outline" />
                       <label htmlFor="search-enquiries-input" className="sr-only">Search Enquiries</label>
                       <input id="search-enquiries-input"
                         type="text"
                         placeholder="Search enquiries by name, email, or property title..."
                         value={enquirySearch}
                         onChange={(e) => setEnquirySearch(e.target.value)}
-                        className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/40 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-650 outline-none transition-all"
+                        className="w-full bg-surface border border-outline-variant/50 focus:border-gold-accent/40 rounded-xl pl-10 pr-4 py-2 text-xs text-on-surface placeholder-slate-650 outline-none transition-all"
                       />
                     </div>
 
-                    <div className="flex bg-slate-950 p-1 rounded-xl border border-white/5">
+                    <div className="flex bg-surface p-1 rounded-xl border border-outline-variant/50">
                       {["All", "New", "Contacted", "Resolved"].map((enqFilterOpt) => (
                         <button
                           key={enqFilterOpt}
                           onClick={() => setEnquiryFilter(enqFilterOpt)}
                           className={`px-3 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all ${
                             enquiryFilter === enqFilterOpt
-                              ? "bg-slate-800 text-[#D4AF37]"
-                              : "text-slate-400 hover:text-white"
+                              ? "bg-surface-container-high text-gold-accent"
+                              : "text-on-surface-variant hover:text-on-surface"
                           }`}
                         >
                           {enqFilterOpt}
@@ -1498,11 +1498,11 @@ export default function AdminView({
                   </div>
 
                   {/* Enquiries Grid table list */}
-                  <div className="bg-slate-900 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+                  <div className="bg-surface-container border border-outline-variant/50 rounded-2xl overflow-hidden shadow-md">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-slate-950 border-b border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          <tr className="bg-surface border-b border-outline-variant/50 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                             <th className="py-4 px-4 w-48">Client Details</th>
                             <th className="py-4 px-4">Subject Property</th>
                             <th className="py-4 px-4 w-48">Client Request</th>
@@ -1511,29 +1511,29 @@ export default function AdminView({
                           </tr>
                         </thead>
 
-                        <tbody className="divide-y divide-white/5 text-xs text-slate-300">
+                        <tbody className="divide-y divide-white/5 text-xs text-on-surface-variant">
                           {filteredEnquiries.length === 0 ? (
                             <tr>
-                              <td colSpan={5} className="py-16 text-center text-slate-500 font-medium">
+                              <td colSpan={5} className="py-16 text-center text-outline font-medium">
                                 No client enquiries found matching keywords!
                               </td>
                             </tr>
                           ) : (
                             filteredEnquiries.map((enq, index) => (
-                              <tr key={enq.id || `enq-${index}`} className="hover:bg-slate-950/20 transition-all font-sans">
+                              <tr key={enq.id || `enq-${index}`} className="hover:bg-surface/20 transition-all font-sans">
                                 
                                 {/* Client stats */}
                                 <td className="py-4 px-4 space-y-1">
-                                  <h4 className="font-extrabold text-white leading-tight">{enq.name}</h4>
-                                  <p className="text-[10px] text-[#D4AF37] font-semibold">{enq.phone}</p>
-                                  <p className="text-[10px] text-slate-500 select-all font-medium break-all">{enq.email}</p>
-                                  <p className="text-[9px] text-slate-600">Recd: {new Date(enq.dateStr).toLocaleDateString()}</p>
+                                  <h4 className="font-extrabold text-on-surface leading-tight">{enq.name}</h4>
+                                  <p className="text-[10px] text-gold-accent font-semibold">{enq.phone}</p>
+                                  <p className="text-[10px] text-outline select-all font-medium break-all">{enq.email}</p>
+                                  <p className="text-[9px] text-outline-variant">Recd: {new Date(enq.dateStr).toLocaleDateString()}</p>
                                 </td>
 
                                 {/* Property connection */}
-                                <td className="py-4 px-4 font-bold text-slate-200">
+                                <td className="py-4 px-4 font-bold text-on-surface">
                                   {enq.propertyName}
-                                  <p className="text-[10px] text-slate-500 font-medium">ID: {enq.propertyId}</p>
+                                  <p className="text-[10px] text-outline font-medium">ID: {enq.propertyId}</p>
                                 </td>
 
                                 {/* Enquiry message */}
@@ -1553,7 +1553,7 @@ export default function AdminView({
                                         ? "bg-red-500/10 text-red-400 border-red-500/25 focus:ring-red-500"
                                         : enq.status === "Contacted"
                                         ? "bg-amber-500/10 text-amber-400 border-amber-500/25 focus:ring-amber-500"
-                                        : "bg-emerald-500/10 text-emerald-400 border-emerald-500/25 focus:ring-emerald-500"
+                                        : "bg-gold-accent/10 text-success-green border-emerald-500/25 focus:ring-emerald-500"
                                     }`}
                                   >
                                     <option value="New">New</option>
@@ -1570,7 +1570,7 @@ export default function AdminView({
                                       href={`https://wa.me/${enq.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hello Mr/Ms ${enq.name}, ${BUSINESS_CONFIG.consultantName} here from Shiv Saya Properties. I received your enquiry about: ${enq.propertyName}. I would be glad to share layout details.`)}`}
                                       target="_blank"
                                       rel="noreferrer"
-                                      className="p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-[#10B981] border border-[#10B981]/25 cursor-pointer"
+                                      className="p-2 rounded-lg bg-gold-accent/10 hover:bg-gold-accent/20 text-success-green border border-success-green/25 cursor-pointer"
                                       title="WhatsApp Specialist Chat"
                                     >
                                       <Phone className="h-3.5 w-3.5" />
@@ -1588,7 +1588,7 @@ export default function AdminView({
                                     {/* Delete Enquiry */}
                                     <button
                                       onClick={() => handleDeleteEnquiry(enq.id)}
-                                      className="p-2 rounded-lg bg-slate-850 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 text-slate-400 hover:text-red-400 cursor-pointer"
+                                      className="p-2 rounded-lg bg-slate-850 hover:bg-red-500/10 border border-outline-variant/50 hover:border-red-500/20 text-on-surface-variant hover:text-red-400 cursor-pointer"
                                       title="Delete Enquiry Record"
                                     >
                                       <Trash2 className="h-3.5 w-3.5" />
@@ -1614,28 +1614,28 @@ export default function AdminView({
                   
                   {/* Top info and searching */}
                   <div>
-                    <h1 className="text-xl font-extrabold text-white tracking-tight">Simulated User Base ({filteredUsers.length} files)</h1>
-                    <p className="text-xs text-slate-400">Suspend offending client accounts or override custom registration privileges instantly.</p>
+                    <h1 className="text-xl font-extrabold text-on-surface tracking-tight">Simulated User Base ({filteredUsers.length} files)</h1>
+                    <p className="text-xs text-on-surface-variant">Suspend offending client accounts or override custom registration privileges instantly.</p>
                   </div>
 
-                  <div className="bg-slate-900 border border-white/5 rounded-2xl p-4 shadow-xl relative">
-                    <Search className="absolute left-7 top-7 h-4 w-4 text-slate-500" />
+                  <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-4 shadow-md relative">
+                    <Search className="absolute left-7 top-7 h-4 w-4 text-outline" />
                     <label htmlFor="search-accounts-input" className="sr-only">Search Accounts</label>
                     <input id="search-accounts-input"
                       type="text"
                       placeholder="Search accounts catalog by first/last display name or registration email..."
                       value={userSearch}
                       onChange={(e) => setUserSearch(e.target.value)}
-                      className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/40 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-650 outline-none transition-all"
+                      className="w-full bg-surface border border-outline-variant/50 focus:border-gold-accent/40 rounded-xl pl-10 pr-4 py-2.5 text-xs text-on-surface placeholder-slate-650 outline-none transition-all"
                     />
                   </div>
 
                   {/* Users grid table */}
-                  <div className="bg-slate-900 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+                  <div className="bg-surface-container border border-outline-variant/50 rounded-2xl overflow-hidden shadow-md">
                     <div className="overflow-x-auto font-sans">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-slate-950 border-b border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          <tr className="bg-surface border-b border-outline-variant/50 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                             <th className="py-4 px-4">Account User Name</th>
                             <th className="py-4 px-4 w-48">Verified Email</th>
                             <th className="py-4 px-4 w-44">Contact Record</th>
@@ -1644,32 +1644,32 @@ export default function AdminView({
                           </tr>
                         </thead>
 
-                        <tbody className="divide-y divide-white/5 text-xs text-slate-300">
+                        <tbody className="divide-y divide-white/5 text-xs text-on-surface-variant">
                           {filteredUsers.length === 0 ? (
                             <tr>
-                              <td colSpan={5} className="py-12 text-center text-slate-500">
+                              <td colSpan={5} className="py-12 text-center text-outline">
                                 No registered user accounts match search filter.
                               </td>
                             </tr>
                           ) : (
                             filteredUsers.map((usr) => (
-                              <tr key={usr.uid} className="hover:bg-slate-950/20 transition-all">
+                              <tr key={usr.uid} className="hover:bg-surface/20 transition-all">
                                 
-                                <td className="py-4 px-4 font-extrabold text-white flex items-center gap-3">
-                                  <div className="h-8 w-8 rounded-full bg-slate-800 text-[#D4AF37] font-black text-xs flex items-center justify-center uppercase border border-white/5">
+                                <td className="py-4 px-4 font-extrabold text-on-surface flex items-center gap-3">
+                                  <div className="h-8 w-8 rounded-full bg-surface-container-high text-gold-accent font-black text-xs flex items-center justify-center uppercase border border-outline-variant/50">
                                     {usr.displayName.charAt(0)}
                                   </div>
                                   <div>
                                     {usr.displayName}
-                                    <span className="block text-[8px] text-slate-500 font-mono">UID: {usr.uid}</span>
+                                    <span className="block text-[8px] text-outline font-mono">UID: {usr.uid}</span>
                                   </div>
                                 </td>
 
-                                <td className="py-4 px-4 select-all text-slate-300 font-medium">
+                                <td className="py-4 px-4 select-all text-on-surface-variant font-medium">
                                   {usr.email}
                                 </td>
 
-                                <td className="py-4 px-4 text-slate-400">
+                                <td className="py-4 px-4 text-on-surface-variant">
                                   {usr.phone || "---"}
                                 </td>
 
@@ -1677,7 +1677,7 @@ export default function AdminView({
                                   <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase leading-none border ${
                                     usr.banned === true
                                       ? "bg-red-500/10 text-red-400 border-red-500/20"
-                                      : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 animate-none"
+                                      : "bg-gold-accent/10 text-success-green border-emerald-500/20 animate-none"
                                   }`}>
                                     {usr.banned === true ? "Suspended" : "Active"}
                                   </span>
@@ -1688,14 +1688,14 @@ export default function AdminView({
                                   {usr.banned === true ? (
                                     <button
                                       onClick={() => handleToggleBanUser(usr.uid, true)}
-                                      className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/25 hover:text-white text-emerald-400 border border-emerald-500/25 cursor-pointer font-bold text-[10px]"
+                                      className="px-3 py-1.5 rounded-lg bg-gold-accent/10 hover:bg-gold-accent/25 hover:text-on-surface text-success-green border border-emerald-500/25 cursor-pointer font-bold text-[10px]"
                                     >
                                       Reactivate
                                     </button>
                                   ) : (
                                     <button
                                       onClick={() => handleToggleBanUser(usr.uid, false)}
-                                      className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/25 hover:text-white text-red-450 border border-red-500/25 cursor-pointer font-bold text-[10px]"
+                                      className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/25 hover:text-on-surface text-red-450 border border-red-500/25 cursor-pointer font-bold text-[10px]"
                                     >
                                       Suspend
                                     </button>
@@ -1720,20 +1720,20 @@ export default function AdminView({
                 <div className="space-y-6 animate-fadeIn text-left">
                   
                   <div>
-                    <h1 className="text-xl font-extrabold text-white tracking-tight">Aesthetic Real Estate Analytics</h1>
-                    <p className="text-xs text-slate-400">Performance logs, listing breakdowns, and estimations calculated live.</p>
+                    <h1 className="text-xl font-extrabold text-on-surface tracking-tight">Aesthetic Real Estate Analytics</h1>
+                    <p className="text-xs text-on-surface-variant">Performance logs, listing breakdowns, and estimations calculated live.</p>
                   </div>
 
                   {/* Double Columns charts */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     
                     {/* Visual Breakdown of items */}
-                    <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
-                      <h3 className="font-extrabold text-white text-xs uppercase tracking-wider">Indexed Listing Types</h3>
+                    <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
+                      <h3 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">Indexed Listing Types</h3>
                       
                       <div className="space-y-4 pt-3.5">
                         {[
-                          { name: "3 BHK Builder Floors", count: threeBhkCount, color: "bg-[#D4AF37]" },
+                          { name: "3 BHK Builder Floors", count: threeBhkCount, color: "bg-gold-accent" },
                           { name: "Luxury Heritage Villas", count: villaCount, color: "bg-teal-500" },
                           { name: "Commercial Office / Land Plots", count: commercialCount, color: "bg-blue-500" },
                           { name: "Standard 1 / 2 BHK Flats", count: standardFlatsCount, color: "bg-purple-500" }
@@ -1742,10 +1742,10 @@ export default function AdminView({
                           return (
                           <div key={stat.name} className="space-y-1.5 font-sans">
                             <div className="flex justify-between text-xs font-semibold">
-                              <span className="text-slate-300">{stat.name}</span>
-                              <span className="text-white font-bold">{stat.count} properties ({pctValue}%)</span>
+                              <span className="text-on-surface-variant">{stat.name}</span>
+                              <span className="text-on-surface font-bold">{stat.count} properties ({pctValue}%)</span>
                             </div>
-                            <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden">
+                            <div className="w-full bg-surface rounded-full h-1.5 overflow-hidden">
                               <div className={`${stat.color} h-1.5 rounded-full`} style={{ width: `${Math.max(5, pctValue)}%` }}></div>
                             </div>
                           </div>
@@ -1754,14 +1754,14 @@ export default function AdminView({
                     </div>
 
                     {/* Enquiry callback metrics */}
-                    <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
-                      <h3 className="font-extrabold text-white text-xs uppercase tracking-wider">Callback Conversation Funnel</h3>
+                    <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
+                      <h3 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">Callback Conversation Funnel</h3>
                       
                       <div className="grid grid-cols-3 gap-3 pt-4">
                         {[
                           { title: "New Callback", count: newEnquiriesCount, pct: "30%", color: "border-red-500/20 text-red-400 bg-red-500/5" },
                           { title: "Contacted Agent", count: contactedEnquiriesCount, pct: "50%", color: "border-amber-500/20 text-amber-400 bg-amber-500/5" },
-                          { title: "Successful Deal", count: resolvedEnquiriesCount, pct: "20%", color: "border-emerald-500/20 text-emerald-400 bg-emerald-500/5" }
+                          { title: "Successful Deal", count: resolvedEnquiriesCount, pct: "20%", color: "border-emerald-500/20 text-success-green bg-gold-accent/5" }
                         ].map(f => (
                           <div key={f.title} className={`p-4 border rounded-xl text-center flex flex-col justify-center ${f.color}`}>
                             <span className="text-[17.5px] font-black">{f.count}</span>
@@ -1770,16 +1770,16 @@ export default function AdminView({
                         ))}
                       </div>
 
-                      <div className="p-3.5 bg-slate-950/40 rounded-xl border border-white/5 mt-4 text-[11px] leading-relaxed text-slate-400">
-                        Top performance advisory analytics estimate a conversion velocity of <span className="text-[#D4AF37] font-bold">4.2 Callback visits/week</span> under current verified RERA parameters.
+                      <div className="p-3.5 bg-surface/40 rounded-xl border border-outline-variant/50 mt-4 text-[11px] leading-relaxed text-on-surface-variant">
+                        Top performance advisory analytics estimate a conversion velocity of <span className="text-gold-accent font-bold">4.2 Callback visits/week</span> under current verified RERA parameters.
                       </div>
                     </div>
 
                   </div>
 
                   {/* Activity Chart Area */}
-                  <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
-                    <h3 className="font-extrabold text-white text-xs uppercase tracking-wider">Property Views & Listing Activity (Past 7 Days)</h3>
+                  <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
+                    <h3 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">Property Views & Listing Activity (Past 7 Days)</h3>
                     <div className="h-64 w-full pt-4">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={[
@@ -1793,8 +1793,8 @@ export default function AdminView({
                         ]} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                           <defs>
                             <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.8}/>
-                              <stop offset="95%" stopColor="#D4AF37" stopOpacity={0}/>
+                              <stop offset="5%" stopColor="var(--gold-accent)" stopOpacity={0.8}/>
+                              <stop offset="95%" stopColor="var(--gold-accent)" stopOpacity={0}/>
                             </linearGradient>
                             <linearGradient id="colorProps" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
@@ -1810,7 +1810,7 @@ export default function AdminView({
                             labelStyle={{ color: '#94a3b8', fontSize: '10px', marginBottom: '4px' }}
                           />
                           <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} iconType="circle" />
-                          <Area type="monotone" dataKey="views" name="Platform Views" stroke="#D4AF37" fillOpacity={1} fill="url(#colorViews)" />
+                          <Area type="monotone" dataKey="views" name="Platform Views" stroke="var(--gold-accent)" fillOpacity={1} fill="url(#colorViews)" />
                           <Area type="monotone" dataKey="properties" name="Properties Active" stroke="#3b82f6" fillOpacity={1} fill="url(#colorProps)" />
                         </AreaChart>
                       </ResponsiveContainer>
@@ -1825,101 +1825,101 @@ export default function AdminView({
                   TAB 6: HUB PARAMETERS SETTINGS
                   ===================================================== */}
               {activeTab === "settings" && (
-                <div className="space-y-6 animate-fadeIn md:text-left text-xs text-slate-300">
+                <div className="space-y-6 animate-fadeIn md:text-left text-xs text-on-surface-variant">
                   
                   <div>
-                    <h1 className="text-xl font-extrabold text-white tracking-tight">Hub General Settings</h1>
-                    <p className="text-xs text-slate-400">Modify global credentials list, toggle simulated variables, or reset database snapshots.</p>
+                    <h1 className="text-xl font-extrabold text-on-surface tracking-tight">Hub General Settings</h1>
+                    <p className="text-xs text-on-surface-variant">Modify global credentials list, toggle simulated variables, or reset database snapshots.</p>
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     
                     {/* SECTION 1: EDIT CONFIG */}
-                    <form onSubmit={handleSaveSettings} className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
-                      <div className="flex items-center gap-2 pb-2.5 border-b border-white/5">
-                        <Sliders className="h-4 w-4 text-[#D4AF37]" />
-                        <h3 className="font-extrabold text-white text-sm">Site Business Information</h3>
+                    <form onSubmit={handleSaveSettings} className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
+                      <div className="flex items-center gap-2 pb-2.5 border-b border-outline-variant/50">
+                        <Sliders className="h-4 w-4 text-gold-accent" />
+                        <h3 className="font-extrabold text-on-surface text-sm">Site Business Information</h3>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label htmlFor="auto-adminview-1744" className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Business Name</label>
+                          <label htmlFor="auto-adminview-1744" className="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">Business Name</label>
                           <input id="auto-adminview-1744"
                             type="text"
                             value={settings.businessName}
                             onChange={(e) => setSettings({ ...settings, businessName: e.target.value })}
-                            className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/50 rounded-xl px-3 py-2 text-xs text-white"
+                            className="w-full bg-surface border border-outline-variant/50 focus:border-gold-accent/50 rounded-xl px-3 py-2 text-xs text-on-surface"
                           />
                         </div>
 
                         <div className="space-y-1.5">
-                          <label htmlFor="admin-settings-rera" className="text-[10px] uppercase font-bold tracking-wider text-slate-400">RERA Number</label>
+                          <label htmlFor="admin-settings-rera" className="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">RERA Number</label>
                           <input id="admin-settings-rera"
                             type="text"
                             value={settings.reraNumber}
                             onChange={(e) => setSettings({ ...settings, reraNumber: e.target.value })}
-                            className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/50 rounded-xl px-3 py-2 text-xs text-white"
+                            className="w-full bg-surface border border-outline-variant/50 focus:border-gold-accent/50 rounded-xl px-3 py-2 text-xs text-on-surface"
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label htmlFor="admin-settings-consultant" className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Consultant Lead</label>
+                          <label htmlFor="admin-settings-consultant" className="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">Consultant Lead</label>
                           <input id="admin-settings-consultant"
                             type="text"
                             value={settings.consultantName}
                             onChange={(e) => setSettings({ ...settings, consultantName: e.target.value })}
-                            className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/50 rounded-xl px-3 py-2 text-xs text-white"
+                            className="w-full bg-surface border border-outline-variant/50 focus:border-gold-accent/50 rounded-xl px-3 py-2 text-xs text-on-surface"
                           />
                         </div>
 
                         <div className="space-y-1.5">
-                          <label htmlFor="admin-settings-whatsapp" className="text-[10px] uppercase font-bold tracking-wider text-slate-400">WhatsApp Target</label>
+                          <label htmlFor="admin-settings-whatsapp" className="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">WhatsApp Target</label>
                           <input id="admin-settings-whatsapp"
                             type="text"
                             value={settings.whatsappNumber}
                             onChange={(e) => setSettings({ ...settings, whatsappNumber: e.target.value })}
-                            className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/50 rounded-xl px-3 py-2 text-xs text-white"
+                            className="w-full bg-surface border border-outline-variant/50 focus:border-gold-accent/50 rounded-xl px-3 py-2 text-xs text-on-surface"
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label htmlFor="admin-settings-email" className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Official Email</label>
+                          <label htmlFor="admin-settings-email" className="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">Official Email</label>
                           <input id="admin-settings-email"
                             type="email"
                             value={settings.businessEmail}
                             onChange={(e) => setSettings({ ...settings, businessEmail: e.target.value })}
-                            className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/50 rounded-xl px-3 py-2 text-xs text-white"
+                            className="w-full bg-surface border border-outline-variant/50 focus:border-gold-accent/50 rounded-xl px-3 py-2 text-xs text-on-surface"
                           />
                         </div>
 
                         <div className="space-y-1.5">
-                          <label htmlFor="admin-settings-phone" className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Office Phone</label>
+                          <label htmlFor="admin-settings-phone" className="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">Office Phone</label>
                           <input id="admin-settings-phone"
                             type="text"
                             value={settings.businessPhone}
                             onChange={(e) => setSettings({ ...settings, businessPhone: e.target.value })}
-                            className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/50 rounded-xl px-3 py-2 text-xs text-white"
+                            className="w-full bg-surface border border-outline-variant/50 focus:border-gold-accent/50 rounded-xl px-3 py-2 text-xs text-on-surface"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1.5">
-                        <label htmlFor="admin-settings-addr" className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Office Headquarters Physical Address</label>
+                        <label htmlFor="admin-settings-addr" className="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">Office Headquarters Physical Address</label>
                         <input id="admin-settings-addr"
                           type="text"
                           value={settings.businessAddress}
                           onChange={(e) => setSettings({ ...settings, businessAddress: e.target.value })}
-                          className="w-full bg-slate-950 border border-white/5 focus:border-[#D4AF37]/50 rounded-xl px-3 py-2 text-xs text-white"
+                          className="w-full bg-surface border border-outline-variant/50 focus:border-gold-accent/50 rounded-xl px-3 py-2 text-xs text-on-surface"
                         />
                       </div>
 
                       <button
                         type="submit"
-                        className="w-full mt-2.5 py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 font-black cursor-pointer shadow-lg active:scale-98 hover:brightness-110 transition-all font-sans"
+                        className="w-full mt-2.5 py-3 rounded-xl bg-gold-accent text-[#0F172A] font-black cursor-pointer shadow active:scale-98 hover:bg-gold-hover hover:scale-105 shadow-md transition-all font-sans"
                       >
                         Apply Dynamic Parameters Settings
                       </button>
@@ -1929,10 +1929,10 @@ export default function AdminView({
                     <div className="space-y-6">
                       
                       {/* SECTION 2: ADMIN ACCESS EMAILS */}
-                      <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
-                        <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                          <ShieldCheck className="h-4 w-4 text-[#D4AF37]" />
-                          <h3 className="font-extrabold text-white text-sm">Admin Access list</h3>
+                      <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-outline-variant/50">
+                          <ShieldCheck className="h-4 w-4 text-gold-accent" />
+                          <h3 className="font-extrabold text-on-surface text-sm">Admin Access list</h3>
                         </div>
 
                         <form onSubmit={handleAddAdminEmail} className="flex gap-2">
@@ -1942,27 +1942,27 @@ export default function AdminView({
                             placeholder="Add new admin email (e.g. ritik@shivsaya...)"
                             value={newAdminEmail}
                             onChange={(e) => setNewAdminEmail(e.target.value)}
-                            className="flex-grow bg-slate-950 border border-white/5 focus:border-[#D4AF37]/30 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 outline-none"
+                            className="flex-grow bg-surface border border-outline-variant/50 focus:border-gold-accent/30 rounded-xl px-3 py-2 text-xs text-on-surface placeholder-slate-600 outline-none"
                             required
                           />
                           <button
                             type="submit"
-                            className="bg-slate-800 hover:bg-slate-700 hover:text-white border border-white/5 hover:border-[#D4AF37]/20 text-slate-200 px-3.5 rounded-xl font-bold text-xs"
+                            className="bg-surface-container-high hover:bg-outline-variant hover:text-on-surface border border-outline-variant/50 hover:border-gold-accent/20 text-on-surface px-3.5 rounded-xl font-bold text-xs"
                           >
                             Add
                           </button>
                         </form>
-                        <p className="text-[10px] text-slate-500 italic mt-1 mb-2 leading-tight">
+                        <p className="text-[10px] text-outline italic mt-1 mb-2 leading-tight">
                           If the user hasn't signed up yet, their admin access will activate automatically when they first log in.
                         </p>
 
                         <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
                           {adminsList.map((adm) => (
-                            <div key={adm} className="flex items-center justify-between p-2 rounded-xl bg-slate-950/40 border border-white/5 text-[11px] font-mono select-all">
+                            <div key={adm} className="flex items-center justify-between p-2 rounded-xl bg-surface/40 border border-outline-variant/50 text-[11px] font-mono select-all">
                               <span>{adm}</span>
                               <button
                                 onClick={() => handleRemoveAdminEmail(adm)}
-                                className="text-slate-500 hover:text-red-400 p-1 rounded transition-colors cursor-pointer"
+                                className="text-outline hover:text-red-400 p-1 rounded transition-colors cursor-pointer"
                                 title="Strip admin privileges"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -1973,10 +1973,10 @@ export default function AdminView({
                       </div>
 
                       {/* SECTION 3: SYSTEM CONTROLS/TOGGLES */}
-                      <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
-                        <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                          <Power className="h-4 w-4 text-[#D4AF37]" />
-                          <h3 className="font-extrabold text-white text-sm">System Controls</h3>
+                      <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-outline-variant/50">
+                          <Power className="h-4 w-4 text-gold-accent" />
+                          <h3 className="font-extrabold text-on-surface text-sm">System Controls</h3>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -1988,21 +1988,21 @@ export default function AdminView({
                           ].map(ctl => {
                             const isChecked = (controls as any)[ctl.key];
                             return (
-                              <div key={ctl.key} className="p-3 bg-slate-955/40 border border-white/5 rounded-xl flex items-center justify-between gap-2">
+                              <div key={ctl.key} className="p-3 bg-slate-955/40 border border-outline-variant/50 rounded-xl flex items-center justify-between gap-2">
                                 <div>
-                                  <span className="font-extrabold text-white block text-[10.5px] leading-snug">{ctl.label}</span>
-                                  <span className="text-[8.5px] text-slate-500 mt-0.5 block leading-none font-medium">{ctl.desc}</span>
+                                  <span className="font-extrabold text-on-surface block text-[10.5px] leading-snug">{ctl.label}</span>
+                                  <span className="text-[8.5px] text-outline mt-0.5 block leading-none font-medium">{ctl.desc}</span>
                                 </div>
                                 
                                 <button
                                   type="button"
                                   onClick={() => handleToggleControl(ctl.key as any)}
-                                  className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:ring-offset-1 focus:ring-offset-slate-900 ${
-                                    isChecked ? "bg-emerald-500" : "bg-slate-800"
+                                  className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-gold-accent focus:ring-offset-1 focus:ring-offset-slate-900 ${
+                                    isChecked ? "bg-gold-accent" : "bg-surface-container-high"
                                   }`}
                                 >
                                   <span
-                                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-slate-950 shadow ring-0 transition duration-200 ease-in-out ${
+                                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-surface shadow ring-0 transition duration-200 ease-in-out ${
                                       isChecked ? "translate-x-5" : "translate-x-0"
                                     }`}
                                   />
@@ -2013,7 +2013,7 @@ export default function AdminView({
                         </div>
 
                         {/* SECTION 4: DESTRUCTIVE CLEAN ACTIONS */}
-                        <div className="pt-2 border-t border-white/5">
+                        <div className="pt-2 border-t border-outline-variant/50">
                           <button
                             onClick={handleFactoryReset}
                             className="bg-red-950 hover:bg-red-900 text-red-100 border border-red-500/15 leading-none py-3 px-4 rounded-xl text-center font-bold font-mono tracking-wide text-[10.5px] w-full block transition-colors cursor-pointer"
@@ -2024,27 +2024,27 @@ export default function AdminView({
                       </div>
 
                       {/* DATA MANAGEMENT SECTION */}
-                      <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
-                        <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                          <Database className="h-4 w-4 text-[#D4AF37]" />
-                          <h3 className="font-extrabold text-white text-sm">Data Management</h3>
+                      <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-outline-variant/50">
+                          <Database className="h-4 w-4 text-gold-accent" />
+                          <h3 className="font-extrabold text-on-surface text-sm">Data Management</h3>
                         </div>
 
                         <div className="space-y-2.5">
                           <button
                             type="button"
                             onClick={handleExportPropertiesJSON}
-                            className="w-full py-2.5 rounded-xl bg-slate-950 hover:bg-slate-850 border border-white/5 text-slate-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                            className="w-full py-2.5 rounded-xl bg-surface hover:bg-slate-850 border border-outline-variant/50 text-on-surface-variant hover:text-on-surface font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                           >
-                            <Download className="h-4 w-4 text-[#D4AF37]" /> Export All Properties (JSON)
+                            <Download className="h-4 w-4 text-gold-accent" /> Export All Properties (JSON)
                           </button>
 
                           <button
                             type="button"
                             onClick={handleExportCSV}
-                            className="w-full py-2.5 rounded-xl bg-slate-950 hover:bg-slate-850 border border-white/5 text-slate-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                            className="w-full py-2.5 rounded-xl bg-surface hover:bg-slate-850 border border-outline-variant/50 text-on-surface-variant hover:text-on-surface font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                           >
-                            <Download className="h-4 w-4 text-[#D4AF37]" /> Export All Enquiries as CSV
+                            <Download className="h-4 w-4 text-gold-accent" /> Export All Enquiries as CSV
                           </button>
 
                           <button
@@ -2068,42 +2068,42 @@ export default function AdminView({
                   TAB 7: READINESS AUDIT REGULATORY COMPLIANCE
                   ===================================================== */}
               {activeTab === "checklist" && (
-                <div className="space-y-6 animate-fadeIn md:text-left text-xs text-slate-300">
+                <div className="space-y-6 animate-fadeIn md:text-left text-xs text-on-surface-variant">
                   <div>
-                    <h1 className="text-xl font-extrabold text-white tracking-tight">Readiness Audit Compliance Diagnostics</h1>
-                    <p className="text-xs text-slate-400">Validate real-time real estate guidelines, broker validation records, and digital documentation checklists.</p>
+                    <h1 className="text-xl font-extrabold text-on-surface tracking-tight">Readiness Audit Compliance Diagnostics</h1>
+                    <p className="text-xs text-on-surface-variant">Validate real-time real estate guidelines, broker validation records, and digital documentation checklists.</p>
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Diagnostic Summary Cards */}
                     <div className="lg:col-span-2 space-y-4">
-                      <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                      <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-outline-variant/50">
                           <div className="flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4 text-[#D4AF37]" />
-                            <h3 className="font-extrabold text-white text-sm">Haryana RERA Verification Checks</h3>
+                            <CheckSquare className="h-4 w-4 text-gold-accent" />
+                            <h3 className="font-extrabold text-on-surface text-sm">Haryana RERA Verification Checks</h3>
                           </div>
-                          <span className="text-[10px] font-mono text-slate-500">Standards: HRERA-2026</span>
+                          <span className="text-[10px] font-mono text-outline">Standards: HRERA-2026</span>
                         </div>
 
                         {/* Checklist items list */}
                         <div className="space-y-3">
                           {/* Item 1: RERA office registration parameters */}
-                          <div className="flex items-start gap-3 p-3 bg-slate-950/40 border border-white/5 rounded-xl">
+                          <div className="flex items-start gap-3 p-3 bg-surface/40 border border-outline-variant/50 rounded-xl">
                             <div className="mt-0.5">
                               {settings.reraNumber ? (
-                                <Check className="h-4 w-4 text-emerald-400" />
+                                <Check className="h-4 w-4 text-success-green" />
                               ) : (
                                 <X className="h-4 w-4 text-red-400" />
                               )}
                             </div>
                             <div className="flex-1 space-y-0.5">
-                              <h4 className="font-bold text-white leading-tight">RERA Registered License Registry</h4>
-                              <p className="text-[10px] text-slate-400 leading-relaxed font-semibold">
+                              <h4 className="font-bold text-on-surface leading-tight">RERA Registered License Registry</h4>
+                              <p className="text-[10px] text-on-surface-variant leading-relaxed font-semibold">
                                 Validates if a valid Real Estate Regulatory Authority broker license number is saved in configuration.
                               </p>
                               {settings.reraNumber && (
-                                <span className="inline-block mt-1 font-mono text-[9px] text-[#D4AF37] font-semibold bg-[#D4AF37]/5 px-2 py-0.5 rounded border border-[#D4AF37]/15">
+                                <span className="inline-block mt-1 font-mono text-[9px] text-gold-accent font-semibold bg-gold-accent/5 px-2 py-0.5 rounded border border-gold-accent/15">
                                   Current: {settings.reraNumber}
                                 </span>
                               )}
@@ -2111,81 +2111,81 @@ export default function AdminView({
                           </div>
 
                           {/* Item 2: Builder floor & property status checks */}
-                          <div className="flex items-start gap-3 p-3 bg-slate-950/40 border border-white/5 rounded-xl">
+                          <div className="flex items-start gap-3 p-3 bg-surface/40 border border-outline-variant/50 rounded-xl">
                             <div className="mt-0.5">
                               {properties.length > 0 ? (
-                                <Check className="h-4 w-4 text-emerald-400" />
+                                <Check className="h-4 w-4 text-success-green" />
                               ) : (
                                 <X className="h-4 w-4 text-red-400" />
                               )}
                             </div>
                             <div className="flex-1 space-y-0.5">
-                              <h4 className="font-bold text-white leading-tight">Live Listings Catalog Density</h4>
-                              <p className="text-[10px] text-slate-400 leading-relaxed font-semibold">
+                              <h4 className="font-bold text-on-surface leading-tight">Live Listings Catalog Density</h4>
+                              <p className="text-[10px] text-on-surface-variant leading-relaxed font-semibold">
                                 Confirms whether active property inventory data exists in the system database for client searches.
                               </p>
-                              <span className="inline-block mt-1 font-mono text-[9px] text-slate-400 font-semibold bg-white/5 px-2 py-0.5 rounded">
+                              <span className="inline-block mt-1 font-mono text-[9px] text-on-surface-variant font-semibold bg-white/5 px-2 py-0.5 rounded">
                                 Total: {properties.length} Property Records
                               </span>
                             </div>
                           </div>
 
                           {/* Item 3: Pending verification audits queue */}
-                          <div className="flex items-start gap-3 p-3 bg-slate-950/40 border border-white/5 rounded-xl">
+                          <div className="flex items-start gap-3 p-3 bg-surface/40 border border-outline-variant/50 rounded-xl">
                             <div className="mt-0.5">
                               {!properties.some(p => !p.verified && p.moderationStatus !== "rejected") ? (
-                                <Check className="h-4 w-4 text-emerald-400" />
+                                <Check className="h-4 w-4 text-success-green" />
                               ) : (
                                 <AlertTriangle className="h-4 w-4 text-amber-400" />
                               )}
                             </div>
                             <div className="flex-1 space-y-0.5">
-                              <h4 className="font-bold text-white leading-tight">Unresolved Pending Audits</h4>
-                              <p className="text-[10px] text-slate-400 leading-relaxed font-semibold">
+                              <h4 className="font-bold text-on-surface leading-tight">Unresolved Pending Audits</h4>
+                              <p className="text-[10px] text-on-surface-variant leading-relaxed font-semibold">
                                 Flags any property listings waiting for verification review that are not yet approved or rejected.
                               </p>
-                              <span className="inline-block mt-1 font-mono text-[9px] text-slate-400 font-semibold bg-white/5 px-2 py-0.5 rounded">
+                              <span className="inline-block mt-1 font-mono text-[9px] text-on-surface-variant font-semibold bg-white/5 px-2 py-0.5 rounded">
                                 Pending Audit Queue: {unverifiedActivePropertiesCount} Listings
                               </span>
                             </div>
                           </div>
 
                           {/* Item 4: Enquiry response index */}
-                          <div className="flex items-start gap-3 p-3 bg-slate-950/40 border border-white/5 rounded-xl">
+                          <div className="flex items-start gap-3 p-3 bg-surface/40 border border-outline-variant/50 rounded-xl">
                             <div className="mt-0.5">
                               {newEnquiriesCount === 0 ? (
-                                <Check className="h-4 w-4 text-emerald-400" />
+                                <Check className="h-4 w-4 text-success-green" />
                               ) : (
                                 <AlertCircle className="h-4 w-4 text-amber-400 animate-pulse" />
                               )}
                             </div>
                             <div className="flex-1 space-y-0.5">
-                              <h4 className="font-bold text-white leading-tight">Clean Tours & Enquiries Queue</h4>
-                              <p className="text-[10px] text-slate-400 leading-relaxed font-semibold">
+                              <h4 className="font-bold text-on-surface leading-tight">Clean Tours & Enquiries Queue</h4>
+                              <p className="text-[10px] text-on-surface-variant leading-relaxed font-semibold">
                                 Screens for completely unaddressed "New" scheduled tour interest submissions.
                               </p>
-                              <span className="inline-block mt-1 font-mono text-[9px] text-slate-400 font-semibold bg-white/5 px-2 py-0.5 rounded">
+                              <span className="inline-block mt-1 font-mono text-[9px] text-on-surface-variant font-semibold bg-white/5 px-2 py-0.5 rounded">
                                 New Submissions: {newEnquiriesCount} Tickets
                               </span>
                             </div>
                           </div>
 
                           {/* Item 5: Authorized Consultant Assignment */}
-                          <div className="flex items-start gap-3 p-3 bg-slate-950/40 border border-white/5 rounded-xl">
+                          <div className="flex items-start gap-3 p-3 bg-surface/40 border border-outline-variant/50 rounded-xl">
                             <div className="mt-0.5">
                               {settings.consultantName ? (
-                                <Check className="h-4 w-4 text-emerald-400" />
+                                <Check className="h-4 w-4 text-success-green" />
                               ) : (
                                 <X className="h-4 w-4 text-red-400" />
                               )}
                             </div>
                             <div className="flex-1 space-y-0.5">
-                              <h4 className="font-bold text-white leading-tight">Direct Consultative Lead Assignment</h4>
-                              <p className="text-[10px] text-slate-400 leading-relaxed font-semibold">
+                              <h4 className="font-bold text-on-surface leading-tight">Direct Consultative Lead Assignment</h4>
+                              <p className="text-[10px] text-on-surface-variant leading-relaxed font-semibold">
                                 Ensures directory listing pages route directly to a designated verified advisor.
                               </p>
                               {settings.consultantName && (
-                                <span className="inline-block mt-1 font-mono text-[9px] text-[#D4AF37] font-semibold bg-[#D4AF37]/5 px-2 py-0.5 rounded border border-[#D4AF37]/15">
+                                <span className="inline-block mt-1 font-mono text-[9px] text-gold-accent font-semibold bg-gold-accent/5 px-2 py-0.5 rounded border border-gold-accent/15">
                                   Current Representative: {settings.consultantName}
                                 </span>
                               )}
@@ -2198,13 +2198,13 @@ export default function AdminView({
                     {/* Diagnostics Actions Panel */}
                     <div className="space-y-4">
                       {/* Control Panel Card */}
-                      <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4 flex flex-col justify-between">
+                      <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4 flex flex-col justify-between">
                         <div>
-                          <h3 className="font-extrabold text-white text-xs uppercase tracking-wider pb-2 border-b border-white/5 flex items-center gap-1.5">
-                            <Shield className="h-4 w-4 text-[#D4AF37]" />
+                          <h3 className="font-extrabold text-on-surface text-xs uppercase tracking-wider pb-2 border-b border-outline-variant/50 flex items-center gap-1.5">
+                            <Shield className="h-4 w-4 text-gold-accent" />
                             Audit Automation Control
                           </h3>
-                          <p className="text-[10px] text-slate-400 leading-relaxed mt-2.5 font-semibold">
+                          <p className="text-[10px] text-on-surface-variant leading-relaxed mt-2.5 font-semibold">
                             Execute automated simulations to parse internal databases against local state legal mandates.
                           </p>
                         </div>
@@ -2212,26 +2212,26 @@ export default function AdminView({
                         <div className="py-2.5 space-y-3">
                           {isRunningDiagnostics ? (
                             <div className="py-6 flex flex-col items-center justify-center gap-3">
-                              <RefreshCw className="h-8 w-8 text-[#D4AF37] animate-spin-slow animate-spin" />
+                              <RefreshCw className="h-8 w-8 text-gold-accent animate-spin-slow animate-spin" />
                               <div className="text-center space-y-1">
-                                <p className="text-white text-[11px] font-black animate-pulse uppercase tracking-wider">Scanning Internal Keys...</p>
-                                <p className="text-slate-500 text-[8px] font-mono">Verifying broker RERA indices and database objects</p>
+                                <p className="text-on-surface text-[11px] font-black animate-pulse uppercase tracking-wider">Scanning Internal Keys...</p>
+                                <p className="text-outline text-[8px] font-mono">Verifying broker RERA indices and database objects</p>
                               </div>
                             </div>
                           ) : auditPassed ? (
-                            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl space-y-2 flex flex-col items-center text-center">
-                              <CheckSquare className="h-8 w-8 text-emerald-400" />
+                            <div className="p-4 bg-gold-accent/10 border border-emerald-500/20 text-success-green rounded-xl space-y-2 flex flex-col items-center text-center">
+                              <CheckSquare className="h-8 w-8 text-success-green" />
                               <div className="space-y-0.5">
-                                <h4 className="font-extrabold text-xs text-white uppercase tracking-wider">Audit Diagnostic Passed</h4>
-                                <p className="text-[9px] text-slate-400 font-semibold">All operational and RERA variables conform to compliance criteria.</p>
+                                <h4 className="font-extrabold text-xs text-on-surface uppercase tracking-wider">Audit Diagnostic Passed</h4>
+                                <p className="text-[9px] text-on-surface-variant font-semibold">All operational and RERA variables conform to compliance criteria.</p>
                               </div>
                             </div>
                           ) : (
-                            <div className="p-4 bg-slate-950/50 border border-white/5 text-slate-400 rounded-xl space-y-2 flex flex-col items-center text-center">
-                              <HelpCircle className="h-8 w-8 text-slate-500" />
+                            <div className="p-4 bg-surface/50 border border-outline-variant/50 text-on-surface-variant rounded-xl space-y-2 flex flex-col items-center text-center">
+                              <HelpCircle className="h-8 w-8 text-outline" />
                               <div className="space-y-0.5">
-                                <h4 className="font-extrabold text-xs text-white uppercase tracking-wider">Awaiting Diagnosis Run</h4>
-                                <p className="text-[9px] text-slate-400 font-medium">Integrity screening has not been conducted for the current administrator session.</p>
+                                <h4 className="font-extrabold text-xs text-on-surface uppercase tracking-wider">Awaiting Diagnosis Run</h4>
+                                <p className="text-[9px] text-on-surface-variant font-medium">Integrity screening has not been conducted for the current administrator session.</p>
                               </div>
                             </div>
                           )}
@@ -2251,8 +2251,8 @@ export default function AdminView({
                           }}
                           className={`w-full py-3 rounded-xl font-bold font-sans text-xs flex items-center justify-center gap-2 cursor-pointer transition-all ${
                             isRunningDiagnostics
-                              ? "bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5"
-                              : "bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 hover:brightness-110 shadow-lg active:scale-98"
+                              ? "bg-surface-container-high text-outline cursor-not-allowed border border-outline-variant/50"
+                              : "bg-gold-accent text-[#0F172A] hover:bg-gold-hover hover:scale-105 shadow-md shadow active:scale-98"
                           }`}
                         >
                           {isRunningDiagnostics ? (
@@ -2270,12 +2270,12 @@ export default function AdminView({
                       </div>
 
                       {/* Info Card RERA Advisory */}
-                      <div className="p-4 bg-[#D4AF37]/5 border border-[#D4AF37]/10 rounded-2xl space-y-2">
-                        <div className="flex items-center gap-1.5 text-white font-extrabold text-[10.5px]">
-                          <AlertCircle className="h-4 w-4 text-[#D4AF37] shrink-0" />
+                      <div className="p-4 bg-gold-accent/5 border border-gold-accent/10 rounded-2xl space-y-2">
+                        <div className="flex items-center gap-1.5 text-on-surface font-extrabold text-[10.5px]">
+                          <AlertCircle className="h-4 w-4 text-gold-accent shrink-0" />
                           RERA Advisory Mandate
                         </div>
-                        <p className="text-[9px] leading-relaxed text-slate-400 font-semibold">
+                        <p className="text-[9px] leading-relaxed text-on-surface-variant font-semibold">
                           Every advertisement, circular, web portal, or social marketing post must display the registered corporate broker license clearly as defined under HRERA Rules, Section 15. Real audits must verify documents on-site periodically.
                         </p>
                       </div>
@@ -2294,64 +2294,64 @@ export default function AdminView({
           ======================================================== */}
       <AnimatePresence>
         {isAddModalOpen && (
-          <div className="fixed inset-0 z-50 bg-[#070b13]/85 backdrop-blur-sm overflow-y-auto px-4 py-8 flex items-center justify-center">
+          <div className="fixed inset-0 z-50 bg-surface/85 backdrop-blur-sm overflow-y-auto px-4 py-8 flex items-center justify-center">
             
             <motion.div
-              className="bg-slate-900 border border-white/5 w-full max-w-2xl rounded-2xl p-6 relative shadow-2xl font-sans"
+              className="bg-surface-container border border-outline-variant/50 w-full max-w-2xl rounded-2xl p-6 relative shadow-md font-sans"
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
             >
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white border border-white/5 transition-colors cursor-pointer"
+                className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface border border-outline-variant/50 transition-colors cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
 
-              <h3 className="text-base font-extrabold text-[#D4AF37] uppercase tracking-wide border-b border-white/5 pb-3.5 mb-5 flex items-center gap-1.5">
+              <h3 className="text-base font-extrabold text-gold-accent uppercase tracking-wide border-b border-outline-variant/50 pb-3.5 mb-5 flex items-center gap-1.5">
                 <Plus className="h-4 w-4" /> Direct manual property addition
               </h3>
 
-              <form onSubmit={handleAddNewManualProperty} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-300">
+              <form onSubmit={handleAddNewManualProperty} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-on-surface-variant">
                 <div className="space-y-1.5">
-                  <label htmlFor="add-prop-title" className="text-[10px] uppercase font-bold text-slate-400">Property Title</label>
+                  <label htmlFor="add-prop-title" className="text-[10px] uppercase font-bold text-on-surface-variant">Property Title</label>
                   <input id="add-prop-title"
                     type="text"
                     name="title"
                     placeholder="e.g. Luxury Penthouse duplex Rajnagar"
                     required
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="add-prop-price" className="text-[10px] uppercase font-bold text-slate-400">Price in Rupees (Raw Integer)</label>
+                  <label htmlFor="add-prop-price" className="text-[10px] uppercase font-bold text-on-surface-variant">Price in Rupees (Raw Integer)</label>
                   <input id="add-prop-price"
                     type="number"
                     name="price"
                     placeholder="e.g. 7500000 (75 Lakhs)"
                     required
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="add-prop-locality" className="text-[10px] uppercase font-bold text-slate-400">Locality / Area Name</label>
+                  <label htmlFor="add-prop-locality" className="text-[10px] uppercase font-bold text-on-surface-variant">Locality / Area Name</label>
                   <input id="add-prop-locality"
                     type="text"
                     name="location"
                     placeholder="e.g. Rajnagar Extension, Ghaziabad"
                     required
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="add-prop-type" className="text-[10px] uppercase font-bold text-slate-400">Asset Type</label>
+                  <label htmlFor="add-prop-type" className="text-[10px] uppercase font-bold text-on-surface-variant">Asset Type</label>
                   <select id="add-prop-type"
                     name="type"
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white cursor-pointer"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface cursor-pointer"
                   >
                     <option value="Builder Floor">Builder Floor</option>
                     <option value="Apartment">Apartment</option>
@@ -2361,10 +2361,10 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="add-prop-bhk" className="text-[10px] uppercase font-bold text-slate-400">BHK configuration</label>
+                  <label htmlFor="add-prop-bhk" className="text-[10px] uppercase font-bold text-on-surface-variant">BHK configuration</label>
                   <select id="add-prop-bhk"
                     name="bhk"
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white cursor-pointer"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface cursor-pointer"
                   >
                     <option value="3 BHK">3 BHK</option>
                     <option value="4 BHK">4 BHK</option>
@@ -2375,42 +2375,42 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="add-prop-area" className="text-[10px] uppercase font-bold text-slate-400">Area size (Number)</label>
+                  <label htmlFor="add-prop-area" className="text-[10px] uppercase font-bold text-on-surface-variant">Area size (Number)</label>
                   <input id="add-prop-area"
                     type="number"
                     name="area"
                     placeholder="e.g. 1560 SQ FT"
                     defaultValue={1500}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="add-prop-unit" className="text-[10px] uppercase font-bold text-slate-400">Area Unit</label>
+                  <label htmlFor="add-prop-unit" className="text-[10px] uppercase font-bold text-on-surface-variant">Area Unit</label>
                   <input id="add-prop-unit"
                     type="text"
                     name="areaUnit"
                     defaultValue="Sq.Ft."
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="add-prop-img" className="text-[10px] uppercase font-bold text-slate-400">Image URL</label>
+                  <label htmlFor="add-prop-img" className="text-[10px] uppercase font-bold text-on-surface-variant">Image URL</label>
                   <input id="add-prop-img"
                     type="url"
                     name="imageUrl"
                     placeholder="e.g. https://images.unsplash.com/photo-..."
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white font-mono text-[10.5px]"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface font-mono text-[10.5px]"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 md:col-span-2">
                   <div className="space-y-1.5">
-                    <label htmlFor="add-prop-rera" className="text-[10px] uppercase font-bold text-slate-400">RERA Approved Status</label>
+                    <label htmlFor="add-prop-rera" className="text-[10px] uppercase font-bold text-on-surface-variant">RERA Approved Status</label>
                     <select id="add-prop-rera"
                       name="reraApproved"
-                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white cursor-pointer"
+                      className="w-full bg-surface border border-outline-variant rounded-xl px-3 py-2 text-on-surface cursor-pointer"
                     >
                       <option value="true">YES - Approved</option>
                       <option value="false">NO - Pending</option>
@@ -2418,10 +2418,10 @@ export default function AdminView({
                   </div>
                   
                   <div className="space-y-1.5">
-                    <label htmlFor="add-prop-premium" className="text-[10px] uppercase font-bold text-slate-400">Is Premium Badge</label>
+                    <label htmlFor="add-prop-premium" className="text-[10px] uppercase font-bold text-on-surface-variant">Is Premium Badge</label>
                     <select id="add-prop-premium"
                       name="isPremium"
-                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white cursor-pointer"
+                      className="w-full bg-surface border border-outline-variant rounded-xl px-3 py-2 text-on-surface cursor-pointer"
                     >
                       <option value="false">Standard Listing</option>
                       <option value="true">Premium Listing Placement</option>
@@ -2430,27 +2430,27 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5 md:col-span-2">
-                  <label htmlFor="add-prop-desc" className="text-[10px] uppercase font-bold text-slate-400">Property Description</label>
+                  <label htmlFor="add-prop-desc" className="text-[10px] uppercase font-bold text-on-surface-variant">Property Description</label>
                   <textarea id="add-prop-desc"
                     name="description"
                     rows={3.5}
                     placeholder="Enter exhaustive structural information, near RRTS landmarks, and direct price guarantees..."
                     required
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white resize-none"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface resize-none"
                   ></textarea>
                 </div>
 
-                <div className="md:col-span-2 pt-4 border-t border-white/5 flex gap-4">
+                <div className="md:col-span-2 pt-4 border-t border-outline-variant/50 flex gap-4">
                   <button
                     type="submit"
-                    className="flex-grow py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B5942B] text-slate-950 font-black text-xs cursor-pointer shadow-lg hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-1.5"
+                    className="flex-grow py-3 rounded-xl bg-gold-accent text-[#0F172A] font-black text-xs cursor-pointer shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 transition-all flex items-center justify-center gap-1.5"
                   >
-                    <Check className="h-4 w-4 text-slate-950 stroke-[3]" /> Publish Audited Asset Listing
+                    <Check className="h-4 w-4 text-[#0F172A] stroke-[3]" /> Publish Audited Asset Listing
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsAddModalOpen(false)}
-                    className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-350 border border-white/5"
+                    className="px-6 py-3 rounded-xl bg-surface-container-high hover:bg-slate-750 text-slate-350 border border-outline-variant/50"
                   >
                     Cancel
                   </button>
@@ -2466,31 +2466,31 @@ export default function AdminView({
           ======================================================== */}
       <AnimatePresence>
         {rejectingProperty && (
-          <div className="fixed inset-0 z-50 bg-[#070b13]/85 backdrop-blur-sm overflow-y-auto px-4 py-8 flex items-center justify-center">
+          <div className="fixed inset-0 z-50 bg-surface/85 backdrop-blur-sm overflow-y-auto px-4 py-8 flex items-center justify-center">
             <motion.div
-              className="bg-slate-900 border border-white/5 w-full max-w-md rounded-2xl p-6 relative shadow-2xl font-sans"
+              className="bg-surface-container border border-outline-variant/50 w-full max-w-md rounded-2xl p-6 relative shadow-md font-sans"
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
             >
               <button
                 onClick={() => setRejectingProperty(null)}
-                className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white border border-white/5 transition-colors cursor-pointer"
+                className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface border border-outline-variant/50 transition-colors cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
 
-              <h3 className="text-sm font-extrabold text-red-400 uppercase tracking-wide border-b border-white/5 pb-3 mb-5 flex items-center gap-1.5 font-sans">
+              <h3 className="text-sm font-extrabold text-red-400 uppercase tracking-wide border-b border-outline-variant/50 pb-3 mb-5 flex items-center gap-1.5 font-sans">
                 <AlertTriangle className="h-4 w-4 text-red-550" /> Reject Property Listing
               </h3>
 
-              <div className="space-y-4 text-xs text-slate-300 font-sans">
+              <div className="space-y-4 text-xs text-on-surface-variant font-sans">
                 <div className="space-y-1.5">
-                  <label htmlFor="reject-reason" className="text-[10px] uppercase font-bold text-slate-400">Reason for rejection (Required)</label>
+                  <label htmlFor="reject-reason" className="text-[10px] uppercase font-bold text-on-surface-variant">Reason for rejection (Required)</label>
                   <select id="reject-reason"
                     value={rejectReason}
                     onChange={(e) => setRejectReason(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/5 focus:border-red-500/40 rounded-xl px-3 py-2.5 text-xs text-white outline-none cursor-pointer"
+                    className="w-full bg-surface border border-outline-variant/50 focus:border-red-500/40 rounded-xl px-3 py-2.5 text-xs text-on-surface outline-none cursor-pointer"
                   >
                     <option value="Incomplete information">Incomplete information</option>
                     <option value="Incorrect pricing">Incorrect pricing</option>
@@ -2502,26 +2502,26 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="reject-notes" className="text-[10px] uppercase font-bold text-slate-400">Additional notes for submitter (Optional)</label>
+                  <label htmlFor="reject-notes" className="text-[10px] uppercase font-bold text-on-surface-variant">Additional notes for submitter (Optional)</label>
                   <textarea id="reject-notes"
                     rows={4}
                     value={rejectNotes}
                     onChange={(e) => setRejectNotes(e.target.value)}
                     placeholder="Enter message for the property owner..."
-                    className="w-full bg-slate-950 border border-white/5 focus:border-red-500/40 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-600 outline-none resize-none"
+                    className="w-full bg-surface border border-outline-variant/50 focus:border-red-500/40 rounded-xl px-3 py-2.5 text-xs text-on-surface placeholder-slate-600 outline-none resize-none"
                   />
                 </div>
 
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => setRejectingProperty(null)}
-                    className="flex-grow py-2.5 rounded-xl border border-white/10 hover:bg-slate-800 text-slate-300 font-bold text-xs select-none cursor-pointer transition-colors"
+                    className="flex-grow py-2.5 rounded-xl border border-outline-variant hover:bg-surface-container-high text-on-surface-variant font-bold text-xs select-none cursor-pointer transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleConfirmReject}
-                    className="flex-grow py-2.5 rounded-xl bg-red-500 hover:bg-red-650 text-white font-black text-xs cursor-pointer transition-colors font-sans"
+                    className="flex-grow py-2.5 rounded-xl bg-red-500 hover:bg-red-650 text-on-surface font-black text-xs cursor-pointer transition-colors font-sans"
                   >
                     Confirm Reject
                   </button>
@@ -2537,10 +2537,10 @@ export default function AdminView({
           ======================================================== */}
       <AnimatePresence>
         {isEditModalOpen && editingProperty && (
-          <div className="fixed inset-0 z-50 bg-[#070b13]/85 backdrop-blur-sm overflow-y-auto px-4 py-8 flex items-center justify-center">
+          <div className="fixed inset-0 z-50 bg-surface/85 backdrop-blur-sm overflow-y-auto px-4 py-8 flex items-center justify-center">
             
             <motion.div
-              className="bg-slate-900 border border-white/5 w-full max-w-2xl rounded-2xl p-6 relative shadow-2xl font-sans"
+              className="bg-surface-container border border-outline-variant/50 w-full max-w-2xl rounded-2xl p-6 relative shadow-md font-sans"
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -2550,55 +2550,55 @@ export default function AdminView({
                   setIsEditModalOpen(false);
                   setEditingProperty(null);
                 }}
-                className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white border border-white/5 transition-colors cursor-pointer"
+                className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface border border-outline-variant/50 transition-colors cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
 
-              <h3 className="text-base font-extrabold text-[#D4AF37] uppercase tracking-wide border-b border-white/5 pb-3 mb-5 flex items-center gap-1.5">
+              <h3 className="text-base font-extrabold text-gold-accent uppercase tracking-wide border-b border-outline-variant/50 pb-3 mb-5 flex items-center gap-1.5">
                 <Edit className="h-4 w-4" /> Edit Real Estate Credentials
               </h3>
 
-              <form onSubmit={handleUpdateEditProperty} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-300">
+              <form onSubmit={handleUpdateEditProperty} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-on-surface-variant">
                 <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-title" className="text-[10px] uppercase font-bold text-slate-400">Property Title</label>
+                  <label htmlFor="edit-prop-title" className="text-[10px] uppercase font-bold text-on-surface-variant">Property Title</label>
                   <input id="edit-prop-title"
                     type="text"
                     name="title"
                     defaultValue={editingProperty.title}
                     required
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-price" className="text-[10px] uppercase font-bold text-slate-400">Price in Rupees</label>
+                  <label htmlFor="edit-prop-price" className="text-[10px] uppercase font-bold text-on-surface-variant">Price in Rupees</label>
                   <input id="edit-prop-price"
                     type="number"
                     name="price"
                     defaultValue={editingProperty.price}
                     required
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-locality" className="text-[10px] uppercase font-bold text-slate-400">Locality Address</label>
+                  <label htmlFor="edit-prop-locality" className="text-[10px] uppercase font-bold text-on-surface-variant">Locality Address</label>
                   <input id="edit-prop-locality"
                     type="text"
                     name="location"
                     defaultValue={editingProperty.location}
                     required
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-type" className="text-[10px] uppercase font-bold text-slate-400">Category Type</label>
+                  <label htmlFor="edit-prop-type" className="text-[10px] uppercase font-bold text-on-surface-variant">Category Type</label>
                   <select id="edit-prop-type"
                     name="type"
                     defaultValue={editingProperty.type}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white cursor-pointer"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface cursor-pointer"
                   >
                     <option value="Builder Floor">Builder Floor</option>
                     <option value="Apartment">Apartment</option>
@@ -2608,11 +2608,11 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-bhk" className="text-[10px] uppercase font-bold text-slate-400">BHK configuration</label>
+                  <label htmlFor="edit-prop-bhk" className="text-[10px] uppercase font-bold text-on-surface-variant">BHK configuration</label>
                   <select id="edit-prop-bhk"
                     name="bhk"
                     defaultValue={editingProperty.bhk || ""}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white cursor-pointer"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface cursor-pointer"
                   >
                     <option value="3 BHK">3 BHK</option>
                     <option value="4 BHK">4 BHK</option>
@@ -2623,42 +2623,42 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-area" className="text-[10px] uppercase font-bold text-slate-400">Area size (Number)</label>
+                  <label htmlFor="edit-prop-area" className="text-[10px] uppercase font-bold text-on-surface-variant">Area size (Number)</label>
                   <input id="edit-prop-area"
                     type="number"
                     name="area"
                     defaultValue={editingProperty.area}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-unit" className="text-[10px] uppercase font-bold text-slate-400">Area Unit</label>
+                  <label htmlFor="edit-prop-unit" className="text-[10px] uppercase font-bold text-on-surface-variant">Area Unit</label>
                   <input id="edit-prop-unit"
                     type="text"
                     name="areaUnit"
                     defaultValue={editingProperty.areaUnit}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-img" className="text-[10px] uppercase font-bold text-slate-400">Override Main Hero Image URL</label>
+                  <label htmlFor="edit-prop-img" className="text-[10px] uppercase font-bold text-on-surface-variant">Override Main Hero Image URL</label>
                   <input id="edit-prop-img"
                     type="url"
                     name="imageUrl"
                     placeholder="Keep empty to preserve existing unsplash imagery"
-                    className="w-full bg-slate-950 border border-[#D4AF37]/20 rounded-xl px-3.5 py-2.5 text-white font-mono text-[10px]"
+                    className="w-full bg-surface border border-gold-accent/20 rounded-xl px-3.5 py-2.5 text-on-surface font-mono text-[10px]"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 md:col-span-2">
                   <div className="space-y-1.5">
-                    <label htmlFor="edit-prop-rera" className="text-[10px] uppercase font-bold text-slate-400">RERA Audit status</label>
+                    <label htmlFor="edit-prop-rera" className="text-[10px] uppercase font-bold text-on-surface-variant">RERA Audit status</label>
                     <select id="edit-prop-rera"
                       name="reraApproved"
                       defaultValue={editingProperty.reraApproved ? "true" : "false"}
-                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white cursor-pointer"
+                      className="w-full bg-surface border border-outline-variant rounded-xl px-3 py-2 text-on-surface cursor-pointer"
                     >
                       <option value="true">Approved</option>
                       <option value="false">Pending Verification</option>
@@ -2666,11 +2666,11 @@ export default function AdminView({
                   </div>
                   
                   <div className="space-y-1.5">
-                    <label htmlFor="edit-prop-premium" className="text-[10px] uppercase font-bold text-slate-400">Is Premium Badge</label>
+                    <label htmlFor="edit-prop-premium" className="text-[10px] uppercase font-bold text-on-surface-variant">Is Premium Badge</label>
                     <select id="edit-prop-premium"
                       name="isPremium"
                       defaultValue={editingProperty.isPremium ? "true" : "false"}
-                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white cursor-pointer"
+                      className="w-full bg-surface border border-outline-variant rounded-xl px-3 py-2 text-on-surface cursor-pointer"
                     >
                       <option value="false">Standard Listing</option>
                       <option value="true">Premium Feature placement</option>
@@ -2679,22 +2679,22 @@ export default function AdminView({
                 </div>
 
                 <div className="space-y-1.5 md:col-span-2">
-                  <label htmlFor="edit-prop-desc" className="text-[10px] uppercase font-bold text-slate-400">Listing Description</label>
+                  <label htmlFor="edit-prop-desc" className="text-[10px] uppercase font-bold text-on-surface-variant">Listing Description</label>
                   <textarea id="edit-prop-desc"
                     name="description"
                     rows={4}
                     defaultValue={editingProperty.description}
                     required
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white resize-none"
+                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface resize-none"
                   ></textarea>
                 </div>
 
-                <div className="md:col-span-2 pt-4 border-t border-white/5 flex gap-4">
+                <div className="md:col-span-2 pt-4 border-t border-outline-variant/50 flex gap-4">
                   <button
                     type="submit"
-                    className="flex-grow py-3 rounded-xl bg-[#D4AF37] text-slate-950 font-black text-xs cursor-pointer shadow-lg hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-1.5"
+                    className="flex-grow py-3 rounded-xl bg-gold-accent text-[#0F172A] font-black text-xs cursor-pointer shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 transition-all flex items-center justify-center gap-1.5"
                   >
-                    <Check className="h-4 w-4 text-slate-950 stroke-[3]" /> Commit audited modifications
+                    <Check className="h-4 w-4 text-[#0F172A] stroke-[3]" /> Commit audited modifications
                   </button>
                   <button
                     type="button"
@@ -2702,7 +2702,7 @@ export default function AdminView({
                       setIsEditModalOpen(false);
                       setEditingProperty(null);
                     }}
-                    className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-350 border border-white/5"
+                    className="px-6 py-3 rounded-xl bg-surface-container-high hover:bg-slate-750 text-slate-350 border border-outline-variant/50"
                   >
                     Cancel
                   </button>
@@ -2718,12 +2718,12 @@ export default function AdminView({
           ======================================================== */}
       <AnimatePresence>
         {confirmDialog.isOpen && (
-          <div className="fixed inset-0 z-50 bg-[#06080d]/90 backdrop-blur-md flex items-center justify-center px-4">
+          <div className="fixed inset-0 z-50 bg-surface/90 backdrop-blur-md flex items-center justify-center px-4">
             <motion.div
-              className={`border w-full max-w-sm rounded-2xl p-5 shadow-2xl relative font-sans ${
+              className={`border w-full max-w-sm rounded-2xl p-5 shadow-md relative font-sans ${
                 confirmDialog.isDanger 
                   ? "bg-red-950/20 border-red-500/30" 
-                  : "bg-slate-900 border-white/5"
+                  : "bg-surface-container border-outline-variant/50"
               }`}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -2733,29 +2733,29 @@ export default function AdminView({
                 {confirmDialog.isDanger ? (
                   <AlertCircle className="h-5 w-5 text-red-400" />
                 ) : (
-                  <CheckSquare className="h-5 w-5 text-[#D4AF37]" />
+                  <CheckSquare className="h-5 w-5 text-gold-accent" />
                 )}
-                <h4 className="font-extrabold text-[#D4AF37] text-xs uppercase tracking-wider">{confirmDialog.title}</h4>
+                <h4 className="font-extrabold text-gold-accent text-xs uppercase tracking-wider">{confirmDialog.title}</h4>
               </div>
 
-              <p className="text-slate-300 text-xs leading-relaxed mb-6 font-medium">
+              <p className="text-on-surface-variant text-xs leading-relaxed mb-6 font-medium">
                 {confirmDialog.message}
               </p>
 
               <div className="flex gap-3">
                 <button
                   onClick={confirmDialog.onConfirm}
-                  className={`flex-grow py-2.5 rounded-xl text-slate-950 font-black text-xs cursor-pointer transition-all ${
+                  className={`flex-grow py-2.5 rounded-xl text-[#0F172A] font-black text-xs cursor-pointer transition-all ${
                     confirmDialog.isDanger
-                      ? "bg-red-500 hover:bg-red-650 hover:text-white text-slate-950"
-                      : "bg-[#D4AF37] hover:brightness-110"
+                      ? "bg-red-500 hover:bg-red-650 hover:text-on-surface text-[#0F172A]"
+                      : "bg-gold-accent hover:bg-gold-hover hover:scale-105 shadow-md"
                   }`}
                 >
                   Confirm Execution
                 </button>
                 <button
                   onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-                  className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-400 font-bold text-xs select-none cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-surface-container-high hover:bg-slate-750 text-on-surface-variant font-bold text-xs select-none cursor-pointer"
                 >
                   Decline
                 </button>
