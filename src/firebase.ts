@@ -56,7 +56,7 @@ if (!firebaseConfig.projectId || firebaseConfig.projectId.includes("placeholder"
 if (missingKeys.length > 0) {
   console.error("Missing Firebase environment variables:", missingKeys.join(", "));
   if (isProd) {
-    throw new Error(`Production Build/Deployment Error: Missing required Firebase environment variables/config: ${missingKeys.join(", ")}`);
+    if (import.meta.env.PROD) { throw new Error(`Production: Missing Firebase env vars: ${missingKeys.join(", ")}`); } else { console.error(`[Dev] Missing Firebase env vars: ${missingKeys.join(", ")}`); console.error("App will run in offline/guest mode."); }
   }
 }
 
@@ -69,7 +69,7 @@ try {
 
 let app: any;
 let authInstance: Auth | undefined;
-let dbInstance: Firestore | undefined;
+export let dbInstance: Firestore | undefined;
 let storageInstance: FirebaseStorage | undefined;
 let analyticsInstance: Analytics | undefined;
 
@@ -163,7 +163,7 @@ export const trackEvent = (eventName: string, eventParams?: Record<string, strin
 // (Removed active getDocFromServer call to prevent pre-emptive connection warning spam on slow cold start)
 
 // Diagnostic utility for Firestore connectivity
-export async function testFirestoreConnection(): Promise<{ success: boolean; message: string; details?: any }> {
+export async function testFirestoreConnection(): Promise<{ success: boolean; message: string; details?: Record<string, string | number | boolean | null> }> {
   if (!dbInstance) {
     return { success: false, message: "Firestore is not initialized." };
   }
@@ -962,7 +962,7 @@ export const updatePropertyInDb = async (property: Property): Promise<boolean> =
   }
 };
 
-export const logAdminAction = async (action: string, targetId: string, adminEmail: string, details?: any) => {
+export const logAdminAction = async (action: string, targetId: string, adminEmail: string, details?: Record<string, string | number | boolean | null>) => {
   if (!dbInstance) return;
   try {
     const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');

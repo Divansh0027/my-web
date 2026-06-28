@@ -49,7 +49,7 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
   };
 
   return (
-    <footer className="bg-[#0b0f19] border-t border-outline-variant/50 font-sans relative pt-16 pb-8 text-on-surface-variant">
+    <footer className="bg-surface-container-low border-t border-outline-variant/50 font-sans relative pt-16 pb-8 text-on-surface-variant">
       
       {/* Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

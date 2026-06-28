@@ -72,6 +72,13 @@ export interface Enquiry {
   type: "enquiry" | "visit";
   userId?: string;
   userEmail?: string;
+
+  email?: string;
+  propertyLocation?: string;
+  visitDate?: string;
+  status?: "New" | "Contacted" | "Resolved";
+  source?: string;
+  createdAt?: string;
 }
 
 export interface SearchFilters {

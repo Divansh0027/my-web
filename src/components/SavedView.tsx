@@ -10,6 +10,7 @@ import { motion } from "motion/react";
 import { Heart, MapPin, BedDouble, Maximize, Trash2, ArrowRight } from "lucide-react";
 import { Property } from "../types";
 import { BUSINESS_CONFIG } from "../config";
+import { useAuth } from "../context/AuthContext";
 import { subscribeAuth } from "../firebase";
 
 interface SavedViewProps {
@@ -30,12 +31,10 @@ export default function SavedView({
   onOpenLogin
 }: SavedViewProps) {
   
-  const [user, setUser] = useState<ClientUser | null>(null);
+  const { currentUser } = useAuth();
+  const user = currentUser;
 
-  useEffect(() => {
-    const unsub = subscribeAuth(setUser);
-    return () => unsub();
-  }, []);
+  
 
   const wishlistedItems = properties.filter(p => savedProperties.includes(p.id));
 

@@ -1,4 +1,5 @@
 import { ClientUser } from "../firebase";
+import { useAuth } from "../context/AuthContext";
 import { formatPrice } from "../utils/format";
 /**
  * @license
@@ -55,14 +56,9 @@ export default function DetailView({
   const [isZoomed, setIsZoomed] = useState(false);
 
   // Authenticated User State
-  const [currentUser, setCurrentUser] = useState<ClientUser | null>(null);
+  const { currentUser } = useAuth();
 
-  useEffect(() => {
-    const unsub = subscribeAuth((user) => {
-      setCurrentUser(user);
-    });
-    return () => unsub();
-  }, []);
+  
 
   // Form Inputs
   const [senderName, setSenderName] = useState("");

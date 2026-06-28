@@ -25,6 +25,8 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 
 interface AdminViewProps {
+  currentUser?: any;
+  isAdmin?: boolean;
   currentView: string;
   onNavigate: (view: string, selectedPropertyId?: string) => void;
   properties: Property[];
@@ -32,10 +34,12 @@ interface AdminViewProps {
   onDeleteProperty: (id: string) => void;
   onUpdateProperty: (updated: Property) => void;
   onAddProperty: (newProp: Property) => void;
-  onShowNotification: (msg: string, type: "success" | "info") => void;
+  onShowNotification: (msg: string, type: "success" | "info" | "error") => void;
 }
 
 export default function AdminView({
+  currentUser,
+  isAdmin,
   currentView: _currentView,
   onNavigate: _onNavigate,
   properties,
@@ -133,7 +137,7 @@ export default function AdminView({
             id: "enq-1",
             name: "Rahul Sharma",
             phone: "+91 98123 45678",
-            email: "rahul.sharma@gmail.com",
+            email: "rahul.sharma@example.com",
             propertyId: properties[0]?.id || "p1",
             propertyName: properties[0]?.title || "Premium 3 BHK Builder Floor",
             message: "I am highly interested in visiting this builder floor this weekend. Is there any discount on direct registry?",
@@ -155,7 +159,7 @@ export default function AdminView({
             id: "enq-3",
             name: "Amit Khari",
             phone: "+91 95401 22998",
-            email: "amitkhari90@gmail.com",
+            email: "amitkhari90@example.com",
             propertyId: "manual-ref",
             propertyName: "Morta Industrial Plot",
             message: `Wanted to know loan approval limit for land registry. Can you arrange meeting with ${BUSINESS_CONFIG.consultantName}?`,
@@ -191,7 +195,7 @@ export default function AdminView({
           {
             uid: "simulated-user-1",
             displayName: "Rohit Deshmukh",
-            email: "rohit.d@gmail.com",
+            email: "rohit.d@example.com",
             phone: "+91 88771 22334",
             createdAt: new Date(Date.now() - 3600000 * 240).toISOString(),
             banned: false
@@ -207,7 +211,7 @@ export default function AdminView({
           {
             uid: "simulated-user-3",
             displayName: "Kabir Singh",
-            email: "kabir.realty@gmail.com",
+            email: "kabir.realty@example.com",
             phone: "+91 70112 33445",
             createdAt: new Date(Date.now() - 3600000 * 36).toISOString(),
             banned: true
@@ -1085,7 +1089,7 @@ export default function AdminView({
                   <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
                     <h3 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">Indexed Actions (Overview)</h3>
                     <div className="h-44 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
+                      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                         <BarChart data={[
                           { name: 'Approved', count: approvedListingsCount, fill: 'var(--success-green)' },
                           { name: 'Pending', count: pendingApprovalsCount, fill: 'var(--gold-accent)' },
@@ -1781,7 +1785,7 @@ export default function AdminView({
                   <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
                     <h3 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">Property Views & Listing Activity (Past 7 Days)</h3>
                     <div className="h-64 w-full pt-4">
-                      <ResponsiveContainer width="100%" height="100%">
+                      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                         <AreaChart data={[
                           { name: 'Mon', views: 400, properties: 240 },
                           { name: 'Tue', views: 300, properties: 139 },

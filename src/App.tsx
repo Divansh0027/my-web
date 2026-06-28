@@ -10,6 +10,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomeView from "./components/HomeView";
 import Notification from "./components/Notification";
+import { useAuth } from "./context/AuthContext";
 import { 
   subscribeProperties, 
   getFavorites, 
@@ -23,7 +24,7 @@ import {
   subscribeRemoteSettings,
   logAdminAction
 } from "./firebase";
-import { Property } from "./types";
+import { Property, ModerationStatus } from "./types";
 import LoginModal from "./components/LoginModal";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { BUSINESS_CONFIG } from "./config";
@@ -82,7 +83,7 @@ export default function App() {
   }, []);
 
   // Authenticated Profile User & Savior list
-  const [currentUser, setCurrentUser] = useState<ClientUser | null>(null);
+  const { currentUser, isAdmin } = useAuth();
   const [savedPropertyIds, setSavedPropertyIds] = useState<string[]>([]);
   
   // Auth state modal triggers
@@ -123,19 +124,9 @@ export default function App() {
     }
   }, [properties, currentUser]);
 
-  const [adminsList, setAdminsList] = useState<string[]>([]);
+  
 
-  // Synchronize admin status reactively
-  const isAdmin = useMemo(() => {
-    if (currentUser && currentUser.email) {
-      const isInAdminsList = adminsList.some(
-        email => email.toLowerCase() === currentUser.email.toLowerCase()
-      );
-      const hasAdminFlag = !!currentUser.isAdmin;
-      return isInAdminsList || hasAdminFlag || currentUser.email.toLowerCase() === "divansh0027@gmail.com";
-    }
-    return false;
-  }, [currentUser, adminsList]);
+  
 
   // Load properties and auth state
   useEffect(() => {
@@ -169,7 +160,7 @@ export default function App() {
           ];
           allowedKeys.forEach(key => {
             if (settings[key] !== undefined && typeof settings[key] === "string") {
-              (BUSINESS_CONFIG as any)[key] = settings[key];
+              (BUSINESS_CONFIG as Record<string, string>)[key] = settings[key];
             }
           });
         } catch (_) {}
@@ -177,44 +168,31 @@ export default function App() {
     });
 
     // Stream authenticated user
-    let unsubscribeAuth: (() => void) = () => {};
     try {
-      unsubscribeAuth = subscribeAuth(async (user) => {
-        try {
-          setCurrentUser(user);
-          if (user) {
-            const favs = await getFavorites(user.uid);
-            setSavedPropertyIds(favs);
-            
-            const redirectView = getRedirectView();
-            if (redirectView) {
-              if (redirectView === "list_property") navigate("/list-property");
-              else if (redirectView === "profile") navigate("/profile");
-              else if (redirectView === "admin") navigate("/admin");
-              else if (redirectView === "saved") navigate("/saved");
-              else navigate("/");
-              setRedirectView(null);
-            }
-          } else {
-            // Hydrate from LocalStorage if guest
-            const localFavsStr = localStorage.getItem("ssp_local_favorites");
-            setSavedPropertyIds(localFavsStr ? JSON.parse(localFavsStr) : []);
+      if (currentUser) {
+        getFavorites(currentUser.uid).then(favs => {
+          setSavedPropertyIds(favs);
+          
+          const redirectView = getRedirectView();
+          if (redirectView) {
+            if (redirectView === "list_property") navigate("/list-property");
+            else if (redirectView === "profile") navigate("/profile");
+            else if (redirectView === "admin") navigate("/admin");
+            else if (redirectView === "saved") navigate("/saved");
+            else navigate("/");
+            setRedirectView(null);
           }
-        } catch (innerErr) {
-          console.warn("Auth callback processing error:", innerErr);
-        } finally {
-          setIsAppReady(true);
-        }
-      }) || (() => {});
+        });
+      } else {
+        // Hydrate from LocalStorage if guest
+        const localFavsStr = localStorage.getItem("ssp_local_favorites");
+        setSavedPropertyIds(localFavsStr ? JSON.parse(localFavsStr) : []);
+      }
+      setIsAppReady(true);
     } catch (authSetupErr) {
-      console.warn("Auth subscription setup failed:", authSetupErr);
+      console.warn("Auth processing skipped:", authSetupErr);
       setIsAppReady(true);
     }
-
-    // Stream dynamic admins list to update authorization state on snapshot (Issue 3)
-    const unsubscribeAdmins = subscribeRemoteAdmins((admins) => {
-      setAdminsList(admins);
-    });
 
     // Safety net: if auth takes more than 8 seconds,
     // show the app in guest mode anyway so users are
@@ -236,8 +214,6 @@ export default function App() {
       unsubscribeProperties();
       unsubscribeControls();
       unsubscribeSettings();
-      unsubscribeAuth();
-      unsubscribeAdmins();
       clearTimeout(safetyTimer);
     };
   }, []);
@@ -280,7 +256,7 @@ export default function App() {
 
       const updated = { 
         ...matched, 
-        moderationStatus: nextStatus as any,
+        moderationStatus: nextStatus as ModerationStatus,
         verified: nextStatus === "live",
         auditLog: [
           ...(matched.auditLog || []),
@@ -339,7 +315,7 @@ export default function App() {
         setProperties(prev => prev.map(p => p.id === updated.id ? updated : p));
         triggerToast("Property updated.", "success");
         if (currentUser?.email) {
-          logAdminAction("update_property", updated.id, currentUser.email, { status: updated.moderationStatus });
+          logAdminAction("update_property", updated.id, currentUser.email, { status: updated.moderationStatus || "unknown" });
         }
       } else {
         triggerToast("Failed to update. Try again.", "error");
@@ -375,7 +351,7 @@ export default function App() {
     
     // Force status: pending for non-admins (Issue 10)
     if (options?.forceStatus) {
-      completedProp.moderationStatus = options.forceStatus as any;
+      completedProp.moderationStatus = options.forceStatus as ModerationStatus;
     } else if (!isFromAdmin) {
       completedProp.moderationStatus = "pending";
     } else if (!completedProp.moderationStatus) {
@@ -435,12 +411,7 @@ export default function App() {
   }, [navigate]);
 
   // Get active selected property details computed
-  const getSelectedProperty = (): Property | null => {
-    if (!selectedPropertyId) return null;
-    return properties.find(p => p.id === selectedPropertyId) || null;
-  };
-
-  const selectedProperty = getSelectedProperty();
+  const selectedProperty = React.useMemo(() => properties.find(p => p.id === selectedPropertyId) || null, [properties, selectedPropertyId]);
 
   if (!isAppReady) {
     return (
@@ -470,7 +441,7 @@ export default function App() {
         <div className="flex flex-col items-center text-center space-y-6 max-w-lg px-4 relative z-10">
           <div className="relative">
             <div className="absolute inset-x-0 -top-4 bottom-0 rounded-full bg-gold-accent/5 blur-3xl"></div>
-            <div className="relative h-20 w-20 rounded-full border-2 border-dashed border-gold-accent flex items-center justify-center animate-spin-slow">
+            <div className="relative h-20 w-20 rounded-full border-2 border-dashed border-gold-accent flex items-center justify-center animate-spin">
               <svg className="h-10 w-10 text-gold-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
@@ -481,7 +452,7 @@ export default function App() {
             <p className="text-sm text-on-surface-variant leading-relaxed max-w-md">
               Shiv Saya Properties is currently undergoing scheduled maintenance.
             </p>
-            <p className="text-xs text-slate-405 font-semibold max-w-sm">
+            <p className="text-xs text-slate-400 font-semibold max-w-sm">
               Our team is working to improve your experience. We'll be back shortly!
             </p>
           </div>
@@ -526,6 +497,7 @@ export default function App() {
             savedCount={savedPropertyIds.length} 
             onOpenAuth={() => setIsLoginModalOpen(true)}
             isAdmin={isAdmin}
+            currentUser={currentUser}
           />
         )}
 
@@ -635,6 +607,7 @@ export default function App() {
                       onUpdateProperty={handleUpdatePropertyInApp}
                       onAddProperty={handleAddProperty}
                       onShowNotification={triggerToast}
+                      currentUser={currentUser}
                     />
                   ) : (
                     <div className="flex-grow flex items-center justify-center p-6 text-center text-red-500 font-bold">Access Denied</div>

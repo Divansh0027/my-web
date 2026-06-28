@@ -14,6 +14,7 @@ import ThemeSwitcher from "./ThemeSwitcher";
 import { BUSINESS_CONFIG } from "../config";
 
 interface NavbarProps {
+  currentUser?: any;
   currentView: string;
   onNavigate: (view: string, selectedPropertyId?: string) => void;
   savedCount: number;
@@ -29,10 +30,9 @@ const navLinks = [
   { name: "Contact", view: "contact_sec" }
 ];
 
-export default React.memo(function Navbar({ currentView, onNavigate, savedCount, onOpenAuth, isAdmin = false }: NavbarProps) {
+export default React.memo(function Navbar({ currentView, onNavigate, savedCount, onOpenAuth, isAdmin = false, currentUser: user }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<ClientUser | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -46,11 +46,6 @@ export default React.memo(function Navbar({ currentView, onNavigate, savedCount,
     };
     
     window.addEventListener("scroll", handleScroll);
-    
-    // Subscribe to auth state
-    const unsubscribe = subscribeAuth((usr) => {
-      setUser(usr);
-    });
 
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -62,7 +57,6 @@ export default React.memo(function Navbar({ currentView, onNavigate, savedCount,
     return () => {
       window.removeEventListener("scroll", handleScroll);
       document.removeEventListener("mousedown", handleClickOutside);
-      unsubscribe();
     };
   }, []);
 
@@ -96,8 +90,8 @@ export default React.memo(function Navbar({ currentView, onNavigate, savedCount,
   return (
     <nav
       id="main-navbar"
-      className={`absolute top-0 left-0 right-0 z-50 transition-all duration-300 font-sans px-4 ${
-        isScrolled ? "pt-4" : "pt-6"
+      className={`sticky top-0 z-50 transition-all duration-300 font-sans px-4 ${
+        isScrolled ? "pt-2 pb-2" : "pt-6 pb-2"
       }`}
     >
       <div className={`mx-auto max-w-7xl transition-all duration-300 ${

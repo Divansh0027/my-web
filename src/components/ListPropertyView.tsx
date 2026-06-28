@@ -1,4 +1,5 @@
 import { ClientUser } from "../firebase";
+import { useAuth } from "../context/AuthContext";
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -27,14 +28,9 @@ export default function ListPropertyView({
 }: ListPropertyViewProps) {
   
   // Auth listener
-  const [currentUser, setCurrentUser] = useState<ClientUser | null>(null);
+  const { currentUser } = useAuth();
 
-  useEffect(() => {
-    const unsub = subscribeAuth((user) => {
-      setCurrentUser(user);
-    });
-    return () => unsub();
-  }, []);
+  
 
   // Wizard Navigation Step (1 to 4)
   const [step, setStep] = useState(1);

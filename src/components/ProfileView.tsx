@@ -14,6 +14,8 @@ import { subscribeAuth, updateUserProfileDetails, logoutUser } from "../firebase
 import { Enquiry, Property } from "../types";
 import { BUSINESS_CONFIG } from "../config";
 
+import { useAuth } from "../context/AuthContext";
+
 interface ProfileViewProps {
   onNavigate: (view: string, selectedPropertyId?: string) => void;
   userProperties: Property[];
@@ -33,7 +35,8 @@ export default function ProfileView({
   onToggleSaved,
   onDeleteProperty
 }: ProfileViewProps) {
-  const [user, setUser] = useState<ClientUser | null>(null);
+  const { currentUser } = useAuth();
+  const user = currentUser;
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [activeTab, setActiveTab] = useState<"listings" | "favorites" | "enquiries" | "settings">("listings");
   
@@ -48,26 +51,22 @@ export default function ProfileView({
   );
 
   useEffect(() => {
-    // 1. Subscribe to Auth
-    const unsubscribe = subscribeAuth((usr) => {
-      setUser(usr);
-      if (usr) {
-        setEditName(usr.displayName || "");
-        setEditEmail(usr.email || "");
-        // Fetch phone if saved in DB or local fallback
-        const savedPhone = usr.phone || localStorage.getItem(`ssp_phone_${usr.uid}`) || "";
-        setEditPhone(savedPhone);
-      }
-    });
-
-    // 2. Fetch local storage enquiries
+    // 1. Fetch local storage enquiries
     const localEnquiriesStr = localStorage.getItem("ssp_local_enquiries");
     if (localEnquiriesStr) {
       setEnquiries(JSON.parse(localEnquiriesStr));
     }
-
-    return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (currentUser) {
+      setEditName(currentUser.displayName || "");
+      setEditEmail(currentUser.email || "");
+      // Fetch phone if saved in DB or local fallback
+      const savedPhone = currentUser.phone || localStorage.getItem(`ssp_phone_${currentUser.uid}`) || "";
+      setEditPhone(savedPhone);
+    }
+  }, [currentUser]);
 
   const handleClearEnquiries = () => {
     localStorage.removeItem("ssp_local_enquiries");

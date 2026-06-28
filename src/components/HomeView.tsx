@@ -199,7 +199,7 @@ export default function HomeView({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-sm sm:text-base md:text-lg text-on-surface font-medium opacity-90 max-w-2xl mt-12 leading-loose drop-shadow-sm"
+            className="text-sm sm:text-base md:text-lg text-on-surface font-medium max-w-2xl mt-8 leading-loose drop-shadow-md bg-surface/50 backdrop-blur-sm rounded-xl px-4 py-3 border border-outline-variant/30 text-center sm:text-left"
           >
             Trusted by <span className="font-bold text-on-surface">500+ Families</span> | 100% RERA Registered | Over a decade of verified consultancy in Gurugram, Delhi, Noida & Faridabad.
           </motion.p>
@@ -232,7 +232,7 @@ export default function HomeView({
                 const sec = document.getElementById("contact_sec");
                 if (sec) sec.scrollIntoView({ behavior: "smooth" });
               }}
-              className="w-full sm:w-auto px-7 py-3 rounded-full bg-surface border border-outline hover:bg-surface-container hover:text-on-surface text-on-surface-variant font-semibold text-sm transition-all shadow-sm"
+              className="w-full sm:w-auto px-7 py-3 rounded-full bg-surface border-2 border-on-surface/20 hover:border-on-surface hover:bg-surface-container hover:text-on-surface text-on-surface-variant font-bold text-sm transition-all shadow-md"
             >
               Book Free Consultation
             </button>
@@ -571,7 +571,7 @@ export default function HomeView({
       </section>
 
       {/* SECTION 3: SERVICES */}
-      <section id="services_sec" className="py-32 px-4 bg-surface border-t border-b border-outline-variant/50">
+      <section id="services_sec" className="py-32 px-4 bg-surface border-t border-b border-outline-variant/50 scroll-mt-[72px]">
         <div className="max-w-7xl mx-auto">
           
           <div className="text-center mb-20">
@@ -614,7 +614,7 @@ export default function HomeView({
       </section>
 
       {/* SECTION 4: WHY CHOOSE US */}
-      <section id="about_sec" className="py-32 px-4 bg-surface-container-low">
+      <section id="about_sec" className="py-32 px-4 bg-surface-container-low scroll-mt-[72px]">
         <div className="max-w-7xl mx-auto">
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -768,7 +768,7 @@ export default function HomeView({
       </section>
 
       {/* SECTION 7: CTA CONTACT BANNER */}
-      <section id="contact_sec" className="py-32 px-4 bg-surface relative overflow-hidden">
+      <section id="contact_sec" className="py-32 px-4 bg-surface relative overflow-hidden scroll-mt-[72px]">
         
         {/* Absolute Glowing backdrop overlay */}
         <div className="absolute inset-0 pointer-events-none opacity-20">
