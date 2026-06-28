@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { updateUserProfileDetails, logoutUser } from "../firebase";
 import { Enquiry, Property } from "../types";
-import { BUSINESS_CONFIG } from "../config";
+import { useConfig } from "../context/ConfigContext";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -34,6 +34,7 @@ export default function ProfileView({
   onToggleSaved,
   onDeleteProperty
 }: ProfileViewProps) {
+  const BUSINESS_CONFIG = useConfig();
   const { currentUser } = useAuth();
   const user = currentUser;
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
@@ -133,7 +134,7 @@ export default function ProfileView({
             <div className="flex flex-col sm:flex-row items-center gap-5 w-full md:w-auto">
               <div className="h-16 w-16 shrink-0 rounded-full border border-gold-accent/35 overflow-hidden bg-surface-container-high flex items-center justify-center">
                 {user?.photoURL ? (
-                  <img width={800} height={600} src={user.photoURL} alt={user.displayName} className="h-full w-full object-cover" loading="lazy" />
+                  <img width={128} height={128} src={user.photoURL} alt={user.displayName} className="h-full w-full object-cover" loading="lazy" />
                 ) : (
                   <UserCheck className="h-7 w-7 text-gold-accent" />
                 )}

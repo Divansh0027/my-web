@@ -21,7 +21,7 @@ import {
   Search
 } from "lucide-react";
 import { Property } from "../types";
-import { BUSINESS_CONFIG } from "../config";
+import { useConfig } from "../context/ConfigContext";
 
 interface ListingsViewProps {
   properties: Property[];
@@ -40,6 +40,7 @@ export default function ListingsView({
   savedProperties, 
   onToggleSaved 
 }: ListingsViewProps) {
+  const BUSINESS_CONFIG = useConfig();
   
   // UI Display States
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -550,7 +551,7 @@ export default function ListingsView({
                           onClick={() => onToggleSaved(prop.id)}
                           className="absolute top-3 right-3 h-8 w-8 bg-surface/60 rounded-full flex items-center justify-center border border-outline-variant text-on-surface-variant hover:text-red-400 transition-colors"
                           title="Save to favorites"
-                          aria-label="Save to favorites"
+                          aria-label={isSaved ? `Remove ${prop.title} from favorites` : `Save ${prop.title} to favorites`}
                         >
                           <Heart className={`h-4 w-4 ${isSaved ? "fill-red-500 text-red-500" : ""}`} />
                         </button>

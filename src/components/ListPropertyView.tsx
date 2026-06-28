@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Property, City } from "../types";
 import { uploadPropertyImage, isStorageConnected } from "../firebase";
-import { BUSINESS_CONFIG } from "../config";
+import { useConfig } from "../context/ConfigContext";
 
 interface ListPropertyViewProps {
   onAddProperty: (newProp: Property) => void;
@@ -25,6 +25,7 @@ export default function ListPropertyView({
   onShowNotification,
   onNavigate 
 }: ListPropertyViewProps) {
+  const BUSINESS_CONFIG = useConfig();
   
   // Auth listener
   const { currentUser } = useAuth();

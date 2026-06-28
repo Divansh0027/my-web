@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { Property, Enquiry } from "../types";
 import { submitEnquiry } from "../firebase";
-import { BUSINESS_CONFIG } from "../config";
+import { useConfig } from "../context/ConfigContext";
 
 interface DetailViewProps {
   property?: Property | null;
@@ -48,6 +48,7 @@ export default function DetailView({
   onToggleSaved,
   onShowNotification
 }: DetailViewProps) {
+  const BUSINESS_CONFIG = useConfig();
   
   // Gallery
   const [activeImageIdx, setActiveImageIdx] = useState(0);
@@ -305,7 +306,7 @@ export default function DetailView({
                     onClick={handleShareClick}
                     className="h-9 w-9 bg-surface-container-high hover:bg-outline-variant text-on-surface-variant rounded-full flex items-center justify-center transition-all border border-outline-variant/50"
                     title="Copy listing URL"
-                    aria-label="Copy listing URL"
+                    aria-label={`Share ${property.title}`}
                   >
                     <Share2 className="h-4 w-4" />
                   </button>
@@ -313,7 +314,7 @@ export default function DetailView({
                     onClick={() => onToggleSaved(property.id)}
                     className="h-9 w-9 bg-surface-container-high hover:bg-outline-variant text-on-surface-variant rounded-full flex items-center justify-center transition-all border border-outline-variant/50"
                     title="Save to favorites"
-                    aria-label="Save to favorites"
+                    aria-label={isSaved ? `Remove ${property.title} from favorites` : `Save ${property.title} to favorites`}
                   >
                     <Heart className={`h-4 w-4 ${isSaved ? "fill-red-500 text-red-500 border-none" : ""}`} />
                   </button>

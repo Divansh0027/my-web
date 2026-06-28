@@ -5,14 +5,16 @@
 
 import { Phone, Mail, MapPin, Instagram, Facebook, Linkedin, ArrowUp } from "lucide-react";
 import Logo from "./Logo";
-import { BUSINESS_CONFIG } from "../config";
+import { useConfig } from "../context/ConfigContext";
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 interface FooterProps {
   onNavigate: (view: string) => void;
 }
 
 export default React.memo(function Footer({ onNavigate }: FooterProps) {
+  const BUSINESS_CONFIG = useConfig();
   const [showWhatsappBtn, setShowWhatsappBtn] = useState(true);
 
   useEffect(() => {
@@ -79,15 +81,15 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
             </div>
 
             <div className="flex items-center gap-3">
-              <a href="#" className="h-9 w-9 bg-surface-container-high/60 hover:bg-gold-accent hover:text-[#0F172A] rounded-full flex items-center justify-center text-on-surface-variant transition-all">
+              <button onClick={() => {}} className="h-9 w-9 bg-surface-container-high/60 hover:bg-gold-accent hover:text-[#0F172A] rounded-full flex items-center justify-center text-on-surface-variant transition-all cursor-default">
                 <Facebook className="h-4 w-4" />
-              </a>
-              <a href="#" className="h-9 w-9 bg-surface-container-high/60 hover:bg-gold-accent hover:text-[#0F172A] rounded-full flex items-center justify-center text-on-surface-variant transition-all">
+              </button>
+              <button onClick={() => {}} className="h-9 w-9 bg-surface-container-high/60 hover:bg-gold-accent hover:text-[#0F172A] rounded-full flex items-center justify-center text-on-surface-variant transition-all cursor-default">
                 <Instagram className="h-4 w-4" />
-              </a>
-              <a href="#" className="h-9 w-9 bg-surface-container-high/60 hover:bg-gold-accent hover:text-[#0F172A] rounded-full flex items-center justify-center text-on-surface-variant transition-all">
+              </button>
+              <button onClick={() => {}} className="h-9 w-9 bg-surface-container-high/60 hover:bg-gold-accent hover:text-[#0F172A] rounded-full flex items-center justify-center text-on-surface-variant transition-all cursor-default">
                 <Linkedin className="h-4 w-4" />
-              </a>
+              </button>
             </div>
           </div>
 
@@ -99,29 +101,29 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
             </h3>
             <ul className="space-y-3.5 text-sm">
               <li>
-                <button onClick={() => handleLinkClick("home")} className="hover:text-gold-accent transition-colors text-left">
+                <Link to="/" onClick={(e) => { e.preventDefault(); handleLinkClick("home"); }} className="hover:text-gold-accent transition-colors text-left inline-block">
                   Home
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("properties")} className="hover:text-gold-accent transition-colors text-left">
+                <Link to="/properties" onClick={(e) => { e.preventDefault(); handleLinkClick("properties"); }} className="hover:text-gold-accent transition-colors text-left inline-block">
                   Properties Directory
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("services_sec")} className="hover:text-gold-accent transition-colors text-left">
+                <a href="/#services_sec" onClick={(e) => { e.preventDefault(); handleLinkClick("services_sec"); }} className="hover:text-gold-accent transition-colors text-left inline-block">
                   Our Services
-                </button>
+                </a>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("about_sec")} className="hover:text-gold-accent transition-colors text-left">
+                <a href="/#about_sec" onClick={(e) => { e.preventDefault(); handleLinkClick("about_sec"); }} className="hover:text-gold-accent transition-colors text-left inline-block">
                   About the Firm
-                </button>
+                </a>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("contact_sec")} className="hover:text-gold-accent transition-colors text-left">
+                <a href="/#contact_sec" onClick={(e) => { e.preventDefault(); handleLinkClick("contact_sec"); }} className="hover:text-gold-accent transition-colors text-left inline-block">
                   Contact Us
-                </button>
+                </a>
               </li>
             </ul>
           </div>
@@ -134,29 +136,29 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
             </h3>
             <ul className="space-y-3.5 text-sm">
               <li>
-                <button onClick={() => handleLinkClick("properties")} className="hover:text-gold-accent transition-colors text-left">
+                <Link to="/properties" onClick={(e) => { e.preventDefault(); handleLinkClick("properties"); }} className="hover:text-gold-accent transition-colors text-left inline-block">
                   Luxury Apartments & Flats
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("properties")} className="hover:text-gold-accent transition-colors text-left">
+                <Link to="/properties" onClick={(e) => { e.preventDefault(); handleLinkClick("properties"); }} className="hover:text-gold-accent transition-colors text-left inline-block">
                   Premium Sovereign Villas
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("properties")} className="hover:text-gold-accent transition-colors text-left">
+                <Link to="/properties" onClick={(e) => { e.preventDefault(); handleLinkClick("properties"); }} className="hover:text-gold-accent transition-colors text-left inline-block">
                   Residential Plots & Land
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("properties")} className="hover:text-gold-accent transition-colors text-left">
+                <Link to="/properties" onClick={(e) => { e.preventDefault(); handleLinkClick("properties"); }} className="hover:text-gold-accent transition-colors text-left inline-block">
                   Modern Builder Floors
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => handleLinkClick("properties")} className="hover:text-gold-accent transition-colors text-left">
+                <Link to="/properties" onClick={(e) => { e.preventDefault(); handleLinkClick("properties"); }} className="hover:text-gold-accent transition-colors text-left inline-block">
                   Grade-A Commercial Retail
-                </button>
+                </Link>
               </li>
             </ul>
           </div>
@@ -210,8 +212,8 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
           </div>
           
           <div className="flex items-center gap-6">
-            <a href="#" className="hover:text-on-surface transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-on-surface transition-colors">Terms & Conditions</a>
+            <button onClick={() => {}} className="hover:text-on-surface transition-colors cursor-default">Privacy Policy</button>
+            <button onClick={() => {}} className="hover:text-on-surface transition-colors cursor-default">Terms & Conditions</button>
             
             <button 
               onClick={handleScrollToTop}

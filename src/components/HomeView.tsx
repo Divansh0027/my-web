@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { Property } from "../types";
 import { SERVICES, TESTIMONIALS, COVERED_AREAS } from "../data/sampleData";
-import { BUSINESS_CONFIG } from "../config";
+import { useConfig } from "../context/ConfigContext";
 
 interface HomeViewProps {
   properties: Property[];
@@ -50,6 +50,7 @@ export default function HomeView({
   savedProperties, 
   onToggleSaved 
 }: HomeViewProps) {
+  const BUSINESS_CONFIG = useConfig();
   
   // Search parameters state
   const [searchQuery, setSearchQuery] = useState("");

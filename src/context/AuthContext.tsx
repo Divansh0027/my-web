@@ -47,7 +47,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAdmin = useMemo(() => {
     if (currentUser && currentUser.email) {
       const emailLower = currentUser.email.toLowerCase();
-      if (emailLower === "divansh0027@gmail.com") return true;
       const isInAdminsList = adminsList.some(
         email => email.toLowerCase() === emailLower
       );

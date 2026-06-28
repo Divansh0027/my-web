@@ -1,5 +1,6 @@
 import React, { ErrorInfo, ReactNode } from "react";
 import { ShieldAlert, RefreshCw, Mail, Phone, HelpCircle } from "lucide-react";
+import { BUSINESS_CONFIG } from "../config";
 
 interface Props {
   children?: ReactNode;
@@ -83,14 +84,14 @@ export default class ErrorBoundary extends React.Component<Props, State> {
               </div>
               <div className="flex items-center gap-2">
                 <a 
-                  href="tel:+919811451522" 
+                  href={`tel:${BUSINESS_CONFIG.businessPhone}`} 
                   className="p-2 bg-surface-container border border-outline-variant/50 rounded-xl text-gold-accent hover:bg-slate-850 hover:text-on-surface transition-all cursor-pointer"
                   title="Call Hotline"
                 >
                   <Phone className="h-4 w-4" />
                 </a>
                 <a 
-                  href="mailto:info@shivsayaproperties.com" 
+                  href={`mailto:${BUSINESS_CONFIG.businessEmail}`} 
                   className="p-2 bg-surface-container border border-outline-variant/50 rounded-xl text-gold-accent hover:bg-slate-850 hover:text-on-surface transition-all cursor-pointer"
                   title="Shoot Email"
                 >

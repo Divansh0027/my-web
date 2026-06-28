@@ -7,7 +7,7 @@ import { formatPrice } from "../utils/format";
 import { motion } from "motion/react";
 import { Heart, MapPin, BedDouble, Maximize, Trash2, ArrowRight } from "lucide-react";
 import { Property } from "../types";
-import { BUSINESS_CONFIG } from "../config";
+import { useConfig } from "../context/ConfigContext";
 import { useAuth } from "../context/AuthContext";
 
 interface SavedViewProps {
@@ -27,6 +27,7 @@ export default function SavedView({
   onNavigate,
   onOpenLogin
 }: SavedViewProps) {
+  const BUSINESS_CONFIG = useConfig();
   
   const { currentUser } = useAuth();
   const user = currentUser;
@@ -117,7 +118,7 @@ export default function SavedView({
                     onClick={() => onToggleSaved(prop.id)}
                     className="absolute top-4 right-4 h-9 w-9 bg-surface/70 text-red-500 rounded-full flex items-center justify-center border border-outline-variant shadow"
                     title="Remove from bookmarks"
-                    aria-label="Remove from bookmarks"
+                    aria-label={`Remove ${prop.title} from saved list`}
                   >
                     <Trash2 className="h-5 w-5" />
                   </button>

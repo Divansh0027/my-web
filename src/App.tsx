@@ -18,13 +18,12 @@ import {
   updatePropertyInDb, 
   deletePropertyFromDb,
   subscribeRemoteControls,
-  subscribeRemoteSettings,
   logAdminAction
 } from "./firebase";
 import { Property, ModerationStatus } from "./types";
 import LoginModal from "./components/LoginModal";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { BUSINESS_CONFIG } from "./config";
+import { useConfig } from "./context/ConfigContext";
 
 const ListingsView = React.lazy(() => import("./components/ListingsView"));
 const DetailView = React.lazy(() => import("./components/DetailView"));
@@ -35,6 +34,7 @@ const AdminView = React.lazy(() => import("./components/AdminView"));
 const DevChecklist = import.meta.env.DEV ? React.lazy(() => import("./components/DevChecklist")) : () => null;
 
 export default function App() {
+  const BUSINESS_CONFIG = useConfig();
   // Loading states & controls
   const [isAppReady, setIsAppReady] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -142,33 +142,31 @@ export default function App() {
     });
 
     // Stream remote settings dynamically (Issue 11)
-    const unsubscribeSettings = subscribeRemoteSettings((settings) => {
-      if (settings && typeof settings === "object") {
-        // Hydrate config parameters at runtime securely (C7 Fix)
-        try {
-          const allowedKeys = [
-            "whatsappNumber", 
-            "businessName", 
-            "consultantName", 
-            "businessEmail", 
-            "businessPhone", 
-            "businessAddress", 
-            "reraNumber"
-          ];
-          allowedKeys.forEach(key => {
-            if (settings[key] !== undefined && typeof settings[key] === "string") {
-              (BUSINESS_CONFIG as Record<string, string>)[key] = settings[key];
-            }
-          });
-        } catch (_) {}
-      }
-    });
+    // Handled by ConfigProvider globally now
 
     // Stream authenticated user
     try {
       if (currentUser) {
-        getFavorites(currentUser.uid).then(favs => {
-          setSavedPropertyIds(favs);
+        getFavorites(currentUser.uid).then(async (dbFavs) => {
+          const localFavsStr = localStorage.getItem("ssp_local_favorites");
+          const localFavs: string[] = localFavsStr ? JSON.parse(localFavsStr) : [];
+          
+          if (localFavs.length > 0) {
+            // Merge unique favorites
+            const mergedFavs = Array.from(new Set([...dbFavs, ...localFavs]));
+            setSavedPropertyIds(mergedFavs);
+            
+            // Sync guest favorites to Firestore
+            for (const propId of localFavs) {
+              if (!dbFavs.includes(propId)) {
+                await toggleFavorite(currentUser.uid, propId);
+              }
+            }
+            localStorage.removeItem("ssp_local_favorites");
+            triggerToast("Merged your guest favorites with your account!", "success");
+          } else {
+            setSavedPropertyIds(dbFavs);
+          }
           
           const redirectView = getRedirectView();
           if (redirectView) {
@@ -210,7 +208,6 @@ export default function App() {
     return () => {
       unsubscribeProperties();
       unsubscribeControls();
-      unsubscribeSettings();
       clearTimeout(safetyTimer);
     };
   }, []);

@@ -6,3 +6,6 @@ firebase-applet-config.json
 .firebase-blueprint.json
 node_modules
 .DS_Store
+
+# Temp scripts
+scripts/

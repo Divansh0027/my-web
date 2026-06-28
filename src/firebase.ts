@@ -31,7 +31,9 @@ import {
   where,
   getDocFromServer,
   onSnapshot,
-  setLogLevel
+  setLogLevel,
+  addDoc,
+  serverTimestamp
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getAnalytics, isSupported, logEvent as firebaseLogEvent, Analytics } from "firebase/analytics";
@@ -965,7 +967,6 @@ export const updatePropertyInDb = async (property: Property): Promise<boolean> =
 export const logAdminAction = async (action: string, targetId: string, adminEmail: string, details?: Record<string, string | number | boolean | null>) => {
   if (!dbInstance) return;
   try {
-    const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
     await addDoc(collection(dbInstance as Firestore, 'audit_logs'), {
       action,
       targetId,

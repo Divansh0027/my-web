@@ -5,6 +5,7 @@ import * as Sentry from "@sentry/react";
 import App from './App.tsx';
 import ErrorBoundary from './components/ErrorBoundary.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
+import { ConfigProvider } from './context/ConfigContext.tsx';
 import { HelmetProvider } from 'react-helmet-async';
 import './index.css';
 
@@ -24,11 +25,13 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <HelmetProvider>
       <ErrorBoundary>
-        <AuthProvider>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
-        </AuthProvider>
+        <ConfigProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </AuthProvider>
+        </ConfigProvider>
       </ErrorBoundary>
     </HelmetProvider>
   </StrictMode>,

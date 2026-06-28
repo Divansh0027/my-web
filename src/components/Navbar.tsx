@@ -5,12 +5,13 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { Link } from "react-router-dom";
 import FocusLock from "react-focus-lock";
 import { Menu, X, PhoneCall, User as UserIcon, Heart, LogOut, ChevronDown, Clipboard, Shield } from "lucide-react";
 import { logoutUser } from "../firebase";
 import Logo from "./Logo";
 import ThemeSwitcher from "./ThemeSwitcher";
-import { BUSINESS_CONFIG } from "../config";
+import { useConfig } from "../context/ConfigContext";
 
 interface NavbarProps {
   currentUser?: any;
@@ -30,6 +31,7 @@ const navLinks = [
 ];
 
 export default React.memo(function Navbar({ currentView, onNavigate, savedCount, onOpenAuth, isAdmin = false, currentUser: user }: NavbarProps) {
+  const BUSINESS_CONFIG = useConfig();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -115,11 +117,26 @@ export default React.memo(function Navbar({ currentView, onNavigate, savedCount,
           <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => {
               const isSelected = currentView === link.view;
+              const isSectionLink = link.view.endsWith("_sec");
+              
+              if (isSectionLink) {
+                return (
+                  <a
+                    key={link.name}
+                    href={`/#${link.view}`}
+                    onClick={(e) => { e.preventDefault(); handleLinkClick(link.view); }}
+                    className="relative text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors duration-150 py-1"
+                  >
+                    {link.name}
+                  </a>
+                );
+              }
+              
               return (
-                <button
+                <Link
                   key={link.name}
-                  onClick={() => handleLinkClick(link.view)}
-                  aria-current={isSelected ? "page" : undefined}
+                  to={link.view === "home" ? "/" : `/${link.view}`}
+                  onClick={(e) => { e.preventDefault(); handleLinkClick(link.view); }}
                   className="relative text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors duration-150 py-1"
                 >
                   {link.name}
@@ -130,7 +147,7 @@ export default React.memo(function Navbar({ currentView, onNavigate, savedCount,
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
-                </button>
+                </Link>
               );
             })}
           </div>
@@ -147,7 +164,7 @@ export default React.memo(function Navbar({ currentView, onNavigate, savedCount,
                   className="flex items-center gap-2 bg-surface-container-high/40 border border-outline-variant/50 pl-3 pr-2 py-1.5 rounded-full hover:bg-surface-container-high transition-colors cursor-pointer select-none"
                 >
                   {user.photoURL ? (
-                    <img width={800} height={600} src={user.photoURL} alt={user.displayName} referrerPolicy="no-referrer" className="h-6 w-6 rounded-full object-cover" loading="lazy" />
+                    <img width={24} height={24} src={user.photoURL} alt={user.displayName} referrerPolicy="no-referrer" className="h-6 w-6 rounded-full object-cover" loading="lazy" />
                   ) : (
                     <div className="h-6 w-6 bg-outline-variant rounded-full flex items-center justify-center text-gold-accent font-bold text-[10px]">
                       {user.displayName?.charAt(0).toUpperCase()}
@@ -293,7 +310,7 @@ export default React.memo(function Navbar({ currentView, onNavigate, savedCount,
                     <div className="space-y-4">
                       <div className="flex items-center gap-3 border-b border-outline-variant/50 pb-3.5">
                         {user.photoURL ? (
-                          <img width={800} height={600} src={user.photoURL} alt={user.displayName} className="h-10 w-10 rounded-full object-cover border border-gold-accent/30" loading="lazy" />
+                          <img width={40} height={40} src={user.photoURL} alt={user.displayName} className="h-10 w-10 rounded-full object-cover border border-gold-accent/30" loading="lazy" />
                         ) : (
                           <div className="h-10 w-10 bg-surface-container-high rounded-full flex items-center justify-center text-gold-accent font-bold text-sm">
                             {user.displayName?.charAt(0).toUpperCase()}

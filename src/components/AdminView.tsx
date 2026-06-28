@@ -14,7 +14,7 @@ import {
   Database
 } from "lucide-react";
 import { Property, EnquiryRecord, AdminTab, AdminSettings } from "../types";
-import { BUSINESS_CONFIG } from "../config";
+import { useConfig } from "../context/ConfigContext";
 import { 
   ADMIN_EMAILS, 
   addRemoteAdmin, 
@@ -47,6 +47,7 @@ currentView: _currentView,
   onAddProperty,
   onShowNotification
 }: AdminViewProps) {
+  const BUSINESS_CONFIG = useConfig();
   
   // Tab state
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
@@ -425,11 +426,7 @@ currentView: _currentView,
     e.preventDefault();
     executeOperation(async () => {
       await updateRemoteSettings(settings);
-      // Reload page immediately to re-bootstrap CONFIG values
-      onShowNotification("Core settings updated! Reloading parameters...", "success");
-      setTimeout(() => {
-        window.location.reload();
-      }, 800);
+      onShowNotification("Core settings updated successfully!", "success");
     });
   };
 

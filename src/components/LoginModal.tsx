@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, Eye, EyeOff, Mail, Lock, User, Phone, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import FocusLock from "react-focus-lock";
 import { loginWithGoogle, loginWithEmailPassword, signUpWithEmailPassword, sendPasswordReset } from "../firebase";
-import { BUSINESS_CONFIG } from "../config";
+import { useConfig } from "../context/ConfigContext";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -17,6 +17,7 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ isOpen, onClose, initialTab = "login" }: LoginModalProps) {
+  const BUSINESS_CONFIG = useConfig();
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   
   // Login State
