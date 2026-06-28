@@ -38,9 +38,7 @@ interface AdminViewProps {
 }
 
 export default function AdminView({
-  currentUser,
-  isAdmin,
-  currentView: _currentView,
+currentView: _currentView,
   onNavigate: _onNavigate,
   properties,
   onToggleApproval,

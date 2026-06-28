@@ -1,4 +1,3 @@
-import { ClientUser } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { formatPrice } from "../utils/format";
 /**
@@ -27,7 +26,7 @@ import {
   Calculator
 } from "lucide-react";
 import { Property, Enquiry } from "../types";
-import { submitEnquiry, subscribeAuth } from "../firebase";
+import { submitEnquiry } from "../firebase";
 import { BUSINESS_CONFIG } from "../config";
 
 interface DetailViewProps {

@@ -1,4 +1,3 @@
-import { ClientUser } from "../firebase";
 import { formatPrice } from "../utils/format";
 /**
  * @license
@@ -10,7 +9,7 @@ import {
   UserCheck, Shield, Clipboard, Calendar, Trash2, Mail, 
   Phone, Heart, Edit3, Save, MapPin, Key, Sparkles, Building, ShieldAlert, Settings
 } from "lucide-react";
-import { subscribeAuth, updateUserProfileDetails, logoutUser } from "../firebase";
+import { updateUserProfileDetails, logoutUser } from "../firebase";
 import { Enquiry, Property } from "../types";
 import { BUSINESS_CONFIG } from "../config";
 

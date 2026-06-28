@@ -1,4 +1,3 @@
-import { ClientUser } from "./firebase";
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -15,11 +14,9 @@ import {
   subscribeProperties, 
   getFavorites, 
   toggleFavorite, 
-  subscribeAuth, 
   addProperty, 
   updatePropertyInDb, 
   deletePropertyFromDb,
-  subscribeRemoteAdmins,
   subscribeRemoteControls,
   subscribeRemoteSettings,
   logAdminAction

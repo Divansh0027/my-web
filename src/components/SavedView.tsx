@@ -1,17 +1,14 @@
-import { ClientUser } from "../firebase";
 import { formatPrice } from "../utils/format";
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Heart, MapPin, BedDouble, Maximize, Trash2, ArrowRight } from "lucide-react";
 import { Property } from "../types";
 import { BUSINESS_CONFIG } from "../config";
 import { useAuth } from "../context/AuthContext";
-import { subscribeAuth } from "../firebase";
 
 interface SavedViewProps {
   properties: Property[];

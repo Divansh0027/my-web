@@ -1,4 +1,3 @@
-import { ClientUser } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 /**
  * @license
@@ -12,7 +11,7 @@ import {
   ArrowRight, ArrowLeft, Trash2, CheckCircle2, AlertCircle, Sparkles, RefreshCw, Upload
 } from "lucide-react";
 import { Property, City } from "../types";
-import { subscribeAuth, uploadPropertyImage, isStorageConnected } from "../firebase";
+import { uploadPropertyImage, isStorageConnected } from "../firebase";
 import { BUSINESS_CONFIG } from "../config";
 
 interface ListPropertyViewProps {

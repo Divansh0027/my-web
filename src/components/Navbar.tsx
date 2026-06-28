@@ -1,4 +1,3 @@
-import { ClientUser } from "../firebase";
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -8,7 +7,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import FocusLock from "react-focus-lock";
 import { Menu, X, PhoneCall, User as UserIcon, Heart, LogOut, ChevronDown, Clipboard, Shield } from "lucide-react";
-import { logoutUser, subscribeAuth } from "../firebase";
+import { logoutUser } from "../firebase";
 import Logo from "./Logo";
 import ThemeSwitcher from "./ThemeSwitcher";
 import { BUSINESS_CONFIG } from "../config";
