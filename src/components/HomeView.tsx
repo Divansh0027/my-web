@@ -4,6 +4,7 @@ import { formatPrice } from "../utils/format";
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { useNavigate } from "react-router-dom";
 import React, { useState, useMemo, useCallback } from "react";
 import { motion } from "motion/react";
 import { Helmet } from "react-helmet-async";
@@ -36,8 +37,7 @@ import { useConfig } from "../context/ConfigContext";
 interface HomeViewProps {
   properties: Property[];
   isLoading?: boolean;
-  onNavigate: (view: string, selectedPropertyId?: string) => void;
-  onSearch: (filters: { query?: string; location: string; type: string; budgetMax: number; bhk: string }) => void;
+    onSearch: (filters: { query?: string; location: string; type: string; budgetMax: number; bhk: string }) => void;
   savedProperties: string[];
   onToggleSaved: (id: string) => void;
 }
@@ -45,11 +45,11 @@ interface HomeViewProps {
 export default function HomeView({ 
   properties, 
   isLoading,
-  onNavigate, 
   onSearch, 
   savedProperties, 
   onToggleSaved 
 }: HomeViewProps) {
+  const navigate = useNavigate();
   const BUSINESS_CONFIG = useConfig();
   
   // Search parameters state
@@ -150,7 +150,7 @@ export default function HomeView({
             initial={{ scale: 1 }}
             animate={{ scale: 1.05 }}
             transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-            src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2850&q=80" 
+            src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80" 
             alt="Luxury Property Background" 
             className="w-full h-full object-cover"
           />
@@ -213,7 +213,7 @@ export default function HomeView({
             className="flex flex-col sm:flex-row items-center gap-4 mt-8 w-full sm:w-auto"
           >
             <button
-              onClick={() => onNavigate("properties")}
+              onClick={() => navigate("/properties")}
               className="w-full sm:w-auto px-8 py-3 rounded-full bg-gold-accent text-[#0F172A] font-bold text-sm shadow-md shadow-gold-accent/15 hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 transition-all"
             >
               Explore Properties
@@ -447,7 +447,7 @@ export default function HomeView({
                   {/* Image, Status Header */}
                   <div className="relative h-64 w-full overflow-hidden shrink-0">
                     <img 
-                      src={prop.images[0]} 
+                      src={`${prop.images[0]}&w=600&q=80`} 
                       alt={prop.title} 
                       className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     loading="lazy" />
@@ -533,7 +533,7 @@ export default function HomeView({
                     {/* Actions */}
                     <div className="flex items-center gap-3 mt-auto">
                       <button
-                        onClick={() => onNavigate("properties", prop.id)}
+                        onClick={() => navigate(`/property/${prop.id}`)}
                         className="flex-1 py-3 text-center rounded-xl bg-surface-container-high hover:bg-outline-variant text-on-surface font-bold text-xs border border-outline-variant/50 transition-all"
                       >
                         View Details
@@ -560,7 +560,7 @@ export default function HomeView({
           {/* View All Properties Bottom CTA */}
           <div className="mt-12 text-center">
             <button
-              onClick={() => onNavigate("properties")}
+              onClick={() => navigate("/properties")}
               className="inline-flex items-center gap-2 px-8 py-3 bg-surface-container-high border border-outline-variant hover:border-outline rounded-full font-bold text-on-surface text-xs transition-all group hover:bg-gold-accent hover:text-[#0F172A]"
             >
               View All Premium Listings
@@ -792,7 +792,7 @@ export default function HomeView({
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
             <button
-              onClick={() => onNavigate("properties")}
+              onClick={() => navigate("/properties")}
               className="w-full sm:w-auto px-8 py-4 rounded-full bg-gold-accent text-[#0F172A] font-bold text-sm shadow-md hover:bg-gold-hover hover:scale-105 shadow-md active:scale-95 transition-all text-center"
             >
               Explore Properties Catalog

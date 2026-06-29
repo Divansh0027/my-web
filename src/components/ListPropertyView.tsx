@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -17,14 +18,13 @@ import { useConfig } from "../context/ConfigContext";
 interface ListPropertyViewProps {
   onAddProperty: (newProp: Property) => void;
   onShowNotification: (msg: string, type: "success" | "info" | "error") => void;
-  onNavigate: (view: string) => void;
-}
+  }
 
 export default function ListPropertyView({ 
   onAddProperty, 
-  onShowNotification,
-  onNavigate 
+  onShowNotification
 }: ListPropertyViewProps) {
+  const navigate = useNavigate();
   const BUSINESS_CONFIG = useConfig();
   
   // Auth listener
@@ -877,7 +877,7 @@ export default function ListPropertyView({
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                         {(presetPhotos[type] || presetPhotos.Flat).map((url, i) => (
                           <div key={i} className="relative h-20 rounded-xl overflow-hidden bg-surface border border-outline-variant/50">
-                            <img width={800} height={600} src={url} alt="Preset visual" className="h-full w-full object-cover" loading="lazy" />
+                            <img width={800} height={600} src={`${url}&w=150&q=80`} alt="Preset visual" className="h-full w-full object-cover" loading="lazy" />
                             <span className="absolute bottom-1 right-1 bg-surface/85 text-on-surface text-[8px] font-black px-1.5 py-0.5 rounded uppercase">Preset {i+1}</span>
                           </div>
                         ))}
@@ -1133,14 +1133,14 @@ export default function ListPropertyView({
               <div className="pt-6 flex flex-col sm:flex-row gap-3 items-center justify-center">
                 <button
                   id="celebration-view-btn"
-                  onClick={() => onNavigate("profile")}
+                  onClick={() => navigate("/profile")}
                   className="w-full sm:w-auto px-6 py-3 bg-surface-container-high text-on-surface font-bold text-xs rounded-xl border border-outline-variant cursor-pointer"
                 >
                   My Workspace Dashboard
                 </button>
                 <button
                   id="celebration-home-btn"
-                  onClick={() => onNavigate("home")}
+                  onClick={() => navigate("/")}
                   className="w-full sm:w-auto px-6 py-3 bg-gold-accent text-[#0F172A] font-bold text-xs rounded-xl flex items-center justify-center gap-2 group shadow-md cursor-pointer"
                 >
                   Explore Properties

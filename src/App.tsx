@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef, useMemo, Suspense, useCallback } from "react";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation, NavLink } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomeView from "./components/HomeView";
@@ -42,18 +42,6 @@ export default function App() {
   // Routing & View Managers
   const navigate = useNavigate();
   const location = useLocation();
-
-  const currentView = useMemo(() => {
-    const path = location.pathname;
-    if (path === "/") return "home";
-    if (path === "/properties") return "properties";
-    if (path.startsWith("/property/")) return "properties";
-    if (path === "/saved") return "saved";
-    if (path === "/list-property") return "list_property";
-    if (path === "/profile") return "profile";
-    if (path === "/admin") return "admin";
-    return "home";
-  }, [location.pathname]);
 
   const selectedPropertyId = useMemo(() => {
     if (location.pathname.startsWith("/property/")) {
@@ -236,7 +224,7 @@ export default function App() {
   }, [savedPropertyIds, currentUser, triggerToast]);
 
   // Toggle Property status between "live" and "pending"
-  const handleToggleApprovalInApp = async (id: string, customReason?: string) => {
+  const handleToggleApprovalInApp = useCallback(async (id: string, customReason?: string) => {
     try {
       const matched = properties.find(p => p.id === id);
       if (!matched) return;
@@ -276,10 +264,10 @@ export default function App() {
       console.warn("handleToggleApproval error:", err);
       triggerToast("Unexpected error. Try again.", "error");
     }
-  };
+  }, [properties, currentUser, triggerToast]);
 
   // Delete a property listing
-  const handleDeletePropertyInApp = async (id: string) => {
+  const handleDeletePropertyInApp = useCallback(async (id: string) => {
     try {
       if (!properties.some(p => p.id === id)) {
         triggerToast("Property not found.", "error");
@@ -299,10 +287,10 @@ export default function App() {
       console.warn("handleDeleteProperty error:", err);
       triggerToast("Unexpected error. Try again.", "error");
     }
-  };
+  }, [properties, currentUser, triggerToast]);
 
   // Modify property details
-  const handleUpdatePropertyInApp = async (updated: Property) => {
+  const handleUpdatePropertyInApp = useCallback(async (updated: Property) => {
     try {
       const success = await updatePropertyInDb(updated);
       if (success) {
@@ -318,10 +306,10 @@ export default function App() {
       console.warn("handleUpdateProperty error:", err);
       triggerToast("Unexpected error. Try again.", "error");
     }
-  };
+  }, [currentUser, triggerToast]);
 
-  const handleAddProperty = async (newProp: Property, options?: { postedBy?: string; forceStatus?: string }) => {
-    const isFromAdmin = currentView === "admin";
+  const handleAddProperty = useCallback(async (newProp: Property, options?: { postedBy?: string; forceStatus?: string }) => {
+    const isFromAdmin = location.pathname.startsWith("/admin");
     const completedProp: Property = {
       ...newProp,
     };
@@ -364,39 +352,9 @@ export default function App() {
     } else {
       triggerToast("Errored on registry request. Check connection.", "error");
     }
-  };
+  }, [currentUser, location.pathname, triggerToast]);
 
-  const handleNavigation = useCallback((view: string, targetPropertyId?: string) => {
-    if (view === "admin" && !isAdmin) {
-      triggerToast("Access Denied: Administrative credentials required.", "info");
-      return;
-    }
-
-    const isProtected = view === "list_property" || view === "profile";
-    if (isProtected && !currentUser) {
-      setRedirectView(view);
-      setIsLoginModalOpen(true);
-      triggerToast("Authentication is required to access this resource.", "info");
-      return;
-    }
-
-    if (view === "properties" && !targetPropertyId) {
-      // Clear filters when clicking "Properties" directly
-      setActiveSearchFilters(null);
-    }
-    
-    if (view === "home") navigate("/");
-    else if (view === "properties" && targetPropertyId) navigate(`/property/${targetPropertyId}`);
-    else if (view === "properties") navigate("/properties");
-    else if (view === "saved") navigate("/saved");
-    else if (view === "list_property") navigate("/list-property");
-    else if (view === "profile") navigate("/profile");
-    else if (view === "admin") navigate("/admin");
-    else navigate("/");
-    
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [isAdmin, currentUser, navigate, triggerToast]);
-
+  
   // Trigger search submit redirection
   const handleSearchTrigger = useCallback((searchFilters: { query?: string; location: string; type: string; budgetMax: number; bhk: string }) => {
     setActiveSearchFilters(searchFilters);
@@ -484,11 +442,9 @@ export default function App() {
         />
 
         {/* HEADER DESKTOP / STICKY HEADER */}
-        {currentView !== "admin" && (
+        {(location.pathname !== "/admin" && !location.pathname.startsWith("/admin/")) && (
           <Navbar 
-            currentView={currentView} 
-            onNavigate={handleNavigation} 
-            savedCount={savedPropertyIds.length} 
+                        savedCount={savedPropertyIds.length} 
             onOpenAuth={() => setIsLoginModalOpen(true)}
             isAdmin={isAdmin}
             currentUser={currentUser}
@@ -517,7 +473,7 @@ export default function App() {
                   <HomeView 
                     properties={visibleProperties} 
                     isLoading={isLoadingProperties}
-                    onNavigate={handleNavigation} 
+                     
                     onSearch={handleSearchTrigger}
                     savedProperties={savedPropertyIds}
                     onToggleSaved={handleToggleSaved}
@@ -531,7 +487,7 @@ export default function App() {
                     properties={visibleProperties} 
                     isLoadingData={isLoadingProperties}
                     initialFilters={activeSearchFilters}
-                    onNavigate={handleNavigation}
+                    
                     savedProperties={savedPropertyIds}
                     onToggleSaved={handleToggleSaved}
                   />
@@ -544,7 +500,7 @@ export default function App() {
                     property={selectedProperty} 
                     isLoadingData={isLoadingProperties}
                     allProperties={visibleProperties}
-                    onNavigate={handleNavigation}
+                    
                     savedProperties={savedPropertyIds}
                     onToggleSaved={handleToggleSaved}
                     onShowNotification={triggerToast}
@@ -559,7 +515,7 @@ export default function App() {
                     savedProperties={savedPropertyIds} 
                     isLoadingData={isLoadingProperties}
                     onToggleSaved={handleToggleSaved}
-                    onNavigate={handleNavigation}
+                    
                     onOpenLogin={() => setIsLoginModalOpen(true)}
                   />
                 </ErrorBoundary>
@@ -570,7 +526,7 @@ export default function App() {
                   <ListPropertyView 
                     onAddProperty={handleAddProperty} 
                     onShowNotification={triggerToast}
-                    onNavigate={handleNavigation}
+                    
                   />
                 </ErrorBoundary>
               } />
@@ -578,7 +534,7 @@ export default function App() {
               <Route path="/profile" element={
                 <ErrorBoundary>
                   <ProfileView 
-                    onNavigate={handleNavigation} 
+                     
                     userProperties={userProperties}
                     onShowNotification={triggerToast}
                     allProperties={properties}
@@ -593,9 +549,7 @@ export default function App() {
                 <ErrorBoundary>
                   {isAdmin ? (
                     <AdminView 
-                      currentView={currentView}
-                      onNavigate={handleNavigation}
-                      properties={properties}
+                                            properties={properties}
                       onToggleApproval={handleToggleApprovalInApp}
                       onDeleteProperty={handleDeletePropertyInApp}
                       onUpdateProperty={handleUpdatePropertyInApp}
@@ -612,7 +566,7 @@ export default function App() {
           </Suspense>
 
           {/* MASTER FOOTER */}
-          <Footer onNavigate={handleNavigation} />
+          <Footer />
         </main>
 
         {/* FLOATING DEVELOPER PRE-LAUNCH CHECKLIST */}
@@ -623,55 +577,35 @@ export default function App() {
         )}
 
         {/* ================= TOUCH MOBILE BOTTOM TAB BAR ACTIONS ================= */}
-        {currentView !== "admin" && (
+        {(location.pathname !== "/admin" && !location.pathname.startsWith("/admin/")) && (
           <div className="lg:hidden bg-surface border-t border-outline-variant/50 py-4 px-4 flex items-center justify-around text-center select-none w-full pb-8">
             
             {/* Tab 1: Home */}
-            <button
-              onClick={() => handleNavigation("home")}
-              className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
-                currentView === "home" ? "text-gold-accent" : "text-on-surface-variant"
-              }`}
-            >
+            <NavLink to="/" className={({ isActive }) => `flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${isActive ? "text-gold-accent" : "text-on-surface-variant"}`}>
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
               <span className="text-[10px] font-bold">Home</span>
-            </button>
+            </NavLink>
 
             {/* Tab 2: Properties */}
-            <button
-              onClick={() => handleNavigation("properties")}
-              className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
-                currentView === "properties" ? "text-gold-accent" : "text-on-surface-variant"
-              }`}
-            >
+            <NavLink to="/properties" className={({ isActive }) => `flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${isActive || location.pathname.startsWith("/property/") ? "text-gold-accent" : "text-on-surface-variant"}`}>
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
               <span className="text-[10px] font-bold">Listings</span>
-            </button>
+            </NavLink>
 
             {/* Tab 3: Post */}
-            <button
-              onClick={() => handleNavigation("list_property")}
-              className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
-                currentView === "list_property" ? "text-gold-accent" : "text-on-surface-variant"
-              }`}
-            >
+            <NavLink to="/list-property" className={({ isActive }) => `flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${isActive ? "text-gold-accent" : "text-on-surface-variant"}`}>
               <div className="h-4 w-4 bg-gold-accent rounded flex items-center justify-center text-[#0F172A]">
                 <span className="text-sm font-black leading-none">+</span>
               </div>
               <span className="text-[10px] font-bold">Post</span>
-            </button>
+            </NavLink>
 
             {/* Tab 4: Saved */}
-            <button
-              onClick={() => handleNavigation("saved")}
-              className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-[42px] relative ${
-                currentView === "saved" ? "text-gold-accent" : "text-on-surface-variant"
-              }`}
-            >
+            <NavLink to="/saved" className={({ isActive }) => `flex flex-col items-center justify-center gap-1 cursor-pointer w-[42px] relative ${isActive ? "text-gold-accent" : "text-on-surface-variant"}`}>
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
@@ -679,21 +613,15 @@ export default function App() {
                 <span className="absolute top-[2px] right-2 h-2.5 w-2.5 bg-emerald-500 rounded-full"></span>
               )}
               <span className="text-[10px] font-bold">Saved</span>
-            </button>
+            </NavLink>
 
             {/* Tab 5: Profile */}
-            <button
-              onClick={() => handleNavigation("profile")}
-              className={`flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${
-                currentView === "profile" ? "text-gold-accent" : "text-on-surface-variant"
-              }`}
-            >
+            <NavLink to="/profile" className={({ isActive }) => `flex flex-col items-center justify-center gap-1 cursor-pointer w-12 ${isActive ? "text-gold-accent" : "text-on-surface-variant"}`}>
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               <span className="text-[10px] font-bold">Profile</span>
-            </button>
-
+            </NavLink>
           </div>
         )}
 

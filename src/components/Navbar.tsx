@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Link } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import FocusLock from "react-focus-lock";
 import { Menu, X, PhoneCall, User as UserIcon, Heart, LogOut, ChevronDown, Clipboard, Shield } from "lucide-react";
 import { logoutUser } from "../firebase";
@@ -15,9 +15,7 @@ import { useConfig } from "../context/ConfigContext";
 
 interface NavbarProps {
   currentUser?: any;
-  currentView: string;
-  onNavigate: (view: string, selectedPropertyId?: string) => void;
-  savedCount: number;
+    savedCount: number;
   onOpenAuth: () => void;
   isAdmin?: boolean;
 }
@@ -30,8 +28,10 @@ const navLinks = [
   { name: "Contact", view: "contact_sec" }
 ];
 
-export default React.memo(function Navbar({ currentView, onNavigate, savedCount, onOpenAuth, isAdmin = false, currentUser: user }: NavbarProps) {
+export default React.memo(function Navbar({ savedCount, onOpenAuth, isAdmin = false, currentUser: user }: NavbarProps) {
   const BUSINESS_CONFIG = useConfig();
+  const navigate = useNavigate();
+    
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -69,13 +69,13 @@ export default React.memo(function Navbar({ currentView, onNavigate, savedCount,
     setIsDropdownOpen(false);
     setIsMobileMenuOpen(false);
     await logoutUser();
-    onNavigate("home");
+    navigate("/");
   };
 
   const handleLinkClick = (view: string) => {
     setIsMobileMenuOpen(false);
     if (view === "services_sec" || view === "about_sec" || view === "contact_sec") {
-      onNavigate("home");
+      navigate("/");
       setTimeout(() => {
         const element = document.getElementById(view);
         if (element) {
@@ -83,7 +83,7 @@ export default React.memo(function Navbar({ currentView, onNavigate, savedCount,
         }
       }, 100);
     } else {
-      onNavigate(view);
+      if (view === "home") navigate("/"); else if (view === "list_property") navigate("/list-property"); else navigate("/" + view);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
@@ -116,8 +116,7 @@ export default React.memo(function Navbar({ currentView, onNavigate, savedCount,
           {/* Desktop Navigation Links */}
           <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => {
-              const isSelected = currentView === link.view;
-              const isSectionLink = link.view.endsWith("_sec");
+                            const isSectionLink = link.view.endsWith("_sec");
               
               if (isSectionLink) {
                 return (
@@ -133,21 +132,29 @@ export default React.memo(function Navbar({ currentView, onNavigate, savedCount,
               }
               
               return (
-                <Link
+                <NavLink
                   key={link.name}
                   to={link.view === "home" ? "/" : `/${link.view}`}
-                  onClick={(e) => { e.preventDefault(); handleLinkClick(link.view); }}
-                  className="relative text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors duration-150 py-1"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `relative text-sm font-medium transition-colors duration-150 py-1 ${
+                      isActive ? "text-on-surface" : "text-on-surface-variant hover:text-on-surface"
+                    }`
+                  }
                 >
-                  {link.name}
-                  {isSelected && (
-                    <motion.span
-                      layoutId="nav-underline"
-                      className="absolute bottom-0 left-0 w-full h-[2px] bg-gold-accent"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    />
+                  {({ isActive }) => (
+                    <>
+                      {link.name}
+                      {isActive && (
+                        <motion.span
+                          layoutId="nav-underline"
+                          className="absolute bottom-0 left-0 w-full h-[2px] bg-gold-accent"
+                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                    </>
                   )}
-                </Link>
+                </NavLink>
               );
             })}
           </div>
@@ -374,16 +381,34 @@ export default React.memo(function Navbar({ currentView, onNavigate, savedCount,
                 {/* Menu items */}
                 <div className="flex flex-col gap-4">
                   {navLinks.map((link) => {
-                    const isSelected = currentView === link.view;
+                    const isSectionLink = link.view.endsWith("_sec");
+                    
+                    if (isSectionLink) {
+                      return (
+                        <a
+                          key={link.name}
+                          href={`/#${link.view}`}
+                          onClick={(e) => { e.preventDefault(); handleLinkClick(link.view); }}
+                          className="text-left py-2 text-base font-medium text-on-surface-variant hover:text-on-surface border-b border-outline-variant/50 block w-full"
+                        >
+                          {link.name}
+                        </a>
+                      );
+                    }
+                    
                     return (
-                    <button
+                    <NavLink
                       key={link.name}
-                      onClick={() => handleLinkClick(link.view)}
-                      aria-current={isSelected ? "page" : undefined}
-                      className="text-left py-2 text-base font-medium text-on-surface-variant hover:text-on-surface border-b border-outline-variant/50"
+                      to={link.view === "home" ? "/" : `/${link.view}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={({ isActive }) =>
+                        `text-left py-2 text-base font-medium border-b border-outline-variant/50 block w-full ${
+                          isActive ? "text-on-surface" : "text-on-surface-variant hover:text-on-surface"
+                        }`
+                      }
                     >
                       {link.name}
-                    </button>
+                    </NavLink>
                     )
                   })}
 

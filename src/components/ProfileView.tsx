@@ -4,6 +4,7 @@ import { formatPrice } from "../utils/format";
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import { 
   UserCheck, Shield, Clipboard, Calendar, Trash2, Mail, 
@@ -16,8 +17,7 @@ import { useConfig } from "../context/ConfigContext";
 import { useAuth } from "../context/AuthContext";
 
 interface ProfileViewProps {
-  onNavigate: (view: string, selectedPropertyId?: string) => void;
-  userProperties: Property[];
+    userProperties: Property[];
   onShowNotification: (msg: string, type: "success" | "info" | "error") => void;
   allProperties: Property[];
   savedPropertyIds: string[];
@@ -26,7 +26,6 @@ interface ProfileViewProps {
 }
 
 export default function ProfileView({ 
-  onNavigate, 
   userProperties, 
   onShowNotification,
   allProperties,
@@ -34,6 +33,7 @@ export default function ProfileView({
   onToggleSaved,
   onDeleteProperty
 }: ProfileViewProps) {
+  const navigate = useNavigate();
   const BUSINESS_CONFIG = useConfig();
   const { currentUser } = useAuth();
   const user = currentUser;
@@ -288,7 +288,7 @@ export default function ProfileView({
                 </p>
                 <button
                   type="button"
-                  onClick={() => onNavigate("list_property")}
+                  onClick={() => navigate("/list-property")}
                   className="px-4 py-2 bg-gold-accent text-[#0F172A] text-xs font-bold rounded-lg hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 cursor-pointer"
                 >
                   List your property now
@@ -322,7 +322,7 @@ export default function ProfileView({
                       key={prop.id} 
                       className="p-4 bg-surface border border-outline-variant/50 rounded-2xl hover:border-gold-accent/20 transition-all flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4"
                     >
-                      <button className="cursor-pointer flex-1 space-y-1 block text-left outline-none focus:ring-2 focus:ring-gold-accent/50 rounded-lg p-1" onClick={() => onNavigate("properties", prop.id)}>
+                      <button className="cursor-pointer flex-1 space-y-1 block text-left outline-none focus:ring-2 focus:ring-gold-accent/50 rounded-lg p-1" onClick={() => navigate(`/property/${prop.id}`)}>
                         <h4 className="font-extrabold text-on-surface text-xs hover:text-gold-accent transition-all leading-snug">{prop.title}</h4>
                         <p className="text-[10px] text-on-surface-variant font-semibold flex items-center gap-1.5 pt-0.5">
                           <MapPin className="h-3 w-3 text-outline shrink-0" />
@@ -392,7 +392,7 @@ export default function ProfileView({
                   Your bookmarked properties are empty. Explore our catalog to save items!
                 </p>
                 <button
-                  onClick={() => onNavigate("properties")}
+                  onClick={() => navigate("/properties")}
                   className="mt-3 px-4 py-2 bg-surface-container-high border border-outline-variant text-on-surface-variant text-xs font-bold rounded-lg hover:text-on-surface"
                 >
                   Browse Listings
@@ -408,7 +408,7 @@ export default function ProfileView({
                     <div className="space-y-2">
                       <div className="relative h-28 rounded-xl overflow-hidden bg-surface-container">
                         <img 
-                          src={prop.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=400&q=80"} 
+                          src={prop.images?.[0] ? `${prop.images[0]}&w=400&q=80` : "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=400&q=80"} 
                           alt={prop.title} 
                           className="h-full w-full object-cover group-hover:scale-105 transition-all duration-300"
                         loading="lazy" />
@@ -421,7 +421,7 @@ export default function ProfileView({
                         </button>
                       </div>
 
-                      <button className="cursor-pointer space-y-1.5 block text-left outline-none focus:ring-2 focus:ring-gold-accent/50 rounded-lg" onClick={() => onNavigate("properties", prop.id)}>
+                      <button className="cursor-pointer space-y-1.5 block text-left outline-none focus:ring-2 focus:ring-gold-accent/50 rounded-lg" onClick={() => navigate(`/property/${prop.id}`)}>
                         <h4 className="font-extrabold text-on-surface text-xs line-clamp-1 group-hover:text-gold-accent transition-all pt-1">{prop.title}</h4>
                         <p className="text-[10px] text-outline flex items-center gap-1">
                           <MapPin className="h-3 w-3 shrink-0" />
@@ -434,7 +434,7 @@ export default function ProfileView({
                     <div className="pt-3 border-t border-outline-variant/50 mt-3 flex justify-between items-center">
                       <span className="text-[9px] font-bold text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded uppercase">{prop.type}</span>
                       <button
-                        onClick={() => onNavigate("properties", prop.id)}
+                        onClick={() => navigate(`/property/${prop.id}`)}
                         className="text-[10px] text-gold-accent font-bold hover:underline"
                       >
                         View Property Details →

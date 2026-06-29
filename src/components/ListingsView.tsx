@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { formatPrice } from "../utils/format";
 /**
  * @license
@@ -27,8 +28,7 @@ interface ListingsViewProps {
   properties: Property[];
   isLoadingData?: boolean;
   initialFilters?: { query?: string; location: string; type: string; budgetMax: number; bhk: string } | null;
-  onNavigate: (view: string, selectedPropertyId?: string) => void;
-  savedProperties: string[];
+    savedProperties: string[];
   onToggleSaved: (id: string) => void;
 }
 
@@ -36,10 +36,10 @@ export default function ListingsView({
   properties, 
   isLoadingData,
   initialFilters, 
-  onNavigate, 
   savedProperties, 
   onToggleSaved 
 }: ListingsViewProps) {
+  const navigate = useNavigate();
   const BUSINESS_CONFIG = useConfig();
   
   // UI Display States
@@ -528,7 +528,7 @@ export default function ListingsView({
                     >
                       {/* Image Frame */}
                       <div className={`relative overflow-hidden ${viewMode === "list" ? "w-full md:w-2/5 shrink-0 h-56 md:h-full" : "h-60 w-full shrink-0"}`}>
-                        <img width={800} height={600} src={prop.images[0]} alt={prop.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        <img width={800} height={600} src={`${prop.images[0]}&w=600&q=80`} alt={prop.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                         
                         <div className="absolute top-3 left-3 flex gap-1">
                           {prop.featured && (
@@ -566,7 +566,7 @@ export default function ListingsView({
                           </div>
 
                           <button 
-                            onClick={() => onNavigate("properties", prop.id)}
+                            onClick={() => navigate(`/property/${prop.id}`)}
                             className="text-on-surface font-bold text-base mt-2 hover:text-gold-accent transition-colors cursor-pointer leading-tight line-clamp-1 text-left w-full outline-none focus:ring-2 focus:ring-gold-accent/50 rounded-sm"
                           >
                             {prop.title}
@@ -599,7 +599,7 @@ export default function ListingsView({
                         {/* Card CTA actions */}
                         <div className="flex gap-2.5 items-center mt-4">
                           <button
-                            onClick={() => onNavigate("properties", prop.id)}
+                            onClick={() => navigate(`/property/${prop.id}`)}
                             className="flex-1 py-2.5 text-center rounded-xl bg-surface-container-high hover:bg-outline-variant text-on-surface font-bold text-xs border border-outline-variant/50 transition-all cursor-pointer"
                           >
                             View Details

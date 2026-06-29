@@ -6,7 +6,8 @@ service firebase.storage {
     function isAdmin() {
       return request.auth != null && (
         request.auth.token.email in ["admin@shivsayaproperties.com", "shivsayaproperties@gmail.com", "divansh0027@gmail.com"] ||
-        firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid))
+        // Align database name with VITE_FIREBASE_DATABASE_ID (e.g. 'my-named-db') if not default
+        firestore.exists(/databases/my-named-db/documents/admins/$(request.auth.uid))
       );
     }
 

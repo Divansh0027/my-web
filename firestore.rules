@@ -90,7 +90,7 @@ service cloud.firestore {
 
     // Enquiries collection
     match /enquiries/{enquiryId} {
-      allow create: if isValidId(enquiryId) && isValidEnquiry(incoming());
+      allow create: if isSignedIn() && isValidId(enquiryId) && isValidEnquiry(incoming());
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow update, delete: if isAdmin();
     }

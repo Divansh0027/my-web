@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { formatPrice } from "../utils/format";
 /**
  * @license
@@ -15,8 +16,7 @@ interface SavedViewProps {
   savedProperties: string[];
   isLoadingData?: boolean;
   onToggleSaved: (id: string) => void;
-  onNavigate: (view: string, selectedPropertyId?: string) => void;
-  onOpenLogin: () => void;
+    onOpenLogin: () => void;
 }
 
 export default function SavedView({ 
@@ -24,9 +24,9 @@ export default function SavedView({
   savedProperties, 
   isLoadingData,
   onToggleSaved, 
-  onNavigate,
   onOpenLogin
 }: SavedViewProps) {
+  const navigate = useNavigate();
   const BUSINESS_CONFIG = useConfig();
   
   const { currentUser } = useAuth();
@@ -78,7 +78,7 @@ export default function SavedView({
             </p>
             {user ? (
               <button
-                onClick={() => onNavigate("properties")}
+                onClick={() => navigate("/properties")}
                 className="px-6 py-3 bg-gold-accent text-[#0F172A] text-xs font-bold rounded-xl shadow hover:bg-gold-hover hover:scale-105 shadow-md"
               >
                 Browse Properties Directory
@@ -108,7 +108,7 @@ export default function SavedView({
               >
                 {/* Photo Frame */}
                 <div className="relative h-56 w-full overflow-hidden shrink-0">
-                  <img width={800} height={600} src={prop.images[0]} alt={prop.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
+                  <img width={800} height={600} src={`${prop.images[0]}&w=600&q=80`} alt={prop.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
                   
                   <span className="absolute top-4 left-4 bg-surface/80 text-gold-accent text-[10px] font-bold uppercase px-2.5 py-1 rounded-md">
                     {prop.type}
@@ -130,7 +130,7 @@ export default function SavedView({
                     <span className="text-xl font-bold text-gold-accent">{formatPrice(prop.price)}</span>
                     
                     <button 
-                      onClick={() => onNavigate("properties", prop.id)}
+                      onClick={() => navigate(`/property/${prop.id}`)}
                       className="text-on-surface text-md font-bold mt-2 hover:text-gold-accent cursor-pointer block leading-snug line-clamp-1 text-left w-full outline-none focus:ring-2 focus:ring-gold-accent/50 rounded-sm"
                     >
                       {prop.title}
@@ -158,7 +158,7 @@ export default function SavedView({
                   {/* Actions */}
                   <div className="flex items-center gap-2.5 mt-2 pt-2 border-t border-outline-variant/50">
                     <button
-                      onClick={() => onNavigate("properties", prop.id)}
+                      onClick={() => navigate(`/property/${prop.id}`)}
                       className="flex-1 py-2.5 rounded-xl bg-surface-container-high hover:bg-outline-variant text-on-surface font-bold text-xs select-none cursor-pointer text-center"
                     >
                       Inspect Property

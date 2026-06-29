@@ -342,7 +342,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                     <form onSubmit={handleLoginSubmit} className="space-y-4">
                       {/* Email */}
                       <div className="space-y-1.5 animate-fadeIn">
-                        <label htmlFor="login-email-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Email Address</label>
+                        <label htmlFor="login-email-input" className="sr-only">Email Address</label>
                         <div className="relative">
                           <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
                           <input
@@ -367,7 +367,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                       {/* Password */}
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <label htmlFor="login-password-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Password</label>
+                          <label htmlFor="login-password-input" className="sr-only">Password</label>
                           <button
                             type="button"
                             onClick={() => setShowForgotForm(true)}
@@ -413,7 +413,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                     <form onSubmit={handleSignupSubmit} className="space-y-4">
                       {/* Name */}
                       <div className="space-y-1.5 animate-fadeIn">
-                        <label htmlFor="signup-name-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Full Name</label>
+                        <label htmlFor="signup-name-input" className="sr-only">Full Name</label>
                         <div className="relative">
                           <User className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
                           <input
@@ -437,7 +437,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
 
                       {/* Email */}
                       <div className="space-y-1.5">
-                        <label htmlFor="signup-email-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Email Address</label>
+                        <label htmlFor="signup-email-input" className="sr-only">Email Address</label>
                         <div className="relative">
                           <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
                           <input
@@ -461,7 +461,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
 
                       {/* Phone */}
                       <div className="space-y-1.5">
-                        <label htmlFor="signup-phone-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Verified Contact Number</label>
+                        <label htmlFor="signup-phone-input" className="sr-only">Verified Contact Number</label>
                         <div className="relative">
                           <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
                           <span className="absolute left-9.5 top-3.5 text-xs text-outline select-none font-bold">+91</span>
@@ -490,7 +490,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                       {/* Password */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label htmlFor="signup-password-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Password</label>
+                          <label htmlFor="signup-password-input" className="sr-only">Password</label>
                           <div className="relative">
                             <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
                             <input
@@ -531,7 +531,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                         </div>
 
                         <div className="space-y-1.5">
-                          <label htmlFor="signup-confirm-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Confirm</label>
+                          <label htmlFor="signup-confirm-input" className="sr-only">Confirm</label>
                           <div className="relative">
                             <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
                             <input
@@ -627,7 +627,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
                         )}
 
                         <div className="space-y-1.5">
-                          <label htmlFor="forgot-email-input" className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Email Address</label>
+                          <label htmlFor="forgot-email-input" className="sr-only">Email Address</label>
                           <div className="relative">
                             <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-outline" />
                             <input

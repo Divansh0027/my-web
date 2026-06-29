@@ -7,28 +7,23 @@ import { Phone, Mail, MapPin, Instagram, Facebook, Linkedin, ArrowUp } from "luc
 import Logo from "./Logo";
 import { useConfig } from "../context/ConfigContext";
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { subscribeRemoteControls } from "../firebase";
 
-interface FooterProps {
-  onNavigate: (view: string) => void;
-}
+interface FooterProps {}
 
-export default React.memo(function Footer({ onNavigate }: FooterProps) {
+export default React.memo(function Footer(_props: FooterProps) {
+  const navigate = useNavigate();
   const BUSINESS_CONFIG = useConfig();
   const [showWhatsappBtn, setShowWhatsappBtn] = useState(true);
 
   useEffect(() => {
-    try {
-      const controlsStr = localStorage.getItem("ssp_controls");
-      if (controlsStr) {
-        const controls = JSON.parse(controlsStr);
-        if (controls && typeof controls.showWhatsappFloating === "boolean") {
-          setShowWhatsappBtn(controls.showWhatsappFloating);
-        }
+    const unsubscribe = subscribeRemoteControls((controls) => {
+      if (controls && typeof controls.showWhatsappFloating === "boolean") {
+        setShowWhatsappBtn(controls.showWhatsappFloating);
       }
-    } catch (e) {
-      console.warn("Failed to load ssp_controls in Footer", e);
-    }
+    });
+    return () => unsubscribe();
   }, []);
   
   const handleScrollToTop = () => {
@@ -37,7 +32,7 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
 
   const handleLinkClick = (view: string) => {
     if (view === "services_sec" || view === "about_sec" || view === "contact_sec") {
-      onNavigate("home");
+      navigate("/");
       setTimeout(() => {
         const element = document.getElementById(view);
         if (element) {
@@ -45,7 +40,7 @@ export default React.memo(function Footer({ onNavigate }: FooterProps) {
         }
       }, 100);
     } else {
-      onNavigate(view);
+      navigate(view === "home" ? "/" : "/" + view);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };

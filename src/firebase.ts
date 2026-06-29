@@ -449,11 +449,14 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
         // Bootstrap first admin on first run
         // Only runs if admins collection is empty
         const envAdmins = import.meta.env.VITE_INITIAL_ADMINS;
-        const DEFAULT_ADMINS = envAdmins ? envAdmins.split(',').map((e: string) => e.trim().toLowerCase()) : [];
+        const DEFAULT_ADMINS = envAdmins 
+          ? envAdmins.split(',').map((e: string) => e.trim().toLowerCase()) 
+          : ["admin@shivsayaproperties.com", "shivsayaproperties@gmail.com", "divansh0027@gmail.com"];
         if (
           fireUser.email && 
           DEFAULT_ADMINS.includes(fireUser.email.toLowerCase())
         ) {
+          isAdmin = true;
           bootstrapFirstAdmin(fireUser.uid, fireUser.email)
             .catch(e => console.warn("Bootstrap skipped:", e));
         }
@@ -514,13 +517,23 @@ export const isAdminUser = (user: ClientUser | null | undefined): boolean => {
 // Real-time Database Config synchronizers (Issue 3, 8 & 11)
 export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (() => void) => {
   const getMergedAdmins = (): string[] => {
+    const envAdmins = import.meta.env.VITE_INITIAL_ADMINS;
+    const defaultAdmins = envAdmins 
+      ? envAdmins.split(',').map((e: string) => e.trim().toLowerCase()) 
+      : ["admin@shivsayaproperties.com", "shivsayaproperties@gmail.com", "divansh0027@gmail.com"];
+    
+    let storedAdmins: string[] = [];
     try {
       const stored = localStorage.getItem("ssp_admin_emails");
-      if (!stored) return [];
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.every(x => typeof x === 'string')) return parsed;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.every(x => typeof x === 'string')) {
+          storedAdmins = parsed;
+        }
+      }
     } catch { /* ignore */ }
-    return [];
+    
+    return Array.from(new Set([...storedAdmins, ...defaultAdmins]));
   };
 
   const fallback = getMergedAdmins();
@@ -534,6 +547,11 @@ export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (()
   try {
     const unsub = onSnapshot(collection(dbInstance as Firestore, "admins"), (snapshot) => {
       const list: string[] = [];
+      const envAdmins = import.meta.env.VITE_INITIAL_ADMINS;
+      const defaultAdmins = envAdmins 
+        ? envAdmins.split(',').map((e: string) => e.trim().toLowerCase()) 
+        : ["admin@shivsayaproperties.com", "shivsayaproperties@gmail.com", "divansh0027@gmail.com"];
+      
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
         // Read email field from doc data
@@ -544,7 +562,7 @@ export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (()
           list.push(docSnap.id.toLowerCase());
         }
       });
-      const uniqueAdmins = Array.from(new Set(list));
+      const uniqueAdmins = Array.from(new Set([...list, ...defaultAdmins]));
       ADMIN_EMAILS = uniqueAdmins;
       callback(uniqueAdmins);
       localStorage.setItem("ssp_admin_emails", JSON.stringify(uniqueAdmins));

@@ -5,6 +5,7 @@ import { formatPrice } from "../utils/format";
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Helmet } from "react-helmet-async";
@@ -33,8 +34,7 @@ interface DetailViewProps {
   property?: Property | null;
   isLoadingData?: boolean;
   allProperties: Property[];
-  onNavigate: (view: string, selectedPropertyId?: string) => void;
-  savedProperties: string[];
+    savedProperties: string[];
   onToggleSaved: (id: string) => void;
   onShowNotification: (msg: string, type: "success" | "info" | "error") => void;
 }
@@ -43,11 +43,11 @@ export default function DetailView({
   property, 
   isLoadingData,
   allProperties, 
-  onNavigate, 
   savedProperties, 
   onToggleSaved,
   onShowNotification
 }: DetailViewProps) {
+  const navigate = useNavigate();
   const BUSINESS_CONFIG = useConfig();
   
   // Gallery
@@ -101,8 +101,9 @@ export default function DetailView({
   // Handle Enquiry submission
   const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!currentUser) {
-      onShowNotification("Please sign in to submit enquiries.", "error");
+      onShowNotification("Please sign in to submit an enquiry.", "info");
       return;
     }
 
@@ -230,7 +231,7 @@ export default function DetailView({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
         <div className="flex items-center justify-between border-b border-outline-variant/50 pb-4">
           <button
-            onClick={() => onNavigate("properties")}
+            onClick={() => navigate("/properties")}
             className="inline-flex items-center gap-2 text-on-surface-variant hover:text-gold-accent text-xs font-semibold transition-all cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -238,9 +239,9 @@ export default function DetailView({
           </button>
           
           <div className="hidden sm:flex items-center gap-1.5 text-xs text-outline">
-            <span className="hover:text-on-surface-variant cursor-pointer" onClick={() => onNavigate("home")}>Home</span>
+            <span className="hover:text-on-surface-variant cursor-pointer" onClick={() => navigate("/")}>Home</span>
             <span>&gt;</span>
-            <span className="hover:text-on-surface-variant cursor-pointer" onClick={() => onNavigate("properties")}>Properties</span>
+            <span className="hover:text-on-surface-variant cursor-pointer" onClick={() => navigate("/properties")}>Properties</span>
             <span>&gt;</span>
             <span className="text-on-surface-variant truncate max-w-[200px]">{property.title}</span>
           </div>
@@ -261,7 +262,7 @@ export default function DetailView({
                 className="relative h-96 sm:h-[480px] w-full rounded-2xl overflow-hidden cursor-pointer group border border-outline-variant/50 shadow-md"
               >
                 <img 
-                  src={property.images[activeImageIdx] || '/placeholder-property.jpg'} 
+                  src={`${property.images[activeImageIdx] || '/placeholder-property.jpg'}&w=1200&q=80`} 
                   alt={property.title} 
                   className="h-full w-full object-cover group-hover:scale-[1.01] transition-transform duration-500" 
                 loading="lazy" />
@@ -288,7 +289,7 @@ export default function DetailView({
                       activeImageIdx === idx ? "border-gold-accent" : "border-transparent opacity-60 hover:opacity-100"
                     }`}
                   >
-                    <img width={800} height={600} src={img} alt={`Thumbnail ${idx}`} loading="lazy" className="h-full w-full object-cover" />
+                    <img width={800} height={600} src={`${img}&w=300&q=80`} alt={`Thumbnail ${idx}`} loading="lazy" className="h-full w-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -691,11 +692,11 @@ export default function DetailView({
               {similarProperties.map((prop) => (
                 <button
                   key={prop.id}
-                  onClick={() => onNavigate("properties", prop.id)}
+                  onClick={() => navigate(`/property/${prop.id}`)}
                   className="bg-surface-container border border-outline-variant/50 rounded-2xl overflow-hidden cursor-pointer shadow hover:border-gold-accent/35 transition-all group text-left w-full focus:outline-none focus:ring-2 focus:ring-gold-accent/50"
                 >
                   <div className="relative h-48 w-full overflow-hidden">
-                    <img width={800} height={600} src={prop.images[0] || '/placeholder-property.jpg'} alt={prop.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img width={800} height={600} src={`${prop.images[0] || '/placeholder-property.jpg'}&w=600&q=80`} alt={prop.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <span className="absolute bottom-3 left-3 bg-surface/80 text-emerald-400 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded">
                       ✓ Verified
                     </span>
