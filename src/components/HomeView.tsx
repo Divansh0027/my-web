@@ -8,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 import React, { useState, useMemo, useCallback } from "react";
 import { motion } from "motion/react";
 import { Helmet } from "react-helmet-async";
-import { trackEvent } from "../firebase";
 import { 
   Building, 
   MapPin, 
@@ -33,6 +32,7 @@ import {
 import { Property } from "../types";
 import { SERVICES, TESTIMONIALS, COVERED_AREAS } from "../data/sampleData";
 import { useConfig } from "../context/ConfigContext";
+import { trackEvent } from "../firebase";
 
 interface HomeViewProps {
   properties: Property[];
@@ -70,13 +70,6 @@ export default function HomeView({
     e.preventDefault();
     
     // Track search event with analytics
-    trackEvent("home_search", {
-      query: searchQuery || "none",
-      location: searchLocation || "none",
-      type: searchType || "none",
-      budget: searchBudget.toString(),
-      bhk: searchBhk
-    });
 
     onSearch({
       query: searchQuery,
@@ -89,9 +82,6 @@ export default function HomeView({
 
   const handleTabChange = useCallback((tab: "All" | "Buy" | "Rent" | "Commercial" | "Plots") => {
     setActiveTab(tab);
-    trackEvent("home_filter_property_type", {
-      type: tab
-    });
   }, []);
 
   // Filter properties based on the active tab
@@ -110,13 +100,6 @@ export default function HomeView({
   }, [properties, activeTab]);
 
   const handleLocalityClick = useCallback((locality: string) => {
-    trackEvent("home_search", {
-      query: "none",
-      location: locality,
-      type: "none",
-      budget: "100000000",
-      bhk: "All"
-    });
 
     onSearch({
       location: locality,
@@ -135,14 +118,14 @@ export default function HomeView({
   }, []);
 
   return (
-    <div className="font-sans text-on-surface overflow-x-hidden bg-surface pt-18">
+    <div className="font-sans text-on-surface overflow-x-hidden bg-surface -mt-[64px] lg:-mt-[72px]">
       <Helmet>
         <title>Shiv Saya Properties - Real Estate Agents in Delhi NCR</title>
         <meta name="description" content="Shiv Saya Properties offers verified real estate listings in Ghaziabad, Noida, Delhi NCR. Buy, sell, or rent flats, villas, plots, and commercial spaces." />
       </Helmet>
       
       {/* SECTION 1: CINEMATIC HERO */}
-      <section className="relative min-h-[92vh] flex items-center justify-center py-20 px-4 bg-surface overflow-hidden">
+      <section className="relative min-h-[92vh] flex items-center justify-center pt-[96px] lg:pt-[112px] pb-20 px-4 bg-surface overflow-hidden">
         
         {/* Subtle Luxury Background Image */}
         <div className="absolute inset-0 z-0 overflow-hidden">
@@ -151,7 +134,7 @@ export default function HomeView({
             animate={{ scale: 1.05 }}
             transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
             src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80" 
-            alt="Luxury Property Background" 
+            alt="Decorative image" 
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-surface/80 backdrop-blur-[2px]"></div>
@@ -222,6 +205,7 @@ export default function HomeView({
               href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.consultation)}`}
               target="_blank"
               rel="noreferrer"
+              onClick={() => trackEvent("whatsapp_click", { source: "hero_section" })}
               className="w-full sm:w-auto px-7 py-3 rounded-full bg-surface hover:bg-success-green/5 border border-success-green text-success-green font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm"
             >
               <Phone className="h-4 w-4" />
@@ -448,7 +432,7 @@ export default function HomeView({
                   <div className="relative h-64 w-full overflow-hidden shrink-0">
                     <img 
                       src={`${prop.images[0]}&w=600&q=80`} 
-                      alt={prop.title} 
+                      alt={`${prop.title} — ${prop.location}`} 
                       className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     loading="lazy" />
                     
@@ -544,6 +528,7 @@ export default function HomeView({
                         target="_blank"
                         rel="noreferrer"
                         aria-label={`Enquire about ${prop.title} on WhatsApp`}
+                        onClick={() => trackEvent("whatsapp_click", { source: "property_card", property_id: prop.id })}
                         className="h-11 w-11 shrink-0 rounded-xl bg-success-green/20 hover:bg-success-green/30 text-success-green border border-success-green/30 flex items-center justify-center transition-all"
                       >
                         <Phone className="h-4 w-4" />
@@ -801,6 +786,7 @@ export default function HomeView({
               href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.investment)}`}
               target="_blank"
               rel="noreferrer"
+              onClick={() => trackEvent("whatsapp_click", { source: "footer_cta" })}
               className="w-full sm:w-auto px-8 py-4 rounded-full bg-success-green hover:brightness-110 text-on-surface font-bold text-sm flex items-center justify-center gap-2.5 shadow-md transition-all text-center"
             >
               <Phone className="h-4 w-4" />

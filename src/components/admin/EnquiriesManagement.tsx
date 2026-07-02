@@ -1,22 +1,12 @@
-// @ts-nocheck
-import React from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { LayoutDashboard, Building, Mail, Users, BarChart3, Settings, Plus, Search, Trash2, Edit, Shield, Download, RefreshCw, Check, X, Phone, MailIcon, ExternalLink, Eye, EyeOff, CheckSquare, Sliders, AlertTriangle, ShieldCheck, Power, HelpCircle, AlertCircle, MapPin, Database } from "lucide-react";
+import { Search, Trash2, Download, Phone, MailIcon } from "lucide-react";
 
-export default function EnquiriesManagement(props: any) {
+import { useAdmin } from "../../context/AdminContext";
+
+export default function EnquiriesManagement() {
+  const props = useAdmin();
   const { 
-    formatCurrency, estimatedRevenue, 
-    propertySearch, setPropertySearch, propertyStatusFilter, setPropertyStatusFilter, 
-    propertySort, setPropertySort, filteredProperties, selectedProperties, handleSelectProperty, 
-    handleSelectAllProperties, handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, handleBulkApprove, handleBulkHide, handleBulkDelete, setIsAddModalOpen, setEditingProperty, setIsEditModalOpen, 
-    setConfirmDialog, executeOperation, onDeleteProperty, onToggleApproval, properties, 
-    setRejectingProperty, enquirySearch, setEnquirySearch, enquiryFilter, setEnquiryFilter, 
-    filteredEnquiries, handleUpdateEnquiryStatus, handleDeleteEnquiry, userSearch, setUserSearch, 
-    filteredUsers, handleToggleBanUser, settings, setSettings, 
-    handleSaveSettings, controls, handleToggleControl, adminsList, newAdminEmail, setNewAdminEmail, 
-    handleAddAdmin, handleRemoveAdmin, handleClearTestData, isRunningDiagnostics, 
-    auditPassed, isLoading, setAuditPassed, setIsRunningDiagnostics, onShowNotification, BUSINESS_CONFIG, 
-    pendingApprovalsCount, newEnquiriesCount, activeTab, onUpdateProperty, enquiries
+    handleExportCSV, enquirySearch, setEnquirySearch, enquiryFilter, setEnquiryFilter, 
+    filteredEnquiries, handleUpdateEnquiryStatus, handleDeleteEnquiry, BUSINESS_CONFIG
   } = props;
 
   return (
@@ -119,7 +109,7 @@ export default function EnquiriesManagement(props: any) {
                                 <td className="py-4 px-4 text-center">
                                   <select
                                     value={enq.status}
-                                    onChange={(e) => handleUpdateEnquiryStatus(enq.id, e.target.value as any)}
+                                    onChange={(e) => handleUpdateEnquiryStatus(enq.id, e.target.value as "New" | "Contacted" | "Resolved")}
                                     className={`text-[9px] font-black uppercase rounded-lg border px-2 py-1 outline-none cursor-pointer focus:ring-1 ${
                                       enq.status === "New" 
                                         ? "bg-red-500/10 text-red-400 border-red-500/25 focus:ring-red-500"

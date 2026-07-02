@@ -14,6 +14,7 @@ import {
 import { Property, City } from "../types";
 import { uploadPropertyImage, isStorageConnected } from "../firebase";
 import { useConfig } from "../context/ConfigContext";
+import { validatePropertyStep1, validatePropertyStep2 } from "../utils/validation";
 
 interface ListPropertyViewProps {
   onAddProperty: (newProp: Property) => void;
@@ -67,7 +68,7 @@ export default function ListPropertyView({
       imageFilesRef.current.forEach(item => {
         try {
           URL.revokeObjectURL(item.previewUrl);
-        } catch (_) {}
+        } catch (_) { /* ignore */ }
       });
     };
   }, []);
@@ -220,30 +221,9 @@ export default function ListPropertyView({
   };
 
   // Validation routines per progressive step
-  const validateStep1 = () => {
-    if (title.trim().length < 10) {
-      return "Title must be at least 10 characters long to guide buyers.";
-    }
-    if (description.trim().length < 30) {
-      return "Please write a comprehensive description (at least 30 characters).";
-    }
-    if (!locality.trim()) {
-      return "Locality coordinates cannot be empty.";
-    }
-    return null;
-  };
+  const validateStep1 = () => validatePropertyStep1(title, description, locality);
 
-  const validateStep2 = () => {
-    const priceVal = Number(price);
-    if (!price || isNaN(priceVal) || priceVal <= 0) {
-      return "Please enter a valid positive property price.";
-    }
-    const areaVal = Number(area);
-    if (!area || isNaN(areaVal) || areaVal <= 0) {
-      return "Please enter a valid positive area metric.";
-    }
-    return null;
-  };
+  const validateStep2 = () => validatePropertyStep2(price, area);
 
   const handleNextStep = () => {
     if (step === 1) {
@@ -369,14 +349,14 @@ export default function ListPropertyView({
 
     try {
       if (imageFiles.length > 0) {
-        if (liveStorage) {
+        if (liveStorage && currentUser) {
           onShowNotification("Uploading property images to Google Cloud Storage...", "success");
           for (let i = 0; i < imageFiles.length; i++) {
              setUploadProgress({ current: i + 1, total: imageFiles.length });
              const imgFile = imageFiles[i];
              try {
                const downloadUrl = await uploadPropertyImage(
-                 currentUser?.uid || "guest", 
+                 currentUser.uid, 
                  imgFile.file, 
                  imgFile.file.name
                );
@@ -390,7 +370,7 @@ export default function ListPropertyView({
           }
         } else {
           // Local fallback: don't convert files to Base64, use placeholders instead for demo
-          onShowNotification("Images saved locally. Connect Firebase Storage for cloud hosting.", "info");
+          onShowNotification(liveStorage ? "Guest uploads use placeholders. Log in for real image hosting." : "Images saved locally. Connect Firebase Storage for cloud hosting.", "info");
           for (let i = 0; i < imageFiles.length; i++) {
              setUploadProgress({ current: i + 1, total: imageFiles.length });
              const placeholderImages = [
@@ -877,7 +857,7 @@ export default function ListPropertyView({
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                         {(presetPhotos[type] || presetPhotos.Flat).map((url, i) => (
                           <div key={i} className="relative h-20 rounded-xl overflow-hidden bg-surface border border-outline-variant/50">
-                            <img width={800} height={600} src={`${url}&w=150&q=80`} alt="Preset visual" className="h-full w-full object-cover" loading="lazy" />
+                            <img width={800} height={600} src={`${url}&w=150&q=80`} alt="Property preview" className="h-full w-full object-cover" loading="lazy" />
                             <span className="absolute bottom-1 right-1 bg-surface/85 text-on-surface text-[8px] font-black px-1.5 py-0.5 rounded uppercase">Preset {i+1}</span>
                           </div>
                         ))}
@@ -941,7 +921,7 @@ export default function ListPropertyView({
                             return (
                               <div key={i} className="relative bg-surface border border-outline-variant/50 rounded-xl overflow-hidden group p-2 flex flex-col justify-between">
                                 <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-surface-container border border-outline-variant/50">
-                                  <img width={800} height={600} src={img.previewUrl} alt={img.file.name} className="h-full w-full object-cover" loading="lazy" />
+                                  <img width={800} height={600} src={img.previewUrl} alt={img.file.name || "Uploaded image"} className="h-full w-full object-cover" loading="lazy" />
                                   <button
                                     type="button"
                                     onClick={(e) => {

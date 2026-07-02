@@ -1,22 +1,13 @@
-// @ts-nocheck
-import React from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { LayoutDashboard, Building, Mail, Users, BarChart3, Settings, Plus, Search, Trash2, Edit, Shield, Download, RefreshCw, Check, X, Phone, MailIcon, ExternalLink, Eye, EyeOff, CheckSquare, Sliders, AlertTriangle, ShieldCheck, Power, HelpCircle, AlertCircle, MapPin, Database } from "lucide-react";
+import { Trash2, Download, Sliders, ShieldCheck, Power, Database } from "lucide-react";
 
-export default function SystemSettings(props: any) {
+import { useAdmin } from "../../context/AdminContext";
+
+export default function SystemSettings() {
+  const props = useAdmin();
   const { 
-    formatCurrency, estimatedRevenue, 
-    propertySearch, setPropertySearch, propertyStatusFilter, setPropertyStatusFilter, 
-    propertySort, setPropertySort, filteredProperties, selectedProperties, handleSelectProperty, 
-    handleSelectAllProperties, handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, handleBulkApprove, handleBulkHide, handleBulkDelete, setIsAddModalOpen, setEditingProperty, setIsEditModalOpen, 
-    setConfirmDialog, executeOperation, onDeleteProperty, onToggleApproval, properties, 
-    setRejectingProperty, enquirySearch, setEnquirySearch, enquiryFilter, setEnquiryFilter, 
-    filteredEnquiries, handleUpdateEnquiryStatus, handleDeleteEnquiry, userSearch, setUserSearch, 
-    filteredUsers, handleToggleBanUser, settings, setSettings, 
+    handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, settings, setSettings, 
     handleSaveSettings, controls, handleToggleControl, adminsList, newAdminEmail, setNewAdminEmail, 
-    handleAddAdmin, handleRemoveAdmin, handleClearTestData, isRunningDiagnostics, 
-    auditPassed, isLoading, setAuditPassed, setIsRunningDiagnostics, onShowNotification, BUSINESS_CONFIG, 
-    pendingApprovalsCount, newEnquiriesCount, activeTab, onUpdateProperty 
+    handleAddAdmin, handleRemoveAdmin, handleClearTestData 
   } = props;
 
   return (
@@ -182,7 +173,7 @@ export default function SystemSettings(props: any) {
                             { key: "showWhatsappFloating", label: "WhatsApp Btn", desc: "Floating help widget" },
                             { key: "autoApproveListings", label: "Auto Approve", desc: "Skip admin audit checks" }
                           ].map(ctl => {
-                            const isChecked = (controls as any)[ctl.key];
+                            const isChecked = controls[ctl.key];
                             return (
                               <div key={ctl.key} className="p-3 bg-slate-955/40 border border-outline-variant/50 rounded-xl flex items-center justify-between gap-2">
                                 <div>
@@ -192,7 +183,7 @@ export default function SystemSettings(props: any) {
                                 
                                 <button
                                   type="button"
-                                  onClick={() => handleToggleControl(ctl.key as any)}
+                                  onClick={() => handleToggleControl(ctl.key)}
                                   className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-gold-accent focus:ring-offset-1 focus:ring-offset-slate-900 ${
                                     isChecked ? "bg-gold-accent" : "bg-surface-container-high"
                                   }`}

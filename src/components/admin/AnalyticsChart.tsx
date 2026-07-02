@@ -1,19 +1,19 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { useState, useEffect } from 'react';
 
-export default function AnalyticsChart({ data, type, approvedListingsCount, pendingApprovalsCount, enquiriesCount, usersCount }: any) {
+export default function AnalyticsChart({ data, type, approvedListingsCount = 0, pendingApprovalsCount = 0, enquiriesCount = 0, usersCount = 0 }: { data?: Record<string, string | number>[]; type: string; approvedListingsCount?: number; pendingApprovalsCount?: number; enquiriesCount?: number; usersCount?: number; }) {
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => setIsMounted(true), 50);
     return () => clearTimeout(timer);
   }, []);
 
-  if (!isMounted) return <div className="w-full h-[300px] bg-surface-container animate-pulse rounded-xl" />;
+  if (!isMounted) return <div className="w-full h-full bg-surface-container animate-pulse rounded-xl" />;
 
   if (type === 'bar') {
     return (
-      <div className="w-full h-[300px]">
-        <ResponsiveContainer width="100%" height={300} minWidth={0}>
+      <div className="w-full h-full">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <BarChart data={[
             { name: 'Approved', count: approvedListingsCount, fill: 'var(--success-green)' },
             { name: 'Pending', count: pendingApprovalsCount, fill: 'var(--gold-accent)' },
@@ -35,8 +35,8 @@ export default function AnalyticsChart({ data, type, approvedListingsCount, pend
   }
 
   return (
-    <div className="w-full h-[300px]">
-      <ResponsiveContainer width="100%" height={300} minWidth={0}>
+    <div className="w-full h-full">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         <AreaChart data={data || [
           { name: 'Mon', views: 400, properties: 240 },
           { name: 'Tue', views: 300, properties: 139 },

@@ -2,15 +2,6 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     
-    // Helper to check if user is admin
-    function isAdmin() {
-      return request.auth != null && (
-        request.auth.token.email in ["admin@shivsayaproperties.com", "shivsayaproperties@gmail.com", "divansh0027@gmail.com"] ||
-        // Align database name with VITE_FIREBASE_DATABASE_ID (e.g. 'my-named-db') if not default
-        firestore.exists(/databases/my-named-db/documents/admins/$(request.auth.uid))
-      );
-    }
-
     // Property images
     match /properties/{userId}/{imageId} {
       allow read: if true; // anyone can view images
@@ -23,9 +14,8 @@ service firebase.storage {
             || request.resource.contentType == 'image/png' 
             || request.resource.contentType == 'image/webp');
             
-      // Only the owner of the folder or admin can delete
-      allow delete: if request.auth != null 
-        && (request.auth.uid == userId || isAdmin());
+      // Only the owner of the folder or an admin can delete
+      allow delete: if request.auth != null && (request.auth.uid == userId || firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid)));
     }
 
     // Brochures path
@@ -38,8 +28,7 @@ service firebase.storage {
         && request.resource.size <= 10 * 1024 * 1024
         && request.resource.contentType == 'application/pdf';
         
-      allow delete: if request.auth != null
-        && (request.auth.uid == userId || isAdmin());
+      allow delete: if request.auth != null && (request.auth.uid == userId || firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid)));
     }
   }
 }

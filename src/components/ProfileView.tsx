@@ -134,7 +134,7 @@ export default function ProfileView({
             <div className="flex flex-col sm:flex-row items-center gap-5 w-full md:w-auto">
               <div className="h-16 w-16 shrink-0 rounded-full border border-gold-accent/35 overflow-hidden bg-surface-container-high flex items-center justify-center">
                 {user?.photoURL ? (
-                  <img width={128} height={128} src={user.photoURL} alt={user.displayName} className="h-full w-full object-cover" loading="lazy" />
+                  <img width={128} height={128} src={user.photoURL} alt={user.displayName || "User Profile"} className="h-full w-full object-cover" loading="lazy" />
                 ) : (
                   <UserCheck className="h-7 w-7 text-gold-accent" />
                 )}
@@ -409,7 +409,7 @@ export default function ProfileView({
                       <div className="relative h-28 rounded-xl overflow-hidden bg-surface-container">
                         <img 
                           src={prop.images?.[0] ? `${prop.images[0]}&w=400&q=80` : "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=400&q=80"} 
-                          alt={prop.title} 
+                          alt={`${prop.title} — ${prop.location}`} 
                           className="h-full w-full object-cover group-hover:scale-105 transition-all duration-300"
                         loading="lazy" />
                         <button

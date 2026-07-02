@@ -10,9 +10,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { subscribeRemoteControls } from "../firebase";
 
-interface FooterProps {}
 
-export default React.memo(function Footer(_props: FooterProps) {
+
+export default React.memo(function Footer() {
   const navigate = useNavigate();
   const BUSINESS_CONFIG = useConfig();
   const [showWhatsappBtn, setShowWhatsappBtn] = useState(true);

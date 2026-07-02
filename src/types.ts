@@ -114,6 +114,19 @@ export interface EnquiryRecord {
   status: "New" | "Contacted" | "Resolved";
 }
 
+export interface ClientUser {
+  uid: string;
+  email: string;
+  displayName?: string;
+  phoneNumber?: string;
+  banned?: boolean;
+  role?: string;
+  createdAt?: string;
+  lastLoginAt?: string;
+  savedPropertyIds?: string[];
+  isAdmin?: boolean;
+}
+
 export interface AdminSettings {
   businessName: string;
   whatsappNumber: string;
@@ -124,3 +137,81 @@ export interface AdminSettings {
   businessPhone: string;
 }
 
+
+export interface AdminTabProps {
+  setActiveTab: any;
+  handlePropertyApprovalToggle: (id: string, currentStatus: string | undefined) => void;
+  handlePropertyHideToggle: (prop: Property) => void;
+  handlePropertyDelete: (id: string) => void;
+  handleSelectAllProps: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleSelectProp: (id: string, checked?: boolean) => void;
+  formatCurrency: (val: number) => string;
+  estimatedRevenue: number;
+  propertySearch: string;
+  setPropertySearch: (val: string) => void;
+  propertyStatusFilter: string;
+  setPropertyStatusFilter: (val: string) => void;
+  propertySort: string;
+  setPropertySort: (val: string) => void;
+  filteredProperties: Property[];
+  selectedProperties: string[];
+  handleSelectProperty: (id: string) => void;
+  handleSelectAllProperties: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleExportCSV: () => void;
+  handleExportPropertiesJSON: () => void;
+  handleFactoryReset: () => void;
+  handleBulkApprove: () => void;
+  handleBulkHide: () => void;
+  handleBulkDelete: () => void;
+  setIsAddModalOpen: (val: boolean) => void;
+  setEditingProperty: any;
+  setIsEditModalOpen: (val: boolean) => void;
+  setConfirmDialog: any;
+  executeOperation: (callback: () => void, successMsg?: string) => void;
+  onDeleteProperty: (id: string) => void;
+  onToggleApproval: (id: string) => void;
+  properties: Property[];
+  setRejectingProperty: any;
+  enquirySearch: string;
+  setEnquirySearch: (val: string) => void;
+  enquiryFilter: string;
+  setEnquiryFilter: (val: string) => void;
+  filteredEnquiries: EnquiryRecord[];
+  handleUpdateEnquiryStatus: (id: string, status: "New" | "Contacted" | "Resolved") => void;
+  handleDeleteEnquiry: (id: string) => void;
+  userSearch: string;
+  setUserSearch: (val: string) => void;
+  filteredUsers: ClientUser[];
+  handleToggleBanUser: (uid: string, currentBanState: boolean) => void;
+  settings: AdminSettings;
+  setSettings: any;
+  handleSaveSettings: (e: React.FormEvent) => void;
+  controls: Record<string, boolean>;
+  handleToggleControl: any;
+  adminsList: string[];
+  newAdminEmail: string;
+  setNewAdminEmail: (val: string) => void;
+  handleAddAdmin: (e: React.FormEvent) => void;
+  handleRemoveAdmin: (email: string) => void;
+  handleClearTestData: () => void;
+  isRunningDiagnostics: boolean;
+  auditPassed: boolean | null;
+  isLoading: boolean;
+  setAuditPassed: (val: boolean) => void;
+  setIsRunningDiagnostics: (val: boolean) => void;
+  onShowNotification: (msg: string, type: "success" | "info" | "error") => void;
+  BUSINESS_CONFIG: Record<string, string>;
+  pendingApprovalsCount: number;
+  newEnquiriesCount: number;
+  activeTab: string;
+  onUpdateProperty: (updated: Property) => void;
+  enquiries: EnquiryRecord[];
+  dbUsers: ClientUser[];
+  approvedListingsCount: number;
+  threeBhkCount: number;
+  villaCount: number;
+  commercialCount: number;
+  standardFlatsCount: number;
+  contactedEnquiriesCount: number;
+  resolvedEnquiriesCount: number;
+}

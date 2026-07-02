@@ -108,7 +108,7 @@ export default function SavedView({
               >
                 {/* Photo Frame */}
                 <div className="relative h-56 w-full overflow-hidden shrink-0">
-                  <img width={800} height={600} src={`${prop.images[0]}&w=600&q=80`} alt={prop.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
+                  <img width={800} height={600} src={`${prop.images[0]}&w=600&q=80`} alt={`${prop.title} — ${prop.location}`} className="h-full w-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
                   
                   <span className="absolute top-4 left-4 bg-surface/80 text-gold-accent text-[10px] font-bold uppercase px-2.5 py-1 rounded-md">
                     {prop.type}

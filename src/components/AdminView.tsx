@@ -1,21 +1,17 @@
-// @ts-nocheck
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useNavigate, useLocation } from "react-router-dom";
 import React, { useState, useEffect, useMemo } from "react";
+
 import { motion, AnimatePresence } from "motion/react";
 import { 
   LayoutDashboard, Building, Mail, Users, BarChart3, Settings,
-  Plus, Search, Trash2, Edit, Shield, 
-  Download, RefreshCw, Check, X, Phone, Mail as MailIcon, 
-  ExternalLink, Eye, EyeOff, CheckSquare,
-  Sliders, AlertTriangle, ShieldCheck, Power, HelpCircle, AlertCircle, MapPin,
-  Database
+  Shield, 
+  RefreshCw, Mail as CheckSquare
 } from "lucide-react";
-import { Property, EnquiryRecord, AdminTab, AdminSettings } from "../types";
+import { AdminTabProps, Property, EnquiryRecord, AdminTab, AdminSettings, ClientUser } from "../types";
 import { useConfig } from "../context/ConfigContext";
 import { 
   ADMIN_EMAILS, 
@@ -34,9 +30,17 @@ import UserManagement from "./admin/UserManagement";
 import AnalyticsPanel from "./admin/AnalyticsPanel";
 import SystemSettings from "./admin/SystemSettings";
 import DiagnosticsPanel from "./admin/DiagnosticsPanel";
+import {
+  AddPropertyModal,
+  RejectPropertyModal,
+  EditPropertyModal,
+  ConfirmDialogModal,
+} from "./admin/modals/AdminModals";
+
+import { AdminProvider } from "../context/AdminContext";
 
 interface AdminViewProps {
-  currentUser?: any;
+  currentUser?: ClientUser | null;
   isAdmin?: boolean;
       properties: Property[];
   onToggleApproval: (id: string) => void;
@@ -54,9 +58,9 @@ export default function AdminView({
   onAddProperty,
   onShowNotification
 }: AdminViewProps) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const currentView = location.pathname === "/" ? "home" : location.pathname.split("/")[1] || "home";
+  
+  
+  
   const BUSINESS_CONFIG = useConfig();
   
   // Tab state
@@ -66,7 +70,7 @@ export default function AdminView({
   const [enquiries, setEnquiries] = useState<EnquiryRecord[]>([]);
 
   // Users state
-  const [dbUsers, setDbUsers] = useState<any[]>([]);
+  const [dbUsers, setDbUsers] = useState<ClientUser[]>([]);
 
   // Config/Settings state
   const [settings, setSettings] = useState<AdminSettings>({
@@ -91,7 +95,7 @@ export default function AdminView({
   const [adminsList, setAdminsList] = useState<string[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
 
-  // Search, filter, sorting, and modal states
+  // filter, sorting, and modal states
   const [propertySearch, setPropertySearch] = useState("");
   const [propertyStatusFilter, setPropertyStatusFilter] = useState<string>("All");
   const [propertySort, setPropertySort] = useState<string>("default");
@@ -281,7 +285,7 @@ export default function AdminView({
   // ----------------------------------------------------
   const handleUpdateEnquiryStatus = (id: string, newStatus: "New" | "Contacted" | "Resolved") => {
     executeOperation(() => {
-      const updated = enquiries.map(e => e.id === id ? { ...e, status: newStatus } : e);
+      const updated = enquiries.map((e: any) => e.id === id ? { ...e, status: newStatus } : e);
       setEnquiries(updated);
       localStorage.setItem("ssp_simulated_enquiries", JSON.stringify(updated));
     }, `Enquiry status changed to ${newStatus}`);
@@ -295,11 +299,11 @@ export default function AdminView({
       isDanger: true,
       onConfirm: () => {
         executeOperation(() => {
-          const updated = enquiries.filter(e => e.id !== id);
+          const updated = enquiries.filter((e: any) => e.id !== id);
           setEnquiries(updated);
           localStorage.setItem("ssp_simulated_enquiries", JSON.stringify(updated));
         }, "Enquiry record successfully deleted");
-        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
       }
     });
   };
@@ -308,7 +312,7 @@ export default function AdminView({
     try {
       // Create CSV structure
       const headers = ["ID", "Name", "Phone", "Email", "Property Title", "Message", "Date", "Status"];
-      const rows = enquiries.map(e => [
+      const rows = enquiries.map((e: any) => [
         e.id,
         `"${e.name.replace(/"/g, '""')}"`,
         e.phone,
@@ -319,7 +323,7 @@ export default function AdminView({
         e.status
       ]);
 
-      const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+      const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -384,7 +388,7 @@ export default function AdminView({
           setDbUsers([]);
           setEnquiries([]);
         }, "Test data cleared successfully.");
-        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
       }
     });
   };
@@ -393,7 +397,7 @@ export default function AdminView({
   // USER / BAN ACTIONS
   // ----------------------------------------------------
   const handleToggleBanUser = async (uid: string, currentBanState: boolean) => {
-    const userObj = dbUsers.find(u => u.uid === uid);
+    const userObj = dbUsers.find((u: any) => u.uid === uid);
     if (!userObj) return;
 
     setConfirmDialog({
@@ -426,13 +430,13 @@ export default function AdminView({
               await batch.commit();
               
               // Toggle user ban status locally
-              const updatedUsers = dbUsers.map(u => u.uid === uid ? { ...u, banned: !currentBanState } : u);
+              const updatedUsers = dbUsers.map((u: any) => u.uid === uid ? { ...u, banned: !currentBanState } : u);
               setDbUsers(updatedUsers);
               localStorage.setItem("ssp_simulated_db_users", JSON.stringify(updatedUsers));
 
               // Local state update for properties
               if (!currentBanState && userObj.email) {
-                properties.forEach(prop => {
+                properties.forEach((prop: Property) => {
                   if (prop.postedBy?.toLowerCase() === userObj.email.toLowerCase() || prop.userId === uid) {
                     if (prop.moderationStatus !== "rejected") {
                       onUpdateProperty({
@@ -445,12 +449,12 @@ export default function AdminView({
                 });
               }
               onShowNotification(`User account suspension state toggled.`, "success");
-            } catch (err: any) {
-              onShowNotification(`Database write failed: ${err.message}`, "error");
+            } catch (err: unknown) {
+              onShowNotification(`Database write failed: ${(err as any).message}`, "error");
             }
           }
         });
-        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
       }
     });
   };
@@ -481,7 +485,7 @@ export default function AdminView({
     const cleanEmail = newAdminEmail.trim().toLowerCase();
     if (!cleanEmail) return;
 
-    if (adminsList.map(a => a.toLowerCase()).includes(cleanEmail)) {
+    if (adminsList.map((a: string) => a.toLowerCase()).includes(cleanEmail)) {
       onShowNotification("Admin email already exists in system listings!", "info");
       return;
     }
@@ -513,11 +517,11 @@ export default function AdminView({
       isDanger: true,
       onConfirm: () => {
         executeOperation(async () => {
-          const newList = adminsList.filter(e => e.toLowerCase() !== emailToRemove.toLowerCase());
+          const newList = adminsList.filter((e: any) => e.toLowerCase() !== emailToRemove.toLowerCase());
           setAdminsList(newList);
           await removeRemoteAdmin(emailToRemove);
         }, "Administrator access revoked successfully");
-        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
       }
     });
   };
@@ -555,7 +559,7 @@ export default function AdminView({
         title: "Approve Property",
         message: "Are you sure you want to approve this property? It will be visible to the public.",
         onConfirm: () => {
-          setConfirmDialog(p => ({ ...p, isOpen: false }));
+          setConfirmDialog((prev: any) => ({ ...prev, isOpen: false }));
           executeOperation(() => {
             onToggleApproval(id);
           }, `Listing approved and published successfully`);
@@ -568,7 +572,7 @@ export default function AdminView({
         message: "Are you sure you want to revoke approval? This will hide the property from the public.",
         isDanger: true,
         onConfirm: () => {
-          setConfirmDialog(p => ({ ...p, isOpen: false }));
+          setConfirmDialog((prev: any) => ({ ...prev, isOpen: false }));
           executeOperation(() => {
             onToggleApproval(id);
           }, `Listing approval revoked`);
@@ -588,7 +592,7 @@ export default function AdminView({
         title: "Restore Property",
         message: "Are you sure you want to restore this rejected property back to pending?",
         onConfirm: () => {
-          setConfirmDialog(p => ({ ...p, isOpen: false }));
+          setConfirmDialog((prev: any) => ({ ...prev, isOpen: false }));
           executeOperation(() => {
             onUpdateProperty({
               ...prop,
@@ -605,7 +609,7 @@ export default function AdminView({
   };
 
   const handlePropertyDelete = (id: string) => {
-    const matchedProp = properties.find(p => p.id === id);
+    const matchedProp = properties.find((p: any) => p.id === id);
     setConfirmDialog({
       isOpen: true,
       title: "Delete Real Estate Listing",
@@ -614,9 +618,9 @@ export default function AdminView({
       onConfirm: () => {
         executeOperation(() => {
           onDeleteProperty(id);
-          setSelectedProperties(prev => prev.filter(pId => pId !== id));
+          setSelectedProperties((prev) => prev.filter((pId) => pId !== id));
         }, "Property listing permanently erased from core");
-        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
       }
     });
   };
@@ -626,18 +630,18 @@ export default function AdminView({
   // ----------------------------------------------------
   const handleSelectAllProps = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      const visibleIds = filteredPropertiesings.map(p => p.id);
+      const visibleIds = filteredPropertiesings.map((p: any) => p.id);
       setSelectedProperties(visibleIds);
     } else {
       setSelectedProperties([]);
     }
   };
 
-  const handleSelectProp = (id: string, checked: boolean) => {
+  const handleSelectProp = (id: string, checked?: boolean) => {
     if (checked) {
-      setSelectedProperties(prev => [...prev, id]);
+      setSelectedProperties((prev) => [...prev, id]);
     } else {
-      setSelectedProperties(prev => prev.filter(pId => pId !== id));
+      setSelectedProperties((prev) => prev.filter((pId) => pId !== id));
     }
   };
 
@@ -650,14 +654,14 @@ export default function AdminView({
       isDanger: false,
       onConfirm: () => {
         executeOperation(() => {
-          selectedProperties.forEach(id => {
-            const found = properties.find(p => p.id === id);
+          selectedProperties.forEach((id: string) => {
+            const found = properties.find((p: any) => p.id === id);
             if (found && found.moderationStatus !== "live") {
               onToggleApproval(id);
             }
           });
           setSelectedProperties([]);
-          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
         }, `Bulk approved ${selectedProperties.length} listings successfully`);
       }
     });
@@ -672,14 +676,14 @@ export default function AdminView({
       isDanger: true,
       onConfirm: () => {
         executeOperation(() => {
-          selectedProperties.forEach(id => {
-            const found = properties.find(p => p.id === id);
+          selectedProperties.forEach((id: string) => {
+            const found = properties.find((p: any) => p.id === id);
             if (found && found.moderationStatus !== "rejected") {
               onUpdateProperty({ ...found, moderationStatus: "rejected" });
             }
           });
           setSelectedProperties([]);
-          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
         }, `Successfully rejected ${selectedProperties.length} selected listings`);
       }
     });
@@ -694,12 +698,12 @@ export default function AdminView({
       isDanger: true,
       onConfirm: () => {
         executeOperation(() => {
-          selectedProperties.forEach(id => {
+          selectedProperties.forEach((id: string) => {
             onDeleteProperty(id);
           });
           setSelectedProperties([]);
         }, `Batch purge complete for ${selectedProperties.length} items`);
-        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
       }
     });
   };
@@ -809,7 +813,7 @@ export default function AdminView({
   // COMPUTED METRICS AND FILTERS
   // ----------------------------------------------------
   // 1. Properties filters
-  const filteredPropertiesings = useMemo(() => properties.filter(p => {
+  const filteredPropertiesings = useMemo(() => properties.filter((p: any) => {
     const matchesSearch = p.title.toLowerCase().includes(propertySearch.toLowerCase()) || 
                           p.location.toLowerCase().includes(propertySearch.toLowerCase());
     
@@ -836,21 +840,21 @@ export default function AdminView({
   }), [filteredPropertiesings, propertySort]);
 
   const handleSelectProperty = (id: string) => {
-    setSelectedProperties(prev => 
-      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    setSelectedProperties((prev) => 
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
   };
 
   const handleSelectAllProperties = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedProperties(sortedListings.map(p => p.id));
+      setSelectedProperties(sortedListings.map((p) => p.id));
     } else {
       setSelectedProperties([]);
     }
   };
 
   // 2. Enquiries filters
-  const filteredEnquiries = useMemo(() => enquiries.filter(e => {
+  const filteredEnquiries = useMemo(() => enquiries.filter((e: any) => {
     const matchesSearch = e.name.toLowerCase().includes(enquirySearch.toLowerCase()) ||
                           e.email.toLowerCase().includes(enquirySearch.toLowerCase()) ||
                           e.propertyName.toLowerCase().includes(enquirySearch.toLowerCase());
@@ -861,31 +865,31 @@ export default function AdminView({
   }), [enquiries, enquirySearch, enquiryFilter]);
 
   // 3. User filters
-  const filteredUsers = useMemo(() => dbUsers.filter(u => {
+  const filteredUsers = useMemo(() => dbUsers.filter((u: any) => {
     return u.displayName.toLowerCase().includes(userSearch.toLowerCase()) || 
            u.email.toLowerCase().includes(userSearch.toLowerCase());
   }), [dbUsers, userSearch]);
 
   // 4. Stat counting variables
-  const pendingProperties = useMemo(() => properties.filter(p => p.moderationStatus === "pending"), [properties]);
-  const approvedListingsCount = useMemo(() => properties.filter(p => p.moderationStatus === "live").length, [properties]);
+  const pendingProperties = useMemo(() => properties.filter((p: any) => p.moderationStatus === "pending"), [properties]);
+  const approvedListingsCount = useMemo(() => properties.filter((p: any) => p.moderationStatus === "live").length, [properties]);
   const pendingApprovalsCount = pendingProperties.length;
   
   // FLAT RATE of 1% commission on all approved "Buy" (sale) properties for "Estimated Revenue"
   const totalApprovedSalesValue = useMemo(() => properties
-    .filter(p => p.moderationStatus === "live" && (!p.transactionType || p.transactionType === "Buy"))
+    .filter((p: any) => p.moderationStatus === "live" && (!p.transactionType || p.transactionType === "Buy"))
     .reduce((sum, p) => sum + p.price, 0), [properties]);
   const estimatedRevenue = Math.round(totalApprovedSalesValue * 0.01);
 
   // Derived metrics for analytics tab
-  const threeBhkCount = useMemo(() => properties.filter(p => String(p.bhk || "").includes("3 BHK") || String(p.bhk || "").includes("3")).length, [properties]);
-  const villaCount = useMemo(() => properties.filter(p => String(p.type || "").toLowerCase().includes("villa")).length, [properties]);
-  const commercialCount = useMemo(() => properties.filter(p => String(p.type || "").toLowerCase().includes("plot") || String(p.type || "").toLowerCase().includes("office") || String(p.type || "").toLowerCase().includes("commercial")).length, [properties]);
-  const standardFlatsCount = useMemo(() => properties.filter(p => String(p.bhk || "").includes("1 BHK") || String(p.bhk || "").includes("2 BHK") || String(p.bhk || "").includes("1") || String(p.bhk || "").includes("2")).length, [properties]);
-  const newEnquiriesCount = useMemo(() => enquiries.filter(e => e.status === "New").length, [enquiries]);
-  const contactedEnquiriesCount = useMemo(() => enquiries.filter(e => e.status === "Contacted").length, [enquiries]);
-  const resolvedEnquiriesCount = useMemo(() => enquiries.filter(e => e.status === "Resolved").length, [enquiries]);
-  const unverifiedActivePropertiesCount = useMemo(() => properties.filter(p => !p.verified && p.moderationStatus !== "rejected").length, [properties]);
+  const threeBhkCount = useMemo(() => properties.filter((p: any) => String(p.bhk || "").includes("3 BHK") || String(p.bhk || "").includes("3")).length, [properties]);
+  const villaCount = useMemo(() => properties.filter((p: any) => String(p.type || "").toLowerCase().includes("villa")).length, [properties]);
+  const commercialCount = useMemo(() => properties.filter((p: any) => String(p.type || "").toLowerCase().includes("plot") || String(p.type || "").toLowerCase().includes("office") || String(p.type || "").toLowerCase().includes("commercial")).length, [properties]);
+  const standardFlatsCount = useMemo(() => properties.filter((p: any) => String(p.bhk || "").includes("1 BHK") || String(p.bhk || "").includes("2 BHK") || String(p.bhk || "").includes("1") || String(p.bhk || "").includes("2")).length, [properties]);
+  const newEnquiriesCount = useMemo(() => enquiries.filter((e: any) => e.status === "New").length, [enquiries]);
+  const contactedEnquiriesCount = useMemo(() => enquiries.filter((e: any) => e.status === "Contacted").length, [enquiries]);
+  const resolvedEnquiriesCount = useMemo(() => enquiries.filter((e: any) => e.status === "Resolved").length, [enquiries]);
+  
 
   // Formatting currency in Rupee (Cr / Lakh) formats beautifully
   const formatCurrency = (val: number) => {
@@ -894,6 +898,20 @@ export default function AdminView({
     return `₹${val.toLocaleString()}`;
   };
 
+
+    const adminTabProps: AdminTabProps = {
+  settings, setSettings, setEnquirySearch, setEnquiryFilter, setUserSearch,
+  handleUpdateEnquiryStatus, handleDeleteEnquiry, handleToggleBanUser,
+  filteredEnquiries, filteredUsers, setRejectingProperty, enquirySearch, enquiryFilter, userSearch,
+  formatCurrency, estimatedRevenue, 
+  propertySearch, setPropertySearch, propertyStatusFilter, setPropertyStatusFilter, 
+  propertySort, setPropertySort, filteredProperties: sortedListings, selectedProperties, handleSelectProperty, 
+  handleSelectAllProperties, handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, handleBulkApprove, handleBulkHide, handleBulkDelete, setIsAddModalOpen, setEditingProperty, setIsEditModalOpen, 
+  setConfirmDialog, executeOperation, onDeleteProperty, onToggleApproval, properties, handlePropertyApprovalToggle, handlePropertyHideToggle, handlePropertyDelete, handleSelectAllProps, handleSelectProp,  handleSaveSettings, controls, handleToggleControl, adminsList, newAdminEmail, setNewAdminEmail, 
+  handleAddAdmin, handleRemoveAdmin, handleClearTestData, isRunningDiagnostics, 
+  auditPassed, isLoading, setAuditPassed, setIsRunningDiagnostics, onShowNotification, BUSINESS_CONFIG,
+  pendingApprovalsCount, newEnquiriesCount, activeTab, setActiveTab, onUpdateProperty, enquiries, dbUsers, approvedListingsCount, threeBhkCount, villaCount, commercialCount, standardFlatsCount, contactedEnquiriesCount, resolvedEnquiriesCount
+};
 
   return (
     <div className="font-sans text-on-surface bg-surface min-h-screen pt-24 pb-16 flex flex-col md:flex-row">
@@ -959,620 +977,77 @@ export default function AdminView({
       </aside>
 
       {/* ----------------- CORE PANELS HUB ----------------- */}
-      <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 md:py-2 overflow-x-hidden">
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <motion.div 
-              key="spinner_loader"
-              className="flex flex-col items-center justify-center py-24 gap-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <RefreshCw className="h-10 w-10 text-gold-accent animate-spin" />
-              <p className="text-xs text-on-surface-variant font-semibold tracking-wide">Syncing server variables...</p>
-            </motion.div>
-          ) : (
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.25 }}
-              className="space-y-6"
-            >
-              {activeTab === "overview" && <AdminOverview {...{ 
-  formatCurrency, estimatedRevenue, 
-  propertySearch, setPropertySearch, propertyStatusFilter, setPropertyStatusFilter, 
-  propertySort, setPropertySort, filteredProperties: sortedListings, selectedProperties, handleSelectProperty, 
-  handleSelectAllProperties, handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, handleBulkApprove, handleBulkHide, handleBulkDelete, setIsAddModalOpen, setEditingProperty, setIsEditModalOpen, 
-  setConfirmDialog, executeOperation, onDeleteProperty, onToggleApproval, properties, 
-  setRejectingProperty, enquirySearch, setEnquirySearch, enquiryFilter, setEnquiryFilter, 
-  filteredEnquiries, handleUpdateEnquiryStatus, handleDeleteEnquiry, userSearch, setUserSearch, 
-  filteredUsers, handleToggleBanUser,  settings, setSettings, 
-  handleSaveSettings, controls, handleToggleControl, adminsList, newAdminEmail, setNewAdminEmail, 
-  handleAddAdmin, handleRemoveAdmin, handleClearTestData, isRunningDiagnostics, 
-  auditPassed, isLoading, setAuditPassed, setIsRunningDiagnostics, onShowNotification, BUSINESS_CONFIG,
-  pendingApprovalsCount, newEnquiriesCount, activeTab, onUpdateProperty, enquiries, dbUsers, approvedListingsCount, threeBhkCount, villaCount, commercialCount, standardFlatsCount, contactedEnquiriesCount, resolvedEnquiriesCount
-}} />}
-              {activeTab === "properties" && <PropertyManagement {...{ 
-  formatCurrency, estimatedRevenue, 
-  propertySearch, setPropertySearch, propertyStatusFilter, setPropertyStatusFilter, 
-  propertySort, setPropertySort, filteredProperties: sortedListings, selectedProperties, handleSelectProperty, 
-  handleSelectAllProperties, handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, handleBulkApprove, handleBulkHide, handleBulkDelete, setIsAddModalOpen, setEditingProperty, setIsEditModalOpen, 
-  setConfirmDialog, executeOperation, onDeleteProperty, onToggleApproval, properties, 
-  setRejectingProperty, enquirySearch, setEnquirySearch, enquiryFilter, setEnquiryFilter, 
-  filteredEnquiries, handleUpdateEnquiryStatus, handleDeleteEnquiry, userSearch, setUserSearch, 
-  filteredUsers, handleToggleBanUser,  settings, setSettings, 
-  handleSaveSettings, controls, handleToggleControl, adminsList, newAdminEmail, setNewAdminEmail, 
-  handleAddAdmin, handleRemoveAdmin, handleClearTestData, isRunningDiagnostics, 
-  auditPassed, isLoading, setAuditPassed, setIsRunningDiagnostics, onShowNotification, BUSINESS_CONFIG,
-  pendingApprovalsCount, newEnquiriesCount, activeTab, onUpdateProperty, enquiries, dbUsers, approvedListingsCount, threeBhkCount, villaCount, commercialCount, standardFlatsCount, contactedEnquiriesCount, resolvedEnquiriesCount
-}} />}
-              {activeTab === "pending_approvals" && <PropertyModeration {...{ 
-  formatCurrency, estimatedRevenue, 
-  propertySearch, setPropertySearch, propertyStatusFilter, setPropertyStatusFilter, 
-  propertySort, setPropertySort, filteredProperties: sortedListings, selectedProperties, handleSelectProperty, 
-  handleSelectAllProperties, handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, handleBulkApprove, handleBulkHide, handleBulkDelete, setIsAddModalOpen, setEditingProperty, setIsEditModalOpen, 
-  setConfirmDialog, executeOperation, onDeleteProperty, onToggleApproval, properties, 
-  setRejectingProperty, enquirySearch, setEnquirySearch, enquiryFilter, setEnquiryFilter, 
-  filteredEnquiries, handleUpdateEnquiryStatus, handleDeleteEnquiry, userSearch, setUserSearch, 
-  filteredUsers, handleToggleBanUser,  settings, setSettings, 
-  handleSaveSettings, controls, handleToggleControl, adminsList, newAdminEmail, setNewAdminEmail, 
-  handleAddAdmin, handleRemoveAdmin, handleClearTestData, isRunningDiagnostics, 
-  auditPassed, isLoading, setAuditPassed, setIsRunningDiagnostics, onShowNotification, BUSINESS_CONFIG,
-  pendingApprovalsCount, newEnquiriesCount, activeTab, onUpdateProperty, enquiries, dbUsers, approvedListingsCount, threeBhkCount, villaCount, commercialCount, standardFlatsCount, contactedEnquiriesCount, resolvedEnquiriesCount
-}} />}
-              {activeTab === "enquiries" && <EnquiriesManagement {...{ 
-  formatCurrency, estimatedRevenue, 
-  propertySearch, setPropertySearch, propertyStatusFilter, setPropertyStatusFilter, 
-  propertySort, setPropertySort, filteredProperties: sortedListings, selectedProperties, handleSelectProperty, 
-  handleSelectAllProperties, handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, handleBulkApprove, handleBulkHide, handleBulkDelete, setIsAddModalOpen, setEditingProperty, setIsEditModalOpen, 
-  setConfirmDialog, executeOperation, onDeleteProperty, onToggleApproval, properties, 
-  setRejectingProperty, enquirySearch, setEnquirySearch, enquiryFilter, setEnquiryFilter, 
-  filteredEnquiries, handleUpdateEnquiryStatus, handleDeleteEnquiry, userSearch, setUserSearch, 
-  filteredUsers, handleToggleBanUser,  settings, setSettings, 
-  handleSaveSettings, controls, handleToggleControl, adminsList, newAdminEmail, setNewAdminEmail, 
-  handleAddAdmin, handleRemoveAdmin, handleClearTestData, isRunningDiagnostics, 
-  auditPassed, isLoading, setAuditPassed, setIsRunningDiagnostics, onShowNotification, BUSINESS_CONFIG,
-  pendingApprovalsCount, newEnquiriesCount, activeTab, onUpdateProperty, enquiries, dbUsers, approvedListingsCount, threeBhkCount, villaCount, commercialCount, standardFlatsCount, contactedEnquiriesCount, resolvedEnquiriesCount
-}} />}
-              {activeTab === "users" && <UserManagement {...{ 
-  formatCurrency, estimatedRevenue, 
-  propertySearch, setPropertySearch, propertyStatusFilter, setPropertyStatusFilter, 
-  propertySort, setPropertySort, filteredProperties: sortedListings, selectedProperties, handleSelectProperty, 
-  handleSelectAllProperties, handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, handleBulkApprove, handleBulkHide, handleBulkDelete, setIsAddModalOpen, setEditingProperty, setIsEditModalOpen, 
-  setConfirmDialog, executeOperation, onDeleteProperty, onToggleApproval, properties, 
-  setRejectingProperty, enquirySearch, setEnquirySearch, enquiryFilter, setEnquiryFilter, 
-  filteredEnquiries, handleUpdateEnquiryStatus, handleDeleteEnquiry, userSearch, setUserSearch, 
-  filteredUsers, handleToggleBanUser,  settings, setSettings, 
-  handleSaveSettings, controls, handleToggleControl, adminsList, newAdminEmail, setNewAdminEmail, 
-  handleAddAdmin, handleRemoveAdmin, handleClearTestData, isRunningDiagnostics, 
-  auditPassed, isLoading, setAuditPassed, setIsRunningDiagnostics, onShowNotification, BUSINESS_CONFIG,
-  pendingApprovalsCount, newEnquiriesCount, activeTab, onUpdateProperty, enquiries, dbUsers, approvedListingsCount, threeBhkCount, villaCount, commercialCount, standardFlatsCount, contactedEnquiriesCount, resolvedEnquiriesCount
-}} />}
-              {activeTab === "analytics" && <AnalyticsPanel {...{ 
-  formatCurrency, estimatedRevenue, 
-  propertySearch, setPropertySearch, propertyStatusFilter, setPropertyStatusFilter, 
-  propertySort, setPropertySort, filteredProperties: sortedListings, selectedProperties, handleSelectProperty, 
-  handleSelectAllProperties, handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, handleBulkApprove, handleBulkHide, handleBulkDelete, setIsAddModalOpen, setEditingProperty, setIsEditModalOpen, 
-  setConfirmDialog, executeOperation, onDeleteProperty, onToggleApproval, properties, 
-  setRejectingProperty, enquirySearch, setEnquirySearch, enquiryFilter, setEnquiryFilter, 
-  filteredEnquiries, handleUpdateEnquiryStatus, handleDeleteEnquiry, userSearch, setUserSearch, 
-  filteredUsers, handleToggleBanUser,  settings, setSettings, 
-  handleSaveSettings, controls, handleToggleControl, adminsList, newAdminEmail, setNewAdminEmail, 
-  handleAddAdmin, handleRemoveAdmin, handleClearTestData, isRunningDiagnostics, 
-  auditPassed, isLoading, setAuditPassed, setIsRunningDiagnostics, onShowNotification, BUSINESS_CONFIG,
-  pendingApprovalsCount, newEnquiriesCount, activeTab, onUpdateProperty, enquiries, dbUsers, approvedListingsCount, threeBhkCount, villaCount, commercialCount, standardFlatsCount, contactedEnquiriesCount, resolvedEnquiriesCount
-}} />}
-              {activeTab === "settings" && <SystemSettings {...{ 
-  formatCurrency, estimatedRevenue, 
-  propertySearch, setPropertySearch, propertyStatusFilter, setPropertyStatusFilter, 
-  propertySort, setPropertySort, filteredProperties: sortedListings, selectedProperties, handleSelectProperty, 
-  handleSelectAllProperties, handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, handleBulkApprove, handleBulkHide, handleBulkDelete, setIsAddModalOpen, setEditingProperty, setIsEditModalOpen, 
-  setConfirmDialog, executeOperation, onDeleteProperty, onToggleApproval, properties, 
-  setRejectingProperty, enquirySearch, setEnquirySearch, enquiryFilter, setEnquiryFilter, 
-  filteredEnquiries, handleUpdateEnquiryStatus, handleDeleteEnquiry, userSearch, setUserSearch, 
-  filteredUsers, handleToggleBanUser,  settings, setSettings, 
-  handleSaveSettings, controls, handleToggleControl, adminsList, newAdminEmail, setNewAdminEmail, 
-  handleAddAdmin, handleRemoveAdmin, handleClearTestData, isRunningDiagnostics, 
-  auditPassed, isLoading, setAuditPassed, setIsRunningDiagnostics, onShowNotification, BUSINESS_CONFIG,
-  pendingApprovalsCount, newEnquiriesCount, activeTab, onUpdateProperty, enquiries, dbUsers, approvedListingsCount, threeBhkCount, villaCount, commercialCount, standardFlatsCount, contactedEnquiriesCount, resolvedEnquiriesCount
-}} />}
-              {activeTab === "checklist" && <DiagnosticsPanel {...{ 
-  formatCurrency, estimatedRevenue, 
-  propertySearch, setPropertySearch, propertyStatusFilter, setPropertyStatusFilter, 
-  propertySort, setPropertySort, filteredProperties: sortedListings, selectedProperties, handleSelectProperty, 
-  handleSelectAllProperties, handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, handleBulkApprove, handleBulkHide, handleBulkDelete, setIsAddModalOpen, setEditingProperty, setIsEditModalOpen, 
-  setConfirmDialog, executeOperation, onDeleteProperty, onToggleApproval, properties, 
-  setRejectingProperty, enquirySearch, setEnquirySearch, enquiryFilter, setEnquiryFilter, 
-  filteredEnquiries, handleUpdateEnquiryStatus, handleDeleteEnquiry, userSearch, setUserSearch, 
-  filteredUsers, handleToggleBanUser,  settings, setSettings, 
-  handleSaveSettings, controls, handleToggleControl, adminsList, newAdminEmail, setNewAdminEmail, 
-  handleAddAdmin, handleRemoveAdmin, handleClearTestData, isRunningDiagnostics, 
-  auditPassed, isLoading, setAuditPassed, setIsRunningDiagnostics, onShowNotification, BUSINESS_CONFIG,
-  pendingApprovalsCount, newEnquiriesCount, activeTab, onUpdateProperty, enquiries, dbUsers, approvedListingsCount, threeBhkCount, villaCount, commercialCount, standardFlatsCount, contactedEnquiriesCount, resolvedEnquiriesCount
-}} />}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
-
-      {/* ========================================================
-          ADD MANUAL PROPERTY MODAL
-          ======================================================== */}
-      <AnimatePresence>
-        {isAddModalOpen && (
-          <div className="fixed inset-0 z-50 bg-surface/85 backdrop-blur-sm overflow-y-auto px-4 py-8 flex items-center justify-center">
-            
-            <motion.div
-              className="bg-surface-container border border-outline-variant/50 w-full max-w-2xl rounded-2xl p-6 relative shadow-md font-sans"
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            >
-              <button
-                onClick={() => setIsAddModalOpen(false)}
-                className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface border border-outline-variant/50 transition-colors cursor-pointer"
+      <AdminProvider value={adminTabProps}>
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 md:py-2 overflow-x-hidden">
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <motion.div 
+                key="spinner_loader"
+                className="flex flex-col items-center justify-center py-24 gap-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
               >
-                <X className="h-4 w-4" />
-              </button>
-
-              <h3 className="text-base font-extrabold text-gold-accent uppercase tracking-wide border-b border-outline-variant/50 pb-3.5 mb-5 flex items-center gap-1.5">
-                <Plus className="h-4 w-4" /> Direct manual property addition
-              </h3>
-
-              <form onSubmit={handleAddNewManualProperty} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-on-surface-variant">
-                <div className="space-y-1.5">
-                  <label htmlFor="add-prop-title" className="text-[10px] uppercase font-bold text-on-surface-variant">Property Title</label>
-                  <input id="add-prop-title"
-                    type="text"
-                    name="title"
-                    placeholder="e.g. Luxury Penthouse duplex Rajnagar"
-                    required
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="add-prop-price" className="text-[10px] uppercase font-bold text-on-surface-variant">Price in Rupees (Raw Integer)</label>
-                  <input id="add-prop-price"
-                    type="number"
-                    name="price"
-                    placeholder="e.g. 7500000 (75 Lakhs)"
-                    required
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="add-prop-locality" className="text-[10px] uppercase font-bold text-on-surface-variant">Locality / Area Name</label>
-                  <input id="add-prop-locality"
-                    type="text"
-                    name="location"
-                    placeholder="e.g. Rajnagar Extension, Ghaziabad"
-                    required
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="add-prop-type" className="text-[10px] uppercase font-bold text-on-surface-variant">Asset Type</label>
-                  <select id="add-prop-type"
-                    name="type"
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface cursor-pointer"
-                  >
-                    <option value="Builder Floor">Builder Floor</option>
-                    <option value="Apartment">Apartment</option>
-                    <option value="Villas">Villas</option>
-                    <option value="Commercial Plots">Commercial Plots</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="add-prop-bhk" className="text-[10px] uppercase font-bold text-on-surface-variant">BHK configuration</label>
-                  <select id="add-prop-bhk"
-                    name="bhk"
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface cursor-pointer"
-                  >
-                    <option value="3 BHK">3 BHK</option>
-                    <option value="4 BHK">4 BHK</option>
-                    <option value="2 BHK">2 BHK</option>
-                    <option value="1 BHK">1 BHK</option>
-                    <option value="N/A Plots">N/A Plots</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="add-prop-area" className="text-[10px] uppercase font-bold text-on-surface-variant">Area size (Number)</label>
-                  <input id="add-prop-area"
-                    type="number"
-                    name="area"
-                    placeholder="e.g. 1560 SQ FT"
-                    defaultValue={1500}
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="add-prop-unit" className="text-[10px] uppercase font-bold text-on-surface-variant">Area Unit</label>
-                  <input id="add-prop-unit"
-                    type="text"
-                    name="areaUnit"
-                    defaultValue="Sq.Ft."
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="add-prop-img" className="text-[10px] uppercase font-bold text-on-surface-variant">Image URL</label>
-                  <input id="add-prop-img"
-                    type="url"
-                    name="imageUrl"
-                    placeholder="e.g. https://images.unsplash.com/photo-..."
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface font-mono text-[10.5px]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 md:col-span-2">
-                  <div className="space-y-1.5">
-                    <label htmlFor="add-prop-rera" className="text-[10px] uppercase font-bold text-on-surface-variant">RERA Approved Status</label>
-                    <select id="add-prop-rera"
-                      name="reraApproved"
-                      className="w-full bg-surface border border-outline-variant rounded-xl px-3 py-2 text-on-surface cursor-pointer"
-                    >
-                      <option value="true">YES - Approved</option>
-                      <option value="false">NO - Pending</option>
-                    </select>
-                  </div>
-                  
-                  <div className="space-y-1.5">
-                    <label htmlFor="add-prop-premium" className="text-[10px] uppercase font-bold text-on-surface-variant">Is Premium Badge</label>
-                    <select id="add-prop-premium"
-                      name="isPremium"
-                      className="w-full bg-surface border border-outline-variant rounded-xl px-3 py-2 text-on-surface cursor-pointer"
-                    >
-                      <option value="false">Standard Listing</option>
-                      <option value="true">Premium Listing Placement</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 md:col-span-2">
-                  <label htmlFor="add-prop-desc" className="text-[10px] uppercase font-bold text-on-surface-variant">Property Description</label>
-                  <textarea id="add-prop-desc"
-                    name="description"
-                    rows={3.5}
-                    placeholder="Enter exhaustive structural information, near RRTS landmarks, and direct price guarantees..."
-                    required
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface resize-none"
-                  ></textarea>
-                </div>
-
-                <div className="md:col-span-2 pt-4 border-t border-outline-variant/50 flex gap-4">
-                  <button
-                    type="submit"
-                    className="flex-grow py-3 rounded-xl bg-gold-accent text-[#0F172A] font-black text-xs cursor-pointer shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 transition-all flex items-center justify-center gap-1.5"
-                  >
-                    <Check className="h-4 w-4 text-[#0F172A] stroke-[3]" /> Publish Audited Asset Listing
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsAddModalOpen(false)}
-                    className="px-6 py-3 rounded-xl bg-surface-container-high hover:bg-slate-750 text-slate-350 border border-outline-variant/50"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* ========================================================
-          REJECT PROPERTY LISTING MODAL
-          ======================================================== */}
-      <AnimatePresence>
-        {rejectingProperty && (
-          <div className="fixed inset-0 z-50 bg-surface/85 backdrop-blur-sm overflow-y-auto px-4 py-8 flex items-center justify-center">
-            <motion.div
-              className="bg-surface-container border border-outline-variant/50 w-full max-w-md rounded-2xl p-6 relative shadow-md font-sans"
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            >
-              <button
-                onClick={() => setRejectingProperty(null)}
-                className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface border border-outline-variant/50 transition-colors cursor-pointer"
+                <RefreshCw className="h-10 w-10 text-gold-accent animate-spin" />
+                <p className="text-xs text-on-surface-variant font-semibold tracking-wide">Syncing server variables...</p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-6"
               >
-                <X className="h-4 w-4" />
-              </button>
-
-              <h3 className="text-sm font-extrabold text-red-400 uppercase tracking-wide border-b border-outline-variant/50 pb-3 mb-5 flex items-center gap-1.5 font-sans">
-                <AlertTriangle className="h-4 w-4 text-red-550" /> Reject Property Listing
-              </h3>
-
-              <div className="space-y-4 text-xs text-on-surface-variant font-sans">
-                <div className="space-y-1.5">
-                  <label htmlFor="reject-reason" className="text-[10px] uppercase font-bold text-on-surface-variant">Reason for rejection (Required)</label>
-                  <select id="reject-reason"
-                    value={rejectReason}
-                    onChange={(e) => setRejectReason(e.target.value)}
-                    className="w-full bg-surface border border-outline-variant/50 focus:border-red-500/40 rounded-xl px-3 py-2.5 text-xs text-on-surface outline-none cursor-pointer"
-                  >
-                    <option value="Incomplete information">Incomplete information</option>
-                    <option value="Incorrect pricing">Incorrect pricing</option>
-                    <option value="Duplicate listing">Duplicate listing</option>
-                    <option value="Inappropriate content">Inappropriate content</option>
-                    <option value="Images missing">Images missing</option>
-                    <option value="Other - specify below">Other - specify below</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="reject-notes" className="text-[10px] uppercase font-bold text-on-surface-variant">Additional notes for submitter (Optional)</label>
-                  <textarea id="reject-notes"
-                    rows={4}
-                    value={rejectNotes}
-                    onChange={(e) => setRejectNotes(e.target.value)}
-                    placeholder="Enter message for the property owner..."
-                    className="w-full bg-surface border border-outline-variant/50 focus:border-red-500/40 rounded-xl px-3 py-2.5 text-xs text-on-surface placeholder-slate-600 outline-none resize-none"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <button
-                    onClick={() => setRejectingProperty(null)}
-                    className="flex-grow py-2.5 rounded-xl border border-outline-variant hover:bg-surface-container-high text-on-surface-variant font-bold text-xs select-none cursor-pointer transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleConfirmReject}
-                    className="flex-grow py-2.5 rounded-xl bg-red-500 hover:bg-red-650 text-on-surface font-black text-xs cursor-pointer transition-colors font-sans"
-                  >
-                    Confirm Reject
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+                {activeTab === "overview" && <AdminOverview />}
+                {activeTab === "properties" && <PropertyManagement />}
+                {activeTab === "pending_approvals" && <PropertyModeration />}
+                {activeTab === "enquiries" && <EnquiriesManagement />}
+                {activeTab === "users" && <UserManagement />}
+                {activeTab === "analytics" && <AnalyticsPanel />}
+                {activeTab === "settings" && <SystemSettings />}
+                {activeTab === "checklist" && <DiagnosticsPanel />}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+      </AdminProvider>
 
       {/* ========================================================
-          EDIT PROPERTY SPECIFICATIONS SLIDE DRAWER MODAL
+          MODALS
           ======================================================== */}
-      <AnimatePresence>
-        {isEditModalOpen && editingProperty && (
-          <div className="fixed inset-0 z-50 bg-surface/85 backdrop-blur-sm overflow-y-auto px-4 py-8 flex items-center justify-center">
-            
-            <motion.div
-              className="bg-surface-container border border-outline-variant/50 w-full max-w-2xl rounded-2xl p-6 relative shadow-md font-sans"
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            >
-              <button
-                onClick={() => {
-                  setIsEditModalOpen(false);
-                  setEditingProperty(null);
-                }}
-                className="absolute top-5 right-5 p-1.5 rounded-lg bg-slate-850 hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface border border-outline-variant/50 transition-colors cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </button>
+      <AddPropertyModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onSubmit={handleAddNewManualProperty} 
+      />
 
-              <h3 className="text-base font-extrabold text-gold-accent uppercase tracking-wide border-b border-outline-variant/50 pb-3 mb-5 flex items-center gap-1.5">
-                <Edit className="h-4 w-4" /> Edit Real Estate Credentials
-              </h3>
+      <RejectPropertyModal 
+        property={rejectingProperty} 
+        reason={rejectReason} 
+        notes={rejectNotes} 
+        onReasonChange={setRejectReason} 
+        onNotesChange={setRejectNotes} 
+        onClose={() => setRejectingProperty(null)} 
+        onConfirm={handleConfirmReject} 
+      />
 
-              <form onSubmit={handleUpdateEditProperty} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-on-surface-variant">
-                <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-title" className="text-[10px] uppercase font-bold text-on-surface-variant">Property Title</label>
-                  <input id="edit-prop-title"
-                    type="text"
-                    name="title"
-                    defaultValue={editingProperty.title}
-                    required
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
-                  />
-                </div>
+      <EditPropertyModal 
+        isOpen={isEditModalOpen} 
+        property={editingProperty} 
+        onClose={() => { setIsEditModalOpen(false); setEditingProperty(null); }} 
+        onSubmit={handleUpdateEditProperty} 
+      />
 
-                <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-price" className="text-[10px] uppercase font-bold text-on-surface-variant">Price in Rupees</label>
-                  <input id="edit-prop-price"
-                    type="number"
-                    name="price"
-                    defaultValue={editingProperty.price}
-                    required
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-locality" className="text-[10px] uppercase font-bold text-on-surface-variant">Locality Address</label>
-                  <input id="edit-prop-locality"
-                    type="text"
-                    name="location"
-                    defaultValue={editingProperty.location}
-                    required
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-type" className="text-[10px] uppercase font-bold text-on-surface-variant">Category Type</label>
-                  <select id="edit-prop-type"
-                    name="type"
-                    defaultValue={editingProperty.type}
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface cursor-pointer"
-                  >
-                    <option value="Builder Floor">Builder Floor</option>
-                    <option value="Apartment">Apartment</option>
-                    <option value="Villas">Villas</option>
-                    <option value="Commercial Plots">Commercial Plots</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-bhk" className="text-[10px] uppercase font-bold text-on-surface-variant">BHK configuration</label>
-                  <select id="edit-prop-bhk"
-                    name="bhk"
-                    defaultValue={editingProperty.bhk || ""}
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface cursor-pointer"
-                  >
-                    <option value="3 BHK">3 BHK</option>
-                    <option value="4 BHK">4 BHK</option>
-                    <option value="2 BHK">2 BHK</option>
-                    <option value="1 BHK">1 BHK</option>
-                    <option value="N/A Plots">N/A Plots</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-area" className="text-[10px] uppercase font-bold text-on-surface-variant">Area size (Number)</label>
-                  <input id="edit-prop-area"
-                    type="number"
-                    name="area"
-                    defaultValue={editingProperty.area}
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-unit" className="text-[10px] uppercase font-bold text-on-surface-variant">Area Unit</label>
-                  <input id="edit-prop-unit"
-                    type="text"
-                    name="areaUnit"
-                    defaultValue={editingProperty.areaUnit}
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="edit-prop-img" className="text-[10px] uppercase font-bold text-on-surface-variant">Override Main Hero Image URL</label>
-                  <input id="edit-prop-img"
-                    type="url"
-                    name="imageUrl"
-                    placeholder="Keep empty to preserve existing unsplash imagery"
-                    className="w-full bg-surface border border-gold-accent/20 rounded-xl px-3.5 py-2.5 text-on-surface font-mono text-[10px]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 md:col-span-2">
-                  <div className="space-y-1.5">
-                    <label htmlFor="edit-prop-rera" className="text-[10px] uppercase font-bold text-on-surface-variant">RERA Audit status</label>
-                    <select id="edit-prop-rera"
-                      name="reraApproved"
-                      defaultValue={editingProperty.reraApproved ? "true" : "false"}
-                      className="w-full bg-surface border border-outline-variant rounded-xl px-3 py-2 text-on-surface cursor-pointer"
-                    >
-                      <option value="true">Approved</option>
-                      <option value="false">Pending Verification</option>
-                    </select>
-                  </div>
-                  
-                  <div className="space-y-1.5">
-                    <label htmlFor="edit-prop-premium" className="text-[10px] uppercase font-bold text-on-surface-variant">Is Premium Badge</label>
-                    <select id="edit-prop-premium"
-                      name="isPremium"
-                      defaultValue={editingProperty.isPremium ? "true" : "false"}
-                      className="w-full bg-surface border border-outline-variant rounded-xl px-3 py-2 text-on-surface cursor-pointer"
-                    >
-                      <option value="false">Standard Listing</option>
-                      <option value="true">Premium Feature placement</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 md:col-span-2">
-                  <label htmlFor="edit-prop-desc" className="text-[10px] uppercase font-bold text-on-surface-variant">Listing Description</label>
-                  <textarea id="edit-prop-desc"
-                    name="description"
-                    rows={4}
-                    defaultValue={editingProperty.description}
-                    required
-                    className="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2.5 text-on-surface resize-none"
-                  ></textarea>
-                </div>
-
-                <div className="md:col-span-2 pt-4 border-t border-outline-variant/50 flex gap-4">
-                  <button
-                    type="submit"
-                    className="flex-grow py-3 rounded-xl bg-gold-accent text-[#0F172A] font-black text-xs cursor-pointer shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 transition-all flex items-center justify-center gap-1.5"
-                  >
-                    <Check className="h-4 w-4 text-[#0F172A] stroke-[3]" /> Commit audited modifications
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditModalOpen(false);
-                      setEditingProperty(null);
-                    }}
-                    className="px-6 py-3 rounded-xl bg-surface-container-high hover:bg-slate-750 text-slate-350 border border-outline-variant/50"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* ========================================================
-          GLOBAL DOUBLE CONFIRM DIALOG SYSTEM PORTAL (GEL PANEL)
-          ======================================================== */}
-      <AnimatePresence>
-        {confirmDialog.isOpen && (
-          <div className="fixed inset-0 z-50 bg-surface/90 backdrop-blur-md flex items-center justify-center px-4">
-            <motion.div
-              className={`border w-full max-w-sm rounded-2xl p-5 shadow-md relative font-sans ${
-                confirmDialog.isDanger 
-                  ? "bg-red-950/20 border-red-500/30" 
-                  : "bg-surface-container border-outline-variant/50"
-              }`}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-            >
-              <div className="flex items-center gap-2 mb-3">
-                {confirmDialog.isDanger ? (
-                  <AlertCircle className="h-5 w-5 text-red-400" />
-                ) : (
-                  <CheckSquare className="h-5 w-5 text-gold-accent" />
-                )}
-                <h4 className="font-extrabold text-gold-accent text-xs uppercase tracking-wider">{confirmDialog.title}</h4>
-              </div>
-
-              <p className="text-on-surface-variant text-xs leading-relaxed mb-6 font-medium">
-                {confirmDialog.message}
-              </p>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={confirmDialog.onConfirm}
-                  className={`flex-grow py-2.5 rounded-xl text-[#0F172A] font-black text-xs cursor-pointer transition-all ${
-                    confirmDialog.isDanger
-                      ? "bg-red-500 hover:bg-red-650 hover:text-on-surface text-[#0F172A]"
-                      : "bg-gold-accent hover:bg-gold-hover hover:scale-105 shadow-md"
-                  }`}
-                >
-                  Confirm Execution
-                </button>
-                <button
-                  onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-                  className="px-5 py-2.5 rounded-xl bg-surface-container-high hover:bg-slate-750 text-on-surface-variant font-bold text-xs select-none cursor-pointer"
-                >
-                  Decline
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <ConfirmDialogModal 
+        isOpen={confirmDialog.isOpen} 
+        title={confirmDialog.title} 
+        message={confirmDialog.message} 
+        isDanger={!!confirmDialog.isDanger} 
+        onConfirm={confirmDialog.onConfirm} 
+        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))} 
+      />
 
     </div>
   );

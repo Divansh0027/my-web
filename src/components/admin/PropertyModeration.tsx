@@ -1,26 +1,15 @@
-// @ts-nocheck
-import React from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { LayoutDashboard, Building, Mail, Users, BarChart3, Settings, Plus, Search, Trash2, Edit, Shield, Download, RefreshCw, Check, X, Phone, MailIcon, ExternalLink, Eye, EyeOff, CheckSquare, Sliders, AlertTriangle, ShieldCheck, Power, HelpCircle, AlertCircle, MapPin, Database } from "lucide-react";
+import { Check, X, ShieldCheck, MapPin } from "lucide-react";
 
-export default function PropertyModeration(props: any) {
+import { useAdmin } from "../../context/AdminContext";
+
+export default function PropertyModeration() {
+  const props = useAdmin();
   const { 
-    formatCurrency, estimatedRevenue, 
-    propertySearch, setPropertySearch, propertyStatusFilter, setPropertyStatusFilter, 
-    propertySort, setPropertySort, filteredProperties, selectedProperties, handleSelectProperty, 
-    handleSelectAllProperties, handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, handleBulkApprove, handleBulkHide, handleBulkDelete, setIsAddModalOpen, setEditingProperty, setIsEditModalOpen, 
-    setConfirmDialog, executeOperation, onDeleteProperty, onToggleApproval, properties, 
-    setRejectingProperty, enquirySearch, setEnquirySearch, enquiryFilter, setEnquiryFilter, 
-    filteredEnquiries, handleUpdateEnquiryStatus, handleDeleteEnquiry, userSearch, setUserSearch, 
-    filteredUsers, handleToggleBanUser, settings, setSettings, 
-    handleSaveSettings, controls, handleToggleControl, adminsList, newAdminEmail, setNewAdminEmail, 
-    handleAddAdmin, handleRemoveAdmin, handleClearTestData, isRunningDiagnostics, 
-    auditPassed, isLoading, setAuditPassed, setIsRunningDiagnostics, onShowNotification, BUSINESS_CONFIG, 
-    pendingApprovalsCount, newEnquiriesCount, activeTab, onUpdateProperty 
+    formatCurrency, properties 
   } = props;
 
   const pendingProperties = properties.filter(
-    (p: any) => p.moderationStatus === "pending" || p.status === "pending"
+    (p) => p.moderationStatus === "pending" 
   );
 
   return (
@@ -85,14 +74,14 @@ export default function PropertyModeration(props: any) {
                                 <td className="py-4 px-4">
                                   <div className="flex items-center justify-center gap-2">
                                     <button
-                                      onClick={() => handlePropertyApprovalToggle(prop.id, prop.moderationStatus)}
+                                      onClick={() => props.handlePropertyApprovalToggle(prop.id, prop.moderationStatus)}
                                       className="px-3 py-1.5 rounded-lg bg-gold-accent hover:bg-gold-hover text-[#0F172A] font-black text-[10px] flex items-center gap-1 cursor-pointer transition-all focus:ring-2 ring-gold-accent/50"
                                       title="Audit Approve"
                                     >
                                       <Check className="h-3.5 w-3.5" /> Approve
                                     </button>
                                     <button
-                                      onClick={() => handlePropertyHideToggle(prop)}
+                                      onClick={() => props.handlePropertyHideToggle(prop)}
                                       className="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-red-500/20 text-on-surface-variant hover:text-red-400 border border-outline-variant/50 hover:border-red-500/30 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
                                       title="Reject Listing"
                                     >

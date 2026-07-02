@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { Property } from "../types";
 import { useConfig } from "../context/ConfigContext";
+import PropertyCardSkeleton from "./PropertyCardSkeleton";
+import { trackEvent } from "../firebase";
 
 interface ListingsViewProps {
   properties: Property[];
@@ -480,12 +482,7 @@ export default function ListingsView({
             {isLoading || isLoadingData ? (
               <div className={`grid ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"} gap-8`}>
                 {[...Array(4)].map((_, i) => (
-                  <div key={i} className="bg-surface-container border border-outline-variant/50 rounded-2xl p-4 space-y-4 animate-pulse">
-                    <div className="bg-surface-container-high h-60 w-full rounded-xl"></div>
-                    <div className="h-4 bg-surface-container-high rounded w-1/3"></div>
-                    <div className="h-6 bg-surface-container-high rounded w-2/3"></div>
-                    <div className="h-4 bg-surface-container-high rounded w-1/2"></div>
-                  </div>
+                  <PropertyCardSkeleton key={i} />
                 ))}
               </div>
             ) : paginatedListings.length === 0 ? (
@@ -528,7 +525,7 @@ export default function ListingsView({
                     >
                       {/* Image Frame */}
                       <div className={`relative overflow-hidden ${viewMode === "list" ? "w-full md:w-2/5 shrink-0 h-56 md:h-full" : "h-60 w-full shrink-0"}`}>
-                        <img width={800} height={600} src={`${prop.images[0]}&w=600&q=80`} alt={prop.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        <img width={800} height={600} src={`${prop.images[0]}&w=600&q=80`} alt={`${prop.title} — ${prop.location}`} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                         
                         <div className="absolute top-3 left-3 flex gap-1">
                           {prop.featured && (
@@ -609,6 +606,7 @@ export default function ListingsView({
                             href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.propertyEnquiry(prop.title))}`}
                             target="_blank"
                             rel="noreferrer"
+                            onClick={() => trackEvent("whatsapp_click", { source: "listings_view", property_id: prop.id })}
                             className="h-10 w-10 shrink-0 bg-success-green/25 hover:bg-success-green/30 border border-success-green/30 rounded-xl text-success-green flex items-center justify-center transition-all cursor-pointer"
                             aria-label={`Enquire about ${prop.title} on WhatsApp`}
                           >

@@ -64,11 +64,6 @@ const TOTAL_ITEMS = SECTIONS.reduce((acc, sec) => acc + sec.items.length, 0);
 export default function DevChecklist() {
   const isDev = (import.meta as any).env?.DEV;
 
-  // Render nothing in production
-  if (!isDev) {
-    return null;
-  }
-
   const [isOpen, setIsOpen] = useState(false);
   const [checkedState, setCheckedState] = useState<ChecklistState>({});
 
@@ -99,6 +94,10 @@ export default function DevChecklist() {
 
   const completedCount = getCheckedLength();
   const percentage = Math.round((completedCount / TOTAL_ITEMS) * 100);
+
+  if (!isDev) {
+    return null;
+  }
 
   return (
     <>
@@ -171,7 +170,11 @@ export default function DevChecklist() {
                 <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 scrollbar-thin scrollbar-thumb-white/5">
                   {SECTIONS.map((section) => {
                     const SecIcon = section.icon;
-                    return (
+                    if (!isDev) {
+    return null;
+  }
+
+  return (
                       <div key={section.id} className="space-y-3">
                         <div className="flex items-center gap-2 pb-1 border-b border-outline-variant/50">
                           <SecIcon className="h-3.5 w-3.5 text-gold-accent" strokeWidth={2.5} />
@@ -183,7 +186,11 @@ export default function DevChecklist() {
                         <div className="space-y-2.5">
                           {section.items.map((item) => {
                             const isChecked = !!checkedState[item.id];
-                            return (
+                            if (!isDev) {
+    return null;
+  }
+
+  return (
                               <label
                                 htmlFor={`checklist-item-${item.id}`}
                                 key={item.id}

@@ -16,7 +16,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendEmailVerification
 } from "firebase/auth";
 import { 
   getFirestore, 
@@ -36,7 +37,9 @@ import {
   serverTimestamp
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getAnalytics, isSupported, logEvent as firebaseLogEvent, Analytics } from "firebase/analytics";
+import { getAnalytics, logEvent, isSupported } from "firebase/analytics";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
+
 
 import { Property, Enquiry } from "./types";
 
@@ -73,7 +76,7 @@ let app: any;
 let authInstance: Auth | undefined;
 export let dbInstance: Firestore | undefined;
 let storageInstance: FirebaseStorage | undefined;
-let analyticsInstance: Analytics | undefined;
+export let analyticsInstance: any = undefined;
 
 try {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
@@ -86,11 +89,30 @@ try {
   }
   authInstance = getAuth(app);
   storageInstance = getStorage(app);
+
+  try {
+    const appCheckKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+    if (appCheckKey && typeof window !== "undefined") {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(appCheckKey),
+        isTokenAutoRefreshEnabled: true
+      });
+    } else if (import.meta.env.DEV) {
+      // Allow App check in dev with debug token if we want, but usually it relies on self.FIREBASE_APPCHECK_DEBUG_TOKEN
+      // Just initialize with a dummy if needed, but safe to skip if no key
+    }
+  } catch (appCheckError) {
+    console.warn("Failed to initialize App Check", appCheckError);
+  }
+
   
-  isSupported().then(supported => {
-    if (supported && app) {
+  // Initialize Analytics only if supported (browser)
+  isSupported().then((supported) => {
+    if (supported) {
       analyticsInstance = getAnalytics(app);
     }
+  }).catch(() => {
+    // Ignore errors checking for analytics support
   });
 } catch (error) {
   console.warn("Failed to initialize remote Firebase. Falling back to local state.", error);
@@ -148,18 +170,6 @@ export function handleFirestoreError(
   return errInfo;
 }
 
-export const trackEvent = (eventName: string, eventParams?: Record<string, string | number | boolean>) => {
-  if (analyticsInstance) {
-    try {
-      firebaseLogEvent(analyticsInstance, eventName, eventParams);
-    } catch (e) {
-      console.warn("Analytics tracking failed", e);
-    }
-  } else {
-    // Analytics is commonly blocked by ad/tracker blockers
-    console.debug(`[Analytics] ${eventName}`, eventParams);
-  }
-};
 
 // Validate connection on startup silently if using real Firestore
 // (Removed active getDocFromServer call to prevent pre-emptive connection warning spam on slow cold start)
@@ -213,6 +223,12 @@ export function cleanForFirestore<T>(obj: T): T {
   return cleaned;
 }
 
+export const trackEvent = (eventName: string, eventParams?: any) => {
+  if (analyticsInstance) {
+    logEvent(analyticsInstance, eventName, eventParams);
+  }
+};
+
 /**
  * CLIENT DATA LAYER API WITH LOCAL STAND-IN FALLBACKS
  */
@@ -253,30 +269,6 @@ export const getProperties = async (): Promise<Property[]> => {
   }
 };
 
-export const bootstrapFirstAdmin = async (
-  uid: string, 
-  email: string
-): Promise<void> => {
-  if (!dbInstance || !uid || !email) return;
-  try {
-    // Check if ANY admins exist in Firestore
-    const adminsColl = collection(dbInstance as Firestore, "admins");
-    const snap = await getDocs(adminsColl);
-    
-    // Only seed if completely empty (first run)
-    if (snap.empty) {
-      await setDoc(doc(dbInstance as Firestore, "admins", uid), {
-        uid,
-        email: email.toLowerCase(),
-        addedAt: new Date().toISOString(),
-        addedBy: "system_bootstrap"
-      });
-      console.log("Admin bootstrapped for first run:", email);
-    }
-  } catch (err) {
-    console.warn("Admin bootstrap skipped:", err);
-  }
-};
 
 export const getPropertyById = async (id: string): Promise<Property | null> => {
   
@@ -294,14 +286,19 @@ export const getPropertyById = async (id: string): Promise<Property | null> => {
   }
 };
 
-export const submitEnquiry = async (enquiry: Enquiry): Promise<{ success: boolean; savedLocally: boolean }> => {
+export const submitEnquiry = async (enquiry: Enquiry): Promise<{ success: boolean; savedLocally: boolean; error?: string }> => {
+  const lastEnquiryTime = localStorage.getItem("ssp_last_enquiry_time");
+  if (lastEnquiryTime && Date.now() - parseInt(lastEnquiryTime) < 60000) {
+    return { success: false, savedLocally: false, error: "You are submitting too fast. Please wait a minute." };
+  }
+
   const completeEnquiry = {
     ...enquiry,
     id: enquiry.id || `enq-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     dateStr: enquiry.dateStr || new Date().toISOString()
   };
 
-  
+  localStorage.setItem("ssp_last_enquiry_time", Date.now().toString());
 
   try {
     await setDoc(doc(dbInstance as Firestore, "enquiries", completeEnquiry.id), cleanForFirestore(completeEnquiry));
@@ -446,20 +443,7 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
           console.warn("Admin status check failed:", err);
         }
 
-        // Bootstrap first admin on first run
-        // Only runs if admins collection is empty
-        const envAdmins = import.meta.env.VITE_INITIAL_ADMINS;
-        const DEFAULT_ADMINS = envAdmins 
-          ? envAdmins.split(',').map((e: string) => e.trim().toLowerCase()) 
-          : ["admin@shivsayaproperties.com", "shivsayaproperties@gmail.com", "divansh0027@gmail.com"];
-        if (
-          fireUser.email && 
-          DEFAULT_ADMINS.includes(fireUser.email.toLowerCase())
-        ) {
-          isAdmin = true;
-          bootstrapFirstAdmin(fireUser.uid, fireUser.email)
-            .catch(e => console.warn("Bootstrap skipped:", e));
-        }
+        
 
         callback({
           uid: fireUser.uid,
@@ -517,10 +501,7 @@ export const isAdminUser = (user: ClientUser | null | undefined): boolean => {
 // Real-time Database Config synchronizers (Issue 3, 8 & 11)
 export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (() => void) => {
   const getMergedAdmins = (): string[] => {
-    const envAdmins = import.meta.env.VITE_INITIAL_ADMINS;
-    const defaultAdmins = envAdmins 
-      ? envAdmins.split(',').map((e: string) => e.trim().toLowerCase()) 
-      : ["admin@shivsayaproperties.com", "shivsayaproperties@gmail.com", "divansh0027@gmail.com"];
+    
     
     let storedAdmins: string[] = [];
     try {
@@ -533,7 +514,7 @@ export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (()
       }
     } catch { /* ignore */ }
     
-    return Array.from(new Set([...storedAdmins, ...defaultAdmins]));
+    return Array.from(new Set([...storedAdmins]));
   };
 
   const fallback = getMergedAdmins();
@@ -547,10 +528,7 @@ export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (()
   try {
     const unsub = onSnapshot(collection(dbInstance as Firestore, "admins"), (snapshot) => {
       const list: string[] = [];
-      const envAdmins = import.meta.env.VITE_INITIAL_ADMINS;
-      const defaultAdmins = envAdmins 
-        ? envAdmins.split(',').map((e: string) => e.trim().toLowerCase()) 
-        : ["admin@shivsayaproperties.com", "shivsayaproperties@gmail.com", "divansh0027@gmail.com"];
+      
       
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
@@ -562,7 +540,7 @@ export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (()
           list.push(docSnap.id.toLowerCase());
         }
       });
-      const uniqueAdmins = Array.from(new Set([...list, ...defaultAdmins]));
+      const uniqueAdmins = Array.from(new Set([...list]));
       ADMIN_EMAILS = uniqueAdmins;
       callback(uniqueAdmins);
       localStorage.setItem("ssp_admin_emails", JSON.stringify(uniqueAdmins));
@@ -797,6 +775,12 @@ export const loginWithEmailPassword = async (email: string, password: string): P
   if (authInstance) {
     try {
       const result = await signInWithEmailAndPassword(authInstance, email, password);
+      
+      if (!result.user.emailVerified) {
+        await authInstance.signOut();
+        return { success: false, error: "Please verify your email before logging in. Check your inbox for the verification link." };
+      }
+
       let isBanned = false;
       let banMsg = "Your account has been suspended. Contact support@shivsayaproperties.com.";
       try {
@@ -844,6 +828,12 @@ export const signUpWithEmailPassword = async (name: string, email: string, phone
     try {
       const result = await createUserWithEmailAndPassword(authInstance, email, password);
       await updateProfile(result.user, { displayName: name });
+      
+      try {
+        await sendEmailVerification(result.user);
+      } catch (err) {
+        console.warn("Failed to send verification email:", err);
+      }
 
       try {
         await setDoc(doc(dbInstance as Firestore, "users", result.user.uid), {
@@ -857,12 +847,8 @@ export const signUpWithEmailPassword = async (name: string, email: string, phone
         console.warn("Failed index for users table", dbErr);
       }
 
-      return {
-        uid: result.user.uid,
-        email: result.user.email || "",
-        displayName: name,
-        photoURL: undefined
-      };
+      await authInstance.signOut();
+      throw new Error("Account created successfully. Please check your email inbox to verify your account before logging in.");
     } catch (error) {
       console.error("Sign up error:", error);
       throw error;
@@ -1013,13 +999,58 @@ export const isStorageConnected = (): boolean => {
   return !!storageInstance;
 };
 
-export async function uploadPropertyImage(userId: string, file: File, fileName: string): Promise<{ url: string }> {
+async function compressToWebP(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) return file;
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return resolve(file);
+        
+        const MAX_WIDTH = 1920;
+        let width = img.width;
+        let height = img.height;
+        if (width > MAX_WIDTH) {
+          height *= MAX_WIDTH / width;
+          width = MAX_WIDTH;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          if (!blob) return resolve(file);
+          const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+            type: "image/webp",
+            lastModified: Date.now(),
+          });
+          resolve(compressedFile);
+        }, "image/webp", 0.8);
+      };
+      img.onerror = () => resolve(file); // fallback to original on error
+    };
+    reader.onerror = () => resolve(file);
+  });
+}
+
+export async function uploadPropertyImage(userId: string, file: File, _fileName: string): Promise<{ url: string }> {
   if (!storageInstance) throw new Error("Storage not initialized");
+  
+  const optimizedFile = await compressToWebP(file);
+  
   const timestamp = Date.now();
-  const cleanName = fileName.replace(/[^a-zA-Z0-9.]/g, "_");
+  const cleanName = optimizedFile.name.replace(/[^a-zA-Z0-9.]/g, "_");
   const storageRef = ref(storageInstance, `properties/${userId}/${timestamp}_${cleanName}`);
   try {
-    const snapshot = await uploadBytes(storageRef, file);
+    const uploadPromise = uploadBytes(storageRef, optimizedFile);
+    const timeoutPromise = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error("Upload timeout exceeded")), 15000)
+    );
+    const snapshot = await Promise.race([uploadPromise, timeoutPromise]) as any;
     const url = await getDownloadURL(snapshot.ref);
     return { url };
   } catch (err) {

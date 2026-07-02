@@ -27,7 +27,7 @@ import {
   Calculator
 } from "lucide-react";
 import { Property, Enquiry } from "../types";
-import { submitEnquiry } from "../firebase";
+import { submitEnquiry, trackEvent } from "../firebase";
 import { useConfig } from "../context/ConfigContext";
 
 interface DetailViewProps {
@@ -81,6 +81,9 @@ export default function DetailView({
     setLoanPrincipal(Math.round((property?.price ?? 0) * 0.8));
     setActiveImageIdx(0);
     window.scrollTo({ top: 0, behavior: "smooth" });
+    if (property?.id) {
+      trackEvent("property_view", { property_id: property.id });
+    }
   }, [property]);
 
   // Execute Live EMI Mathematics
@@ -136,6 +139,7 @@ export default function DetailView({
     setIsSubmitting(false);
 
     if (result && result.success) {
+      trackEvent("enquiry_submitted", { property_id: property?.id || "unknown" });
       if (result.savedLocally) {
         onShowNotification("Enquiry submitted successfully! (Saved locally, sync pending)", "success");
       } else {
@@ -151,7 +155,7 @@ export default function DetailView({
       setSenderPhone("");
       setSenderMessage(`Hi, I am interested in "${property?.title || "this property"}". Please send me the brochure and available payment plans.`);
     } else {
-      onShowNotification("Failed to submit enquiry. Checking database...", "error");
+      onShowNotification(result?.error || "Failed to submit enquiry. Checking database...", "error");
     }
   }, [currentUser, senderName, senderPhone, senderMessage, property?.id, property?.title, visitType, onShowNotification]);
 
@@ -263,7 +267,7 @@ export default function DetailView({
               >
                 <img 
                   src={`${property.images[activeImageIdx] || '/placeholder-property.jpg'}&w=1200&q=80`} 
-                  alt={property.title} 
+                  alt={`${property.title} — ${property.location}`} 
                   className="h-full w-full object-cover group-hover:scale-[1.01] transition-transform duration-500" 
                 loading="lazy" />
                 
@@ -650,6 +654,7 @@ export default function DetailView({
                   href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(BUSINESS_CONFIG.whatsappMessages.propertyEnquiry(property.title))}`}
                   target="_blank"
                   rel="noreferrer"
+                  onClick={() => trackEvent("whatsapp_click", { source: "property_detail", property_id: property.id })}
                   className="flex-1 py-3 bg-success-green hover:brightness-110 rounded-xl text-on-surface font-bold text-xs flex items-center justify-center gap-2 transition-all shadow"
                 >
                   <PhoneCall className="h-4 w-4" />
@@ -696,7 +701,7 @@ export default function DetailView({
                   className="bg-surface-container border border-outline-variant/50 rounded-2xl overflow-hidden cursor-pointer shadow hover:border-gold-accent/35 transition-all group text-left w-full focus:outline-none focus:ring-2 focus:ring-gold-accent/50"
                 >
                   <div className="relative h-48 w-full overflow-hidden">
-                    <img width={800} height={600} src={`${prop.images[0] || '/placeholder-property.jpg'}&w=600&q=80`} alt={prop.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img width={800} height={600} src={`${prop.images[0] || '/placeholder-property.jpg'}&w=600&q=80`} alt={`${prop.title} — ${prop.location}`} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <span className="absolute bottom-3 left-3 bg-surface/80 text-emerald-400 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded">
                       ✓ Verified
                     </span>
@@ -763,8 +768,8 @@ export default function DetailView({
                   dragConstraints={{ top: -500, left: -500, right: 500, bottom: 500 }}
                   animate={{ scale: isZoomed ? 2 : 1 }}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  src={property.images[activeImageIdx] || '/placeholder-property.jpg'} 
-                  alt="Lightbox High-def View" 
+                  src={property.images[activeImageIdx] || '/placeholder-property.jpg'}
+                  alt={`${property.title} - Lightbox view`} 
                   loading="lazy"
                   className={`max-h-[75vh] w-auto max-w-full object-contain mx-auto ${isZoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`} 
                 />

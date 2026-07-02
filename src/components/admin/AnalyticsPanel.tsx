@@ -1,24 +1,13 @@
-// @ts-nocheck
-import { motion, AnimatePresence } from "motion/react";
-import { LayoutDashboard, Building, Mail, Users, BarChart3, Settings, Plus, Search, Trash2, Edit, Shield, Download, RefreshCw, Check, X, Phone, MailIcon, ExternalLink, Eye, EyeOff, CheckSquare, Sliders, AlertTriangle, ShieldCheck, Power, HelpCircle, AlertCircle, MapPin, Database } from "lucide-react";
 import React, { Suspense } from "react";
 const AnalyticsChart = React.lazy(() => import("./AnalyticsChart"));
 
-export default function AnalyticsPanel(props: any) {
+import { useAdmin } from "../../context/AdminContext";
+
+export default function AnalyticsPanel() {
+  const props = useAdmin();
   const { 
-    formatCurrency, estimatedRevenue, 
-    propertySearch, setPropertySearch, propertyStatusFilter, setPropertyStatusFilter, 
-    propertySort, setPropertySort, filteredProperties, selectedProperties, handleSelectProperty, 
-    handleSelectAllProperties, handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, handleBulkApprove, handleBulkHide, handleBulkDelete, setIsAddModalOpen, setEditingProperty, setIsEditModalOpen, 
-    setConfirmDialog, executeOperation, onDeleteProperty, onToggleApproval, properties, 
-    setRejectingProperty, enquirySearch, setEnquirySearch, enquiryFilter, setEnquiryFilter, 
-    filteredEnquiries, handleUpdateEnquiryStatus, handleDeleteEnquiry, userSearch, setUserSearch, 
-    filteredUsers, handleToggleBanUser, settings, setSettings, 
-    handleSaveSettings, controls, handleToggleControl, adminsList, newAdminEmail, setNewAdminEmail, 
-    handleAddAdmin, handleRemoveAdmin, handleClearTestData, isRunningDiagnostics, 
-    auditPassed, isLoading, setAuditPassed, setIsRunningDiagnostics, onShowNotification, BUSINESS_CONFIG, 
-    pendingApprovalsCount, newEnquiriesCount, activeTab, onUpdateProperty,
-    threeBhkCount, villaCount, commercialCount, standardFlatsCount, contactedEnquiriesCount, resolvedEnquiriesCount
+    properties, 
+    newEnquiriesCount, threeBhkCount, villaCount, commercialCount, standardFlatsCount, contactedEnquiriesCount, resolvedEnquiriesCount
   } = props;
 
   return (
@@ -86,7 +75,7 @@ export default function AnalyticsPanel(props: any) {
                   {/* Activity Chart Area */}
                   <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
                     <h3 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">Property Views & Listing Activity (Past 7 Days)</h3>
-                    <div className="h-64 w-full pt-4">
+                    <div className="h-[300px] w-full pt-4">
                       <Suspense fallback={<div className="h-full w-full bg-surface-container animate-pulse rounded-xl" />}><AnalyticsChart type="area" /></Suspense>
                     </div>
                   </div>

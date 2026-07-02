@@ -91,181 +91,174 @@ export default React.memo(function Navbar({ savedCount, onOpenAuth, isAdmin = fa
   return (
     <nav
       id="main-navbar"
-      className={`sticky top-0 z-50 transition-all duration-300 font-sans px-4 ${
-        isScrolled ? "pt-2 pb-2" : "pt-6 pb-2"
+      className={`sticky top-0 z-50 w-full transition-all duration-300 font-sans bg-surface/90 backdrop-blur-xl border-b ${
+        isScrolled ? "border-outline-variant/50 shadow-sm" : "border-transparent"
       }`}
     >
-      <div className={`mx-auto max-w-7xl transition-all duration-300 ${
-        isScrolled 
-          ? "bg-surface/85 backdrop-blur-xl border border-outline-variant/50 shadow-sm rounded-2xl px-6 py-3" 
-          : "bg-transparent px-2 py-0"
-      }`}>
-        <div className="flex items-center justify-between">
-          
-          {/* Logo */}
-          <div 
-            onClick={() => handleLinkClick("home")}
-            className="flex items-center gap-2 cursor-pointer select-none"
-          >
-            <Logo size={42} className="shrink-0" />
-            <div className="text-xl sm:text-2xl font-bold tracking-tight text-on-surface">
-              Shiv <span className="text-gold-accent relative font-semibold">Saya<span className="absolute bottom-0 left-0 w-full h-[2px] bg-gold-accent"></span></span> Properties
-            </div>
+      <div className="mx-auto w-full max-w-[1280px] px-4 md:px-6 h-[64px] lg:h-[72px] flex items-center justify-between relative">
+        
+        {/* Logo */}
+        <div 
+          onClick={() => handleLinkClick("home")}
+          className="flex items-center gap-2 cursor-pointer select-none shrink-0 w-[160px] sm:w-[180px]"
+        >
+          <Logo size={32} className="shrink-0" />
+          <div className="text-base sm:text-lg font-bold tracking-tight text-on-surface whitespace-nowrap">
+            Shiv <span className="text-gold-accent relative font-semibold">Saya<span className="absolute bottom-0 left-0 w-full h-[2px] bg-gold-accent"></span></span>
           </div>
+        </div>
 
-          {/* Desktop Navigation Links */}
-          <div className="hidden lg:flex items-center gap-8">
-            {navLinks.map((link) => {
-                            const isSectionLink = link.view.endsWith("_sec");
-              
-              if (isSectionLink) {
-                return (
-                  <a
-                    key={link.name}
-                    href={`/#${link.view}`}
-                    onClick={(e) => { e.preventDefault(); handleLinkClick(link.view); }}
-                    className="relative text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors duration-150 py-1"
-                  >
-                    {link.name}
-                  </a>
-                );
-              }
-              
+        {/* Desktop Navigation Links */}
+        <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center justify-center gap-8">
+          {navLinks.map((link) => {
+            const isSectionLink = link.view.endsWith("_sec");
+            
+            if (isSectionLink) {
               return (
-                <NavLink
+                <a
                   key={link.name}
-                  to={link.view === "home" ? "/" : `/${link.view}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={({ isActive }) =>
-                    `relative text-sm font-medium transition-colors duration-150 py-1 ${
-                      isActive ? "text-on-surface" : "text-on-surface-variant hover:text-on-surface"
-                    }`
-                  }
+                  href={`/#${link.view}`}
+                  onClick={(e) => { e.preventDefault(); handleLinkClick(link.view); }}
+                  className="relative text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors duration-150 py-1"
                 >
-                  {({ isActive }) => (
-                    <>
-                      {link.name}
-                      {isActive && (
-                        <motion.span
-                          layoutId="nav-underline"
-                          className="absolute bottom-0 left-0 w-full h-[2px] bg-gold-accent"
-                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                        />
-                      )}
-                    </>
-                  )}
-                </NavLink>
+                  {link.name}
+                </a>
               );
-            })}
-          </div>
-
-          {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center gap-4">
-            <ThemeSwitcher />
-
-            {/* Google Authentication */}
-            {user ? (
-              <div className="relative" ref={dropdownRef}>
-                <button 
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-2 bg-surface-container-high/40 border border-outline-variant/50 pl-3 pr-2 py-1.5 rounded-full hover:bg-surface-container-high transition-colors cursor-pointer select-none"
-                >
-                  {user.photoURL ? (
-                    <img width={24} height={24} src={user.photoURL} alt={user.displayName} referrerPolicy="no-referrer" className="h-6 w-6 rounded-full object-cover" loading="lazy" />
-                  ) : (
-                    <div className="h-6 w-6 bg-outline-variant rounded-full flex items-center justify-center text-gold-accent font-bold text-[10px]">
-                      {user.displayName?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <span className="text-xs font-semibold text-on-surface max-w-[80px] truncate">{user.displayName}</span>
-                  <ChevronDown className={`h-3.5 w-3.5 text-on-surface-variant transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
-                </button>
-
-                <AnimatePresence>
-                  {isDropdownOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 mt-2.5 w-48 rounded-xl bg-surface border border-outline-variant p-1.5 shadow-md z-50 text-xs text-on-surface-variant font-sans"
-                    >
-                                            <button 
-                        onClick={() => { setIsDropdownOpen(false); handleLinkClick("profile"); }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-surface-container-low hover:text-on-surface transition-colors text-left cursor-pointer"
-                      >
-                        <UserIcon className="h-4 w-4 text-gold-accent" />
-                        My Profile
-                      </button>
-                      <button 
-                        onClick={() => { setIsDropdownOpen(false); handleLinkClick("saved"); }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-surface-container-low hover:text-on-surface transition-colors text-left cursor-pointer"
-                      >
-                        <Heart className="h-4 w-4 text-rose-500 fill-rose-500/20" />
-                        Saved ({savedCount})
-                      </button>
-                      {isAdmin && (
-                        <button 
-                          onClick={() => { setIsDropdownOpen(false); handleLinkClick("admin"); }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-surface-container-low hover:text-on-surface transition-colors text-left cursor-pointer"
-                        >
-                          <Shield className="h-4 w-4 text-gold-accent" />
-                          Admin Panel
-                        </button>
-                      )}
-                      <div className="border-t border-outline-variant/50 my-1" />
-                      <button 
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-red-500/10 hover:text-red-400 transition-colors text-left font-semibold cursor-pointer"
-                      >
-                        <LogOut className="h-4 w-4 text-red-500" />
-                        Sign Out
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : (
-              <button
-                onClick={handleLogin}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface-variant hover:text-on-surface bg-surface-container-high/50 hover:bg-surface-container-high border border-outline-variant rounded-full transition-all cursor-pointer"
+            }
+            
+            return (
+              <NavLink
+                key={link.name}
+                to={link.view === "home" ? "/" : `/${link.view}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `relative text-sm font-medium transition-colors duration-150 py-1 ${
+                    isActive ? "text-on-surface" : "text-on-surface-variant hover:text-on-surface"
+                  }`
+                }
               >
-                <UserIcon className="h-4 w-4 text-gold-accent" />
-                Login / Signup
+                {({ isActive }) => (
+                  <>
+                    {link.name}
+                    {isActive && (
+                      <motion.span
+                        layoutId="nav-underline"
+                        className="absolute bottom-0 left-0 w-full h-[2px] bg-gold-accent"
+                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
+        </div>
+
+        {/* Desktop Actions */}
+        <div className="hidden lg:flex items-center gap-4 shrink-0">
+          <ThemeSwitcher />
+
+          {/* Google Authentication */}
+          {user ? (
+            <div className="relative" ref={dropdownRef}>
+              <button 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 bg-surface-container-high/40 border border-outline-variant/50 pl-3 pr-2 py-1 rounded-full hover:bg-surface-container-high transition-colors cursor-pointer select-none"
+              >
+                {user.photoURL ? (
+                  <img width={24} height={24} src={user.photoURL} alt={user.displayName || "User Profile"} referrerPolicy="no-referrer" className="h-6 w-6 rounded-full object-cover" loading="lazy" />
+                ) : (
+                  <div className="h-6 w-6 bg-outline-variant rounded-full flex items-center justify-center text-gold-accent font-bold text-[10px]">
+                    {user.displayName?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="text-xs font-semibold text-on-surface max-w-[80px] truncate">{user.displayName}</span>
+                <ChevronDown className={`h-3.5 w-3.5 text-on-surface-variant transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
               </button>
+
+              <AnimatePresence>
+                {isDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute right-0 mt-2.5 w-48 rounded-xl bg-surface border border-outline-variant p-1.5 shadow-md z-50 text-xs text-on-surface-variant font-sans"
+                  >
+                    <button 
+                      onClick={() => { setIsDropdownOpen(false); handleLinkClick("profile"); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-surface-container-low hover:text-on-surface transition-colors text-left cursor-pointer"
+                    >
+                      <UserIcon className="h-4 w-4 text-gold-accent" />
+                      My Profile
+                    </button>
+                    <button 
+                      onClick={() => { setIsDropdownOpen(false); handleLinkClick("saved"); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-surface-container-low hover:text-on-surface transition-colors text-left cursor-pointer"
+                    >
+                      <Heart className="h-4 w-4 text-rose-500 fill-rose-500/20" />
+                      Saved ({savedCount})
+                    </button>
+                    {isAdmin && (
+                      <button 
+                        onClick={() => { setIsDropdownOpen(false); handleLinkClick("admin"); }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-surface-container-low hover:text-on-surface transition-colors text-left cursor-pointer"
+                      >
+                        <Shield className="h-4 w-4 text-gold-accent" />
+                        Admin Panel
+                      </button>
+                    )}
+                    <div className="border-t border-outline-variant/50 my-1" />
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-red-500/10 hover:text-red-400 transition-colors text-left font-semibold cursor-pointer"
+                    >
+                      <LogOut className="h-4 w-4 text-red-500" />
+                      Sign Out
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <button
+              onClick={handleLogin}
+              className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-on-surface-variant hover:text-on-surface bg-surface-container-high/50 hover:bg-surface-container-high border border-outline-variant rounded-full transition-all cursor-pointer"
+            >
+              <UserIcon className="h-4 w-4 text-gold-accent" />
+              Login / Signup
+            </button>
+          )}
+
+          {/* List Your Property CTA */}
+          <button
+            onClick={() => handleLinkClick("list_property")}
+            className="px-4 py-1.5 rounded-full bg-gold-accent text-slate-900 text-xs font-bold shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-95 transition-all"
+          >
+            List Your Property
+          </button>
+        </div>
+
+        {/* Mobile Right Bar */}
+        <div className="flex lg:hidden items-center gap-3">
+          <button 
+            onClick={() => handleLinkClick("saved")}
+            className="relative p-2 text-on-surface-variant"
+          >
+            <Heart className="h-5 w-5 text-on-surface-variant" />
+            {savedCount > 0 && (
+              <span className="absolute -top-[2px] -right-[2px] flex h-[16px] w-[16px] items-center justify-center rounded-full bg-emerald-500 text-[9px] font-bold text-on-surface">
+                {savedCount}
+              </span>
             )}
+          </button>
 
-            {/* List Your Property CTA */}
-            <button
-              onClick={() => handleLinkClick("list_property")}
-              className="px-5 py-2 rounded-full bg-gold-accent text-slate-900 text-xs font-bold shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-95 transition-all"
-            >
-              List Your Property
-            </button>
-          </div>
-
-          {/* Mobile Right Bar */}
-          <div className="flex lg:hidden items-center gap-3">
-            <button 
-              onClick={() => handleLinkClick("saved")}
-              className="relative p-2 text-on-surface-variant"
-            >
-              <Heart className="h-5 w-5 text-on-surface-variant" />
-              {savedCount > 0 && (
-                <span className="absolute -top-[2px] -right-[2px] flex h-[16px] w-[16px] items-center justify-center rounded-full bg-emerald-500 text-[9px] font-bold text-on-surface">
-                  {savedCount}
-                </span>
-              )}
-            </button>
-
-            {/* Hamburger button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 text-on-surface-variant hover:text-on-surface focus:outline-none"
-            >
-              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
-
+          {/* Hamburger button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 text-on-surface-variant hover:text-on-surface focus:outline-none"
+          >
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
       </div>
 
@@ -317,7 +310,7 @@ export default React.memo(function Navbar({ savedCount, onOpenAuth, isAdmin = fa
                     <div className="space-y-4">
                       <div className="flex items-center gap-3 border-b border-outline-variant/50 pb-3.5">
                         {user.photoURL ? (
-                          <img width={40} height={40} src={user.photoURL} alt={user.displayName} className="h-10 w-10 rounded-full object-cover border border-gold-accent/30" loading="lazy" />
+                          <img width={40} height={40} src={user.photoURL} alt={user.displayName || "User Profile"} className="h-10 w-10 rounded-full object-cover border border-gold-accent/30" loading="lazy" />
                         ) : (
                           <div className="h-10 w-10 bg-surface-container-high rounded-full flex items-center justify-center text-gold-accent font-bold text-sm">
                             {user.displayName?.charAt(0).toUpperCase()}

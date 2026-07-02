@@ -1,9 +1,9 @@
-// @ts-nocheck
-import React from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { LayoutDashboard, Building, Mail, Users, BarChart3, Settings, Plus, Search, Trash2, Edit, Shield, Download, RefreshCw, Check, X, Phone, MailIcon, ExternalLink, Eye, EyeOff, CheckSquare, Sliders, AlertTriangle, ShieldCheck, Power, HelpCircle, AlertCircle, MapPin, Database } from "lucide-react";
+import { Search } from "lucide-react";
 
-export default function UserManagement(props: any) {
+import { useAdmin } from "../../context/AdminContext";
+
+export default function UserManagement() {
+  const props = useAdmin();
   const { 
     userSearch, setUserSearch, 
     filteredUsers, handleToggleBanUser
@@ -53,12 +53,12 @@ export default function UserManagement(props: any) {
                               </td>
                             </tr>
                           ) : (
-                            filteredUsers.map((usr: any) => (
+                            filteredUsers.map((usr) => (
                               <tr key={usr.uid} className="hover:bg-surface/20 transition-all">
                                 
                                 <td className="py-4 px-4 font-extrabold text-on-surface flex items-center gap-3">
                                   <div className="h-8 w-8 rounded-full bg-surface-container-high text-gold-accent font-black text-xs flex items-center justify-center uppercase border border-outline-variant/50">
-                                    {usr.displayName.charAt(0)}
+                                    {(usr.displayName || "?").charAt(0)}
                                   </div>
                                   <div>
                                     {usr.displayName}
@@ -71,7 +71,7 @@ export default function UserManagement(props: any) {
                                 </td>
 
                                 <td className="py-4 px-4 text-on-surface-variant">
-                                  {usr.phone || "---"}
+                                  {usr.phoneNumber || "---"}
                                 </td>
 
                                 <td className="py-4 px-4 text-center">

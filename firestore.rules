@@ -18,10 +18,8 @@ service cloud.firestore {
     
     // Admin check: Strict UID-based validation using admins collection.
     function isAdmin() { 
-      return isSignedIn() && (
-        request.auth.token.email in ["admin@shivsayaproperties.com", "shivsayaproperties@gmail.com", "divansh0027@gmail.com"] ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-      );
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     // Validation helper for Property

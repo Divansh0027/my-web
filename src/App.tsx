@@ -4,14 +4,14 @@
  */
 
 import React, { useState, useEffect, useRef, useMemo, Suspense, useCallback } from "react";
-import { Routes, Route, useNavigate, useLocation, NavLink } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation, NavLink, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomeView from "./components/HomeView";
 import Notification from "./components/Notification";
 import { useAuth } from "./context/AuthContext";
 import { 
-  subscribeProperties, 
+  subscribeProperties, trackEvent, 
   getFavorites, 
   toggleFavorite, 
   addProperty, 
@@ -31,6 +31,7 @@ const SavedView = React.lazy(() => import("./components/SavedView"));
 const ListPropertyView = React.lazy(() => import("./components/ListPropertyView"));
 const ProfileView = React.lazy(() => import("./components/ProfileView"));
 const AdminView = React.lazy(() => import("./components/AdminView"));
+const NotFound = React.lazy(() => import("./components/NotFound"));
 const DevChecklist = import.meta.env.DEV ? React.lazy(() => import("./components/DevChecklist")) : () => null;
 
 export default function App() {
@@ -202,6 +203,7 @@ export default function App() {
 
   // Update favorites lists
   const handleToggleSaved = useCallback(async (id: string) => {
+    trackEvent("toggle_saved_property", { property_id: id });
     try {
       const isSavedAlready = savedPropertyIds.includes(id);
       const userId = currentUser ? currentUser.uid : "guest-user";
@@ -357,6 +359,7 @@ export default function App() {
   
   // Trigger search submit redirection
   const handleSearchTrigger = useCallback((searchFilters: { query?: string; location: string; type: string; budgetMax: number; bhk: string }) => {
+    trackEvent("search", searchFilters);
     setActiveSearchFilters(searchFilters);
     navigate("/properties");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -447,7 +450,7 @@ export default function App() {
                         savedCount={savedPropertyIds.length} 
             onOpenAuth={() => setIsLoginModalOpen(true)}
             isAdmin={isAdmin}
-            currentUser={currentUser}
+            currentUser={currentUser as any}
           />
         )}
 
@@ -555,13 +558,23 @@ export default function App() {
                       onUpdateProperty={handleUpdatePropertyInApp}
                       onAddProperty={handleAddProperty}
                       onShowNotification={triggerToast}
-                      currentUser={currentUser}
+                      currentUser={currentUser as any}
                     />
                   ) : (
                     <div className="flex-grow flex items-center justify-center p-6 text-center text-red-500 font-bold">Access Denied</div>
                   )}
                 </ErrorBoundary>
               } />
+
+              {/* Legacy/Common Redirects */}
+              <Route path="/home" element={<Navigate to="/" replace />} />
+              <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
+              <Route path="/listings" element={<Navigate to="/properties" replace />} />
+              <Route path="/buy" element={<Navigate to="/properties" replace />} />
+              <Route path="/rent" element={<Navigate to="/properties" replace />} />
+              
+              {/* Catch-all 404 route */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
 

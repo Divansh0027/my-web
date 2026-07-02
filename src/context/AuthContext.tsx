@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { subscribeAuth, ClientUser, ADMIN_EMAILS } from '../firebase';
+import { subscribeAuth, ClientUser, ADMIN_EMAILS } from "../firebase";
+import { checkIsAdmin } from "../utils/admin";
 import { onSnapshot, doc } from 'firebase/firestore';
 import { dbInstance } from '../firebase';
 
@@ -45,24 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [currentUser]);
 
-  const isAdmin = useMemo(() => {
-    if (currentUser && currentUser.email) {
-      const emailLower = currentUser.email.toLowerCase();
-      
-      const envAdmins = import.meta.env.VITE_INITIAL_ADMINS;
-      const defaultAdmins = envAdmins 
-        ? envAdmins.split(',').map((e: string) => e.trim().toLowerCase()) 
-        : ["admin@shivsayaproperties.com", "shivsayaproperties@gmail.com", "divansh0027@gmail.com"];
-      
-      const isInAdminsList = adminsList.some(
-        email => email.toLowerCase() === emailLower
-      ) || defaultAdmins.includes(emailLower);
-      
-      const hasAdminFlag = !!currentUser.isAdmin;
-      return isInAdminsList || hasAdminFlag;
-    }
-    return false;
-  }, [currentUser, adminsList]);
+  const isAdmin = useMemo(() => checkIsAdmin(currentUser as any, adminsList, import.meta.env.VITE_INITIAL_ADMINS || ""), [currentUser, adminsList]);
 
   useEffect(() => {
     const unsubscribe = subscribeAuth((user) => {

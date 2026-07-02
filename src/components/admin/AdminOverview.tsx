@@ -1,28 +1,20 @@
-// @ts-nocheck
-import { motion, AnimatePresence } from "motion/react";
-import { LayoutDashboard, Building, Mail, Users, BarChart3, Settings, Plus, Search, Trash2, Edit, Shield, Download, RefreshCw, Check, X, Phone, MailIcon, ExternalLink, Eye, EyeOff, CheckSquare, Sliders, AlertTriangle, ShieldCheck, Power, HelpCircle, AlertCircle, MapPin, Database } from "lucide-react";
+import { motion } from "motion/react";
+import { Mail, Check, X, ExternalLink, AlertTriangle, ShieldCheck, MapPin } from "lucide-react";
 import React, { Suspense } from "react";
 const AnalyticsChart = React.lazy(() => import("./AnalyticsChart"));
 
-export default function AdminOverview(props: any) {
+import { useAdmin } from "../../context/AdminContext";
+
+export default function AdminOverview() {
+  const props = useAdmin();
   const { 
     formatCurrency, estimatedRevenue, 
-    propertySearch, setPropertySearch, propertyStatusFilter, setPropertyStatusFilter, 
-    propertySort, setPropertySort, filteredProperties, selectedProperties, handleSelectProperty, 
-    handleSelectAllProperties, handleExportCSV, handleExportPropertiesJSON, handleFactoryReset, handleBulkApprove, handleBulkHide, handleBulkDelete, setIsAddModalOpen, setEditingProperty, setIsEditModalOpen, 
-    setConfirmDialog, executeOperation, onDeleteProperty, onToggleApproval, properties, 
-    setRejectingProperty, enquirySearch, setEnquirySearch, enquiryFilter, setEnquiryFilter, 
-    filteredEnquiries, handleUpdateEnquiryStatus, handleDeleteEnquiry, userSearch, setUserSearch, 
-    filteredUsers, handleToggleBanUser, settings, setSettings, 
-    handleSaveSettings, controls, handleToggleControl, adminsList, newAdminEmail, setNewAdminEmail, 
-    handleAddAdmin, handleRemoveAdmin, handleClearTestData, isRunningDiagnostics, 
-    auditPassed, isLoading, setAuditPassed, setIsRunningDiagnostics, onShowNotification, BUSINESS_CONFIG, 
-    pendingApprovalsCount, newEnquiriesCount, activeTab, onUpdateProperty,
-    enquiries, dbUsers, approvedListingsCount 
+    properties, 
+    pendingApprovalsCount, enquiries, dbUsers, approvedListingsCount 
   } = props;
 
   const pendingProperties = properties.filter(
-    (p: any) => p.moderationStatus === "pending" || p.status === "pending"
+    (p) => p.moderationStatus === "pending" 
   );
 
   return (
@@ -105,14 +97,14 @@ export default function AdminOverview(props: any) {
 
                               <div className="flex items-center gap-2 shrink-0">
                                 <button
-                                  onClick={() => handlePropertyApprovalToggle(prop.id, prop.moderationStatus)}
+                                  onClick={() => props.handlePropertyApprovalToggle(prop.id, prop.moderationStatus)}
                                   className="px-3 py-1.5 rounded-lg bg-gold-accent hover:bg-gold-hover text-[#0F172A] font-black text-[10px] flex items-center gap-1 cursor-pointer transition-all active:scale-95"
                                   title="Audit Approved & Publish"
                                 >
                                   <Check className="h-3.5 w-3.5" /> Approve
                                 </button>
                                 <button
-                                  onClick={() => handlePropertyHideToggle(prop)}
+                                  onClick={() => props.handlePropertyHideToggle(prop)}
                                   className="p-2 rounded-lg bg-surface-container-high hover:bg-red-500/10 border border-outline-variant/50 hover:border-red-500/20 text-on-surface-variant hover:text-red-400 cursor-pointer transition-all"
                                   title="Reject Listing"
                                 >
@@ -133,7 +125,7 @@ export default function AdminOverview(props: any) {
                           <h3 className="font-extrabold text-on-surface text-sm">Recent Client Inquiries</h3>
                         </div>
                         <button 
-                          onClick={() => setActiveTab("enquiries")}
+                          onClick={() => props.setActiveTab("enquiries")}
                           className="text-[10px] text-gold-accent font-bold flex items-center gap-0.5 cursor-pointer hover:underline"
                         >
                           View All <ExternalLink className="h-3 w-3" />

@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Eye, EyeOff, Mail, Lock, User, Phone, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import FocusLock from "react-focus-lock";
-import { loginWithGoogle, loginWithEmailPassword, signUpWithEmailPassword, sendPasswordReset } from "../firebase";
+import { loginWithGoogle, loginWithEmailPassword, signUpWithEmailPassword, sendPasswordReset, trackEvent } from "../firebase";
 import { useConfig } from "../context/ConfigContext";
 
 interface LoginModalProps {
@@ -159,6 +159,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
     setIsSubmitting(true);
     try {
       const result = await loginWithGoogle();
+      trackEvent("login", { method: "google" });
       if (result.success) {
         onClose();
       } else {
@@ -179,10 +180,18 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
     e.preventDefault();
     if (isLoginDisabled) return;
 
+    const lastLoginTime = localStorage.getItem("ssp_last_login_attempt");
+    if (lastLoginTime && Date.now() - parseInt(lastLoginTime) < 5000) {
+      setAuthError("Too many login attempts. Please wait a few seconds.");
+      return;
+    }
+    localStorage.setItem("ssp_last_login_attempt", Date.now().toString());
+
     setAuthError("");
     setIsSubmitting(true);
     try {
       const result = await loginWithEmailPassword(loginEmail, loginPassword);
+      trackEvent("login", { method: "email" });
       if (result.success) {
         onClose();
       } else {
@@ -208,6 +217,13 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSignupDisabled) return;
+
+    const lastSignupTime = localStorage.getItem("ssp_last_signup_attempt");
+    if (lastSignupTime && Date.now() - parseInt(lastSignupTime) < 5000) {
+      setAuthError("Too many sign up attempts. Please wait a few seconds.");
+      return;
+    }
+    localStorage.setItem("ssp_last_signup_attempt", Date.now().toString());
 
     setAuthError("");
     setIsSubmitting(true);
@@ -238,6 +254,13 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
       setForgotError("Please enter a valid email address.");
       return;
     }
+
+    const lastForgotTime = localStorage.getItem("ssp_last_forgot_attempt");
+    if (lastForgotTime && Date.now() - parseInt(lastForgotTime) < 60000) {
+      setForgotError("Please wait a minute before requesting another reset link.");
+      return;
+    }
+    localStorage.setItem("ssp_last_forgot_attempt", Date.now().toString());
 
     setForgotError("");
     setForgotSuccess("");
@@ -271,8 +294,11 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
           />
 
           {/* Modal Container */}
-          <FocusLock>
+          <FocusLock returnFocus={true}>
             <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="login-modal-title"
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 50 }}
@@ -283,7 +309,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = "login" }: Lo
             <div>
               <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant/50 bg-surface-container/60 sticky top-0 z-10 backdrop-blur-sm">
                 <div>
-                  <h3 className="text-on-surface text-md font-bold">Secure Gateway</h3>
+                  <h3 id="login-modal-title" className="text-on-surface text-md font-bold">Secure Gateway</h3>
                   <p className="text-on-surface-variant text-[10px] mt-0.5">Access your direct-to-owner panel</p>
                 </div>
                 <button

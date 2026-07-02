@@ -16,7 +16,7 @@ Sentry.init({
     Sentry.browserTracingIntegration(),
     ...(import.meta.env.VITE_SENTRY_DSN ? [Sentry.replayIntegration()] : []),
   ],
-  tracesSampleRate: 1.0,
+  tracesSampleRate: 0.1,
   replaysSessionSampleRate: import.meta.env.VITE_SENTRY_DSN ? 0.1 : 0,
   replaysOnErrorSampleRate: import.meta.env.VITE_SENTRY_DSN ? 1.0 : 0,
 });

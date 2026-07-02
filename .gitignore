@@ -9,3 +9,7 @@ node_modules
 
 # Temp scripts
 scripts/
+
+# Test artifacts
+playwright-report/
+test-results/
