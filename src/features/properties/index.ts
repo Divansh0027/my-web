@@ -1,6 +1,7 @@
 export * from '@/features/properties/DetailView'
 export * from '@/features/properties/ListPropertyView'
 export * from '@/features/properties/ListingsView'
+export * from '@/features/properties/PropertyCard'
 export * from '@/features/properties/PropertyCardSkeleton'
 export * from '@/features/properties/SavedView'
 export * from '@/features/properties/useFavorites'

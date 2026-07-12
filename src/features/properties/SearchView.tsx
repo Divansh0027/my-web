@@ -62,8 +62,42 @@ const Hit = ({ hit }: { hit: any }) => {
   )
 }
 
+interface UserLocation {
+  lat: number
+  lng: number
+}
+
 export default function SearchView() {
   const hasKeys = !!(import.meta.env.VITE_ALGOLIA_APP_ID && import.meta.env.VITE_ALGOLIA_SEARCH_KEY)
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
+  const [isLocating, setIsLocating] = useState(false)
+
+  const handleGetLocation = async () => {
+    setIsLocating(true)
+    try {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setUserLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            })
+            setIsLocating(false)
+          },
+          (error) => {
+            console.error('Geolocation error:', error)
+            setIsLocating(false)
+          },
+        )
+      } else {
+        console.error('Geolocation is not supported by this browser')
+        setIsLocating(false)
+      }
+    } catch (error) {
+      console.error('Error getting location:', error)
+      setIsLocating(false)
+    }
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -101,18 +135,22 @@ export default function SearchView() {
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Sidebar for Facets */}
 
-            <div className="mb-4">
-              <button
-                onClick={handleGetLocation}
-                disabled={isLocating}
-                className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border font-bold transition-colors ${userLocation ? 'bg-gold-accent text-white border-gold-accent' : 'bg-surface text-on-surface border-outline-variant hover:border-gold-accent'}`}
-              >
-                <Navigation className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
-                {userLocation ? 'Using Your Location (5km)' : 'Search Near Me (5km)'}
-              </button>
-            </div>
-
             <div className="w-full lg:w-1/4 shrink-0 space-y-8">
+              <div className="mb-4">
+                <button
+                  onClick={handleGetLocation}
+                  disabled={isLocating}
+                  className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border font-bold transition-colors ${
+                    userLocation
+                      ? 'bg-gold-accent text-white border-gold-accent'
+                      : 'border-outline-variant text-on-surface hover:bg-surface-container'
+                  }`}
+                >
+                  <Navigation className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
+                  {userLocation ? 'Using Your Location (5km)' : 'Search Near Me (5km)'}
+                </button>
+              </div>
+
               <div>
                 <h3 className="font-bold text-on-surface mb-4 tracking-wide uppercase text-sm">
                   City
@@ -222,17 +260,19 @@ export default function SearchView() {
             {/* Main Search Area */}
             <div className="flex-1">
               <div className="mb-6">
-                <SearchBox
-                  placeholder="Search by location, builder, or property name..."
-                  classNames={{
-                    form: 'relative',
-                    input:
-                      'w-full bg-surface border border-outline-variant/50 rounded-2xl pl-12 pr-4 py-4 text-on-surface focus:border-gold-accent focus:ring-1 focus:ring-gold-accent outline-none shadow-sm',
-                    submitIcon: 'hidden',
-                    resetIcon: 'hidden',
-                  }}
-                />
-                <MapPin className="absolute top-4 left-4 w-6 h-6 text-on-surface-variant/50 pointer-events-none" />
+                <div className="relative">
+                  <SearchBox
+                    placeholder="Search by location, builder, or property name..."
+                    classNames={{
+                      form: 'relative',
+                      input:
+                        'w-full bg-surface border border-outline-variant/50 rounded-2xl pl-12 pr-4 py-4 text-on-surface focus:border-gold-accent focus:ring-1 focus:ring-gold-accent outline-none shadow-sm',
+                      submitIcon: 'hidden',
+                      resetIcon: 'hidden',
+                    }}
+                  />
+                  <MapPin className="absolute top-4 left-4 w-6 h-6 text-on-surface-variant/50 pointer-events-none" />
+                </div>
 
                 <div className="mt-4 flex items-center justify-between text-sm text-on-surface-variant">
                   <Stats />
