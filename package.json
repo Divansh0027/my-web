@@ -88,7 +88,7 @@
     "jest-axe": "^10.0.0",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.8",
-    "prettier": "^3.9.4",
+    "prettier": "^3.9.5",
     "react-focus-lock": "^2.13.7",
     "rollup-plugin-visualizer": "^7.0.1",
     "size-limit": "^12.1.0",
