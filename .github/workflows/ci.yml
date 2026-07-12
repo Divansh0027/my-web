@@ -48,7 +48,7 @@ jobs:
         run: npm install -g @lhci/cli && lhci autorun
         
       - name: Chromatic Visual Regression Testing
-        uses: chromaui/action@v1
+        uses: chromaui/action@v18
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
         continue-on-error: true
