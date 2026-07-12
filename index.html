@@ -2,48 +2,79 @@
 <html lang="en">
   <head>
     <script>
-      (function() {
+      ;(function () {
         try {
-          var theme = localStorage.getItem('theme');
-          var isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches) || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          if (isDark) { document.documentElement.classList.add('dark'); }
-          else { document.documentElement.classList.add('light'); }
+          var theme = localStorage.getItem('theme')
+          var isDark =
+            theme === 'dark' ||
+            (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches) ||
+            (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (isDark) {
+            document.documentElement.classList.add('dark')
+          } else {
+            document.documentElement.classList.add('light')
+          }
         } catch (e) {}
-      })();
+      })()
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' https://images.unsplash.com https://*.googleusercontent.com https://firebasestorage.googleapis.com https://lh3.googleusercontent.com data: blob:; connect-src 'self' ws: wss: https://*.googleapis.com https://*.firebaseio.com https://*.google.com; frame-src 'self' https://*.firebaseapp.com https://*.google.com; base-uri 'self';">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' https://images.unsplash.com https://*.googleusercontent.com https://firebasestorage.googleapis.com https://lh3.googleusercontent.com data: blob:; connect-src 'self' ws: wss: https://*.googleapis.com https://*.firebaseio.com https://*.google.com; frame-src 'self' https://*.firebaseapp.com https://*.google.com; base-uri 'self';"
+    />
     <title>Shiv Saya Properties - Premier Real Estate Consultant in Ghaziabad & Delhi NCR</title>
-    <meta name="description" content="Find verified residential and commercial properties in Delhi NCR with Shiv Saya Properties. Trusted listings in Gurugram, Noida, Greater Noida West, Dwarka, Faridabad and more. Expert guidance for buying, selling and renting flats, villas, plots and builder floors from RERA-registered advisors." />
+    <meta
+      name="description"
+      content="Find verified residential and commercial properties in Delhi NCR with Shiv Saya Properties. Trusted listings in Gurugram, Noida, Greater Noida West, Dwarka, Faridabad and more. Expert guidance for buying, selling and renting flats, villas, plots and builder floors from RERA-registered advisors."
+    />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
-    
+
     <!-- OpenGraph Social Metadata -->
     <meta property="og:title" content="Shiv Saya Properties | Your Trusted Real Estate Partner" />
-    <meta property="og:description" content="Find verified residential and commercial properties in Delhi NCR with Shiv Saya Properties. Trusted listings in Gurugram, Noida, Greater Noida West, Dwarka, Faridabad and more. Expert guidance for buying, selling and renting flats, villas, plots and builder floors from RERA-registered advisors." />
+    <meta
+      property="og:description"
+      content="Find verified residential and commercial properties in Delhi NCR with Shiv Saya Properties. Trusted listings in Gurugram, Noida, Greater Noida West, Dwarka, Faridabad and more. Expert guidance for buying, selling and renting flats, villas, plots and builder floors from RERA-registered advisors."
+    />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://shivsayaproperties.com/og-image.jpg" />
 
     <!-- Twitter Card Metadata -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Shiv Saya Properties | Your Trusted Real Estate Partner" />
-    <meta name="twitter:description" content="Find verified residential and commercial properties in Delhi NCR with Shiv Saya Properties. Trusted listings in Gurugram, Noida, Greater Noida West, Dwarka, Faridabad and more. Expert guidance for buying, selling and renting flats, villas, plots and builder floors from RERA-registered advisors." />
+    <meta
+      name="twitter:description"
+      content="Find verified residential and commercial properties in Delhi NCR with Shiv Saya Properties. Trusted listings in Gurugram, Noida, Greater Noida West, Dwarka, Faridabad and more. Expert guidance for buying, selling and renting flats, villas, plots and builder floors from RERA-registered advisors."
+    />
     <meta name="twitter:image" content="https://shivsayaproperties.com/og-image.jpg" />
 
     <!-- Additional Rich Metadata -->
-    <meta name="keywords" content="property dealer delhi ncr, real estate gurugram noida, flats for sale dwarka, builder floors delhi, commercial property noida, rera registered properties delhi, plots delhi ncr" />
+    <meta
+      name="keywords"
+      content="property dealer delhi ncr, real estate gurugram noida, flats for sale dwarka, builder floors delhi, commercial property noida, rera registered properties delhi, plots delhi ncr"
+    />
     <meta name="theme-color" content="#0F172A" />
+    <!-- iOS PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-startup-image" href="/logo.svg" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Shiv Saya" />
+
     <meta name="robots" content="index, follow" />
 
     <!-- Canonical URL -->
     <link rel="canonical" href="https://shivsayaproperties.com" />
 
     <!-- Google Fonts Poppins / Inter Linkages -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+      crossorigin="anonymous"
+    />
 
     <!-- JSON-LD Structured Data Schema Markup -->
     <script type="application/ld+json">
@@ -63,10 +94,10 @@
         "image": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80"
       }
     </script>
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

@@ -1,0 +1,44 @@
+{
+  "translation": {
+    "nav": {
+      "home": "Home",
+      "properties": "Properties",
+      "services": "Services",
+      "about": "About Us",
+      "contact": "Contact",
+      "login": "Login",
+      "dashboard": "Dashboard",
+      "logout": "Logout",
+      "postProperty": "Post Property"
+    },
+    "hero": {
+      "title": "Find Your Perfect Property in <1>Delhi NCR</1>",
+      "subtitle": "Trusted by <1>500+ Families</1> | 100% RERA Registered | Over a decade of verified consultancy in Gurugram, Delhi, Noida & Faridabad.",
+      "searchPlaceholder": "Search by location, builder, or project...",
+      "buy": "Buy",
+      "rent": "Rent",
+      "commercial": "Commercial",
+      "residential": "Residential",
+      "search": "Search Properties"
+    },
+    "home": {
+      "trending": "Trending Properties",
+      "recommended": "Recommended for You",
+      "recentlyViewed": "Recently Viewed"
+    },
+    "footer": {
+      "quickLinks": "Quick Links",
+      "legal": "Legal",
+      "contactUs": "Contact Us",
+      "address": "Noida, UP, India",
+      "rights": "All rights reserved."
+    },
+    "common": {
+      "save": "Save",
+      "saved": "Saved",
+      "viewDetails": "View Details",
+      "enquire": "Enquire Now",
+      "loading": "Loading..."
+    }
+  }
+}

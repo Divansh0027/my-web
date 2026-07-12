@@ -1,15 +1,19 @@
-import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
-import {defineConfig} from 'vite';
-import { VitePWA } from 'vite-plugin-pwa';
+import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig(() => {
   return {
     plugins: [
-      react(), 
+      react(),
       tailwindcss(),
       VitePWA({
+        strategies: 'injectManifest',
+        srcDir: 'src',
+        filename: 'sw.ts',
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo.svg'],
         manifest: {
@@ -17,26 +21,36 @@ export default defineConfig(() => {
           short_name: 'Shiv Saya',
           description: 'Premier Real Estate Consultant in Ghaziabad & Delhi NCR',
           theme_color: '#0F172A',
+          background_color: '#0F172A',
+          display: 'standalone',
+          start_url: '/',
+          protocol_handlers: [
+            {
+              protocol: 'web+shivsaya',
+              url: '/?url=%s',
+            },
+          ],
           icons: [
             {
               src: 'logo.svg',
-              sizes: '512x512',
-              type: 'image/svg+xml'
-            }
-          ]
-        }
-      })
+              sizes: '192x192 512x512',
+              type: 'image/svg+xml',
+              purpose: 'any maskable',
+            },
+          ],
+        },
+      }),
     ],
     test: {
       globals: true,
       environment: 'jsdom',
       setupFiles: './src/setupTests.ts',
       include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
-      exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**']
+      exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, './src'),
       },
     },
     server: {
@@ -50,30 +64,40 @@ export default defineConfig(() => {
     },
     build: {
       outDir: 'dist',
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit: 500,
       rollupOptions: {
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
               if (id.includes('react') || id.includes('react-dom')) {
-                return 'vendor-react';
+                return 'vendor-react'
               }
               if (id.includes('firebase')) {
-                return 'vendor-firebase';
+                return 'vendor-firebase'
               }
               if (id.includes('recharts')) {
-                return 'vendor-recharts';
+                return 'vendor-recharts'
               }
               if (id.includes('motion')) {
-                return 'vendor-motion';
+                return 'vendor-motion'
               }
               if (id.includes('lucide-react')) {
-                return 'vendor-icons';
+                return 'vendor-icons'
               }
             }
-          }
-        }
-      }
-    }
-  };
-});
+          },
+        },
+      },
+      plugins: [
+        process.env.ANALYZE || process.argv.includes('--analyze')
+          ? visualizer({
+              open: false,
+              filename: 'bundle-analysis.html',
+              gzipSize: true,
+              brotliSize: true,
+            })
+          : null,
+      ],
+    },
+  }
+})

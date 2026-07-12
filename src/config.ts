@@ -4,24 +4,24 @@
  */
 
 const defaults = {
-  whatsappNumber: "919911690027",
-  businessName: "Shiv Saya Properties",
-  consultantName: "Ritik Khari",
-  businessEmail: "info@shivsayaproperties.com",
-  businessPhone: "+91-9911690027",
-  businessAddress: "Delhi NCR, India",
-  reraNumber: "Registration Pending",
-};
+  whatsappNumber: '919911690027',
+  businessName: 'Shiv Saya Properties',
+  consultantName: 'Ritik Khari',
+  businessEmail: 'info@shivsayaproperties.com',
+  businessPhone: '+91-9911690027',
+  businessAddress: 'Delhi NCR, India',
+  reraNumber: 'Registration Pending',
+}
 
 // Merge from localStorage on load if available
-let storedSettings: any = null;
+let storedSettings: unknown = null
 try {
-  const settingsStr = typeof window !== "undefined" ? localStorage.getItem("ssp_settings") : null;
+  const settingsStr = typeof window !== 'undefined' ? localStorage.getItem('ssp_settings') : null
   if (settingsStr) {
-    storedSettings = JSON.parse(settingsStr);
+    storedSettings = JSON.parse(settingsStr)
   }
 } catch (e) {
-  console.warn("Error reading ssp_settings on boot", e);
+  console.warn('Error reading ssp_settings on boot', e)
 }
 
 export const WHATSAPP_MESSAGES = {
@@ -29,10 +29,10 @@ export const WHATSAPP_MESSAGES = {
   propertyEnquiry: (title: string) => `Hi! I'm interested in: ${title}. Please share more details.`,
   consultation: "Hi! I'd love a free consultation.",
   investment: "Hi! I'd love to chat with your expert.",
-};
+}
 
 export const BUSINESS_CONFIG = {
   ...defaults,
   ...(storedSettings || {}),
-  whatsappMessages: WHATSAPP_MESSAGES
-};
+  whatsappMessages: WHATSAPP_MESSAGES,
+}
