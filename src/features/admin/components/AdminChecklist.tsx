@@ -45,9 +45,9 @@ export default function DiagnosticsPanel() {
               <div className="flex items-center justify-between pb-3 border-b border-outline-variant/50">
                 <div className="flex items-center gap-2">
                   <CheckSquare className="h-4 w-4 text-gold-accent" />
-                  <h3 className="font-extrabold text-on-surface text-sm">
+                  <h2 className="font-extrabold text-on-surface text-sm">
                     Haryana RERA Verification Checks
-                  </h3>
+                  </h2>
                 </div>
                 <span className="text-[10px] font-mono text-on-surface-variant">
                   Standards: HRERA-2026
@@ -62,13 +62,13 @@ export default function DiagnosticsPanel() {
                     {settings.reraNumber ? (
                       <Check className="h-4 w-4 text-success-green" />
                     ) : (
-                      <X className="h-4 w-4 text-red-400" />
+                      <X className="h-4 w-4 text-red-600" />
                     )}
                   </div>
                   <div className="flex-1 space-y-0.5">
-                    <h4 className="font-bold text-on-surface leading-tight">
+                    <h3 className="font-bold text-on-surface leading-tight">
                       RERA Registered License Registry
-                    </h4>
+                    </h3>
                     <p className="text-[10px] text-on-surface-variant leading-relaxed font-semibold">
                       Validates if a valid Real Estate Regulatory Authority broker license number is
                       saved in configuration.
@@ -87,13 +87,13 @@ export default function DiagnosticsPanel() {
                     {properties.length > 0 ? (
                       <Check className="h-4 w-4 text-success-green" />
                     ) : (
-                      <X className="h-4 w-4 text-red-400" />
+                      <X className="h-4 w-4 text-red-600" />
                     )}
                   </div>
                   <div className="flex-1 space-y-0.5">
-                    <h4 className="font-bold text-on-surface leading-tight">
+                    <h3 className="font-bold text-on-surface leading-tight">
                       Live Listings Catalog Density
-                    </h4>
+                    </h3>
                     <p className="text-[10px] text-on-surface-variant leading-relaxed font-semibold">
                       Confirms whether active property inventory data exists in the system database
                       for client searches.
@@ -107,16 +107,16 @@ export default function DiagnosticsPanel() {
                 {/* Item 3: Pending verification audits queue */}
                 <div className="flex items-start gap-3 p-3 bg-surface/40 border border-outline-variant/50 rounded-xl">
                   <div className="mt-0.5">
-                    {!properties.some((p) => !p.verified && p.moderationStatus !== 'rejected') ? (
+                    {!properties.some((p: any) => !p.verified && p.moderationStatus !== 'rejected') ? (
                       <Check className="h-4 w-4 text-success-green" />
                     ) : (
                       <AlertTriangle className="h-4 w-4 text-amber-400" />
                     )}
                   </div>
                   <div className="flex-1 space-y-0.5">
-                    <h4 className="font-bold text-on-surface leading-tight">
+                    <h3 className="font-bold text-on-surface leading-tight">
                       Unresolved Pending Audits
-                    </h4>
+                    </h3>
                     <p className="text-[10px] text-on-surface-variant leading-relaxed font-semibold">
                       Flags any property listings waiting for verification review that are not yet
                       approved or rejected.
@@ -137,9 +137,9 @@ export default function DiagnosticsPanel() {
                     )}
                   </div>
                   <div className="flex-1 space-y-0.5">
-                    <h4 className="font-bold text-on-surface leading-tight">
+                    <h3 className="font-bold text-on-surface leading-tight">
                       Clean Tours & Enquiries Queue
-                    </h4>
+                    </h3>
                     <p className="text-[10px] text-on-surface-variant leading-relaxed font-semibold">
                       Screens for completely unaddressed "New" scheduled tour interest submissions.
                     </p>
@@ -155,13 +155,13 @@ export default function DiagnosticsPanel() {
                     {settings.consultantName ? (
                       <Check className="h-4 w-4 text-success-green" />
                     ) : (
-                      <X className="h-4 w-4 text-red-400" />
+                      <X className="h-4 w-4 text-red-600" />
                     )}
                   </div>
                   <div className="flex-1 space-y-0.5">
-                    <h4 className="font-bold text-on-surface leading-tight">
+                    <h3 className="font-bold text-on-surface leading-tight">
                       Direct Consultative Lead Assignment
-                    </h4>
+                    </h3>
                     <p className="text-[10px] text-on-surface-variant leading-relaxed font-semibold">
                       Ensures directory listing pages route directly to a designated verified
                       advisor.
@@ -182,10 +182,10 @@ export default function DiagnosticsPanel() {
             {/* Control Panel Card */}
             <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4 flex flex-col justify-between">
               <div>
-                <h3 className="font-extrabold text-on-surface text-xs uppercase tracking-wider pb-2 border-b border-outline-variant/50 flex items-center gap-1.5">
+                <h2 className="font-extrabold text-on-surface text-xs uppercase tracking-wider pb-2 border-b border-outline-variant/50 flex items-center gap-1.5">
                   <Shield className="h-4 w-4 text-gold-accent" />
                   Audit Automation Control
-                </h3>
+                </h2>
                 <p className="text-[10px] text-on-surface-variant leading-relaxed mt-2.5 font-semibold">
                   Execute automated simulations to parse internal databases against local state
                   legal mandates.
@@ -209,21 +209,21 @@ export default function DiagnosticsPanel() {
                   <div className="p-4 bg-gold-accent/10 border border-emerald-500/20 text-success-green rounded-xl space-y-2 flex flex-col items-center text-center">
                     <CheckSquare className="h-8 w-8 text-success-green" />
                     <div className="space-y-0.5">
-                      <h4 className="font-extrabold text-xs text-on-surface uppercase tracking-wider">
+                      <h3 className="font-extrabold text-xs text-on-surface uppercase tracking-wider">
                         Audit Diagnostic Passed
-                      </h4>
+                      </h3>
                       <p className="text-[9px] text-on-surface-variant font-semibold">
                         All operational and RERA variables conform to compliance criteria.
                       </p>
                     </div>
                   </div>
                 ) : auditPassed === false ? (
-                  <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl space-y-2 flex flex-col items-center text-center">
-                    <AlertTriangle className="h-8 w-8 text-red-400" />
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-600 rounded-xl space-y-2 flex flex-col items-center text-center">
+                    <AlertTriangle className="h-8 w-8 text-red-600" />
                     <div className="space-y-0.5">
-                      <h4 className="font-extrabold text-xs text-on-surface uppercase tracking-wider">
+                      <h3 className="font-extrabold text-xs text-on-surface uppercase tracking-wider">
                         Audit Diagnostic Failed
-                      </h4>
+                      </h3>
                       <p className="text-[9px] text-on-surface-variant font-semibold">
                         Some operational or RERA variables do not meet compliance criteria.
                       </p>
@@ -233,9 +233,9 @@ export default function DiagnosticsPanel() {
                   <div className="p-4 bg-surface/50 border border-outline-variant/50 text-on-surface-variant rounded-xl space-y-2 flex flex-col items-center text-center">
                     <HelpCircle className="h-8 w-8 text-on-surface-variant" />
                     <div className="space-y-0.5">
-                      <h4 className="font-extrabold text-xs text-on-surface uppercase tracking-wider">
+                      <h3 className="font-extrabold text-xs text-on-surface uppercase tracking-wider">
                         Awaiting Diagnosis Run
-                      </h4>
+                      </h3>
                       <p className="text-[9px] text-on-surface-variant font-medium">
                         Integrity screening has not been conducted for the current administrator
                         session.
@@ -256,7 +256,7 @@ export default function DiagnosticsPanel() {
                   const reraPass = !!settings.reraNumber
                   const propertiesPass = properties.length > 0
                   const approvalsPass = !properties.some(
-                    (p) => !p.verified && p.moderationStatus !== 'rejected',
+                    (p: any) => !p.verified && p.moderationStatus !== 'rejected',
                   )
                   const enquiriesPass = newEnquiriesCount === 0
                   const consultantPass = !!settings.consultantName

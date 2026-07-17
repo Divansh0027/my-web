@@ -98,14 +98,14 @@ export default function EnquiriesManagement() {
                     </td>
                   </tr>
                 ) : (
-                  filteredEnquiries.map((enq, index) => (
+                  filteredEnquiries.map((enq: any, index: number) => (
                     <tr
                       key={enq.id || `enq-${index}`}
                       className="hover:bg-surface/20 transition-all font-sans"
                     >
                       {/* Client stats */}
                       <td className="py-4 px-4 space-y-1">
-                        <h4 className="font-extrabold text-on-surface leading-tight">{enq.name}</h4>
+                        <h3 className="font-extrabold text-on-surface leading-tight">{enq.name}</h3>
                         <p className="text-[10px] text-gold-accent font-semibold">{enq.phone}</p>
                         <p className="text-[10px] text-on-surface-variant select-all font-medium break-all">
                           {enq.email}
@@ -143,7 +143,7 @@ export default function EnquiriesManagement() {
                           }
                           className={`text-[9px] font-black uppercase rounded-lg border px-2 py-1 outline-none cursor-pointer focus:ring-1 ${
                             enq.status === 'New'
-                              ? 'bg-red-500/10 text-red-400 border-red-500/25 focus:ring-red-500'
+                              ? 'bg-red-500/10 text-red-600 border-red-500/25 focus:ring-red-500'
                               : enq.status === 'Contacted'
                                 ? 'bg-amber-500/10 text-amber-400 border-amber-500/25 focus:ring-amber-500'
                                 : 'bg-gold-accent/10 text-success-green border-emerald-500/25 focus:ring-emerald-500'
@@ -160,7 +160,7 @@ export default function EnquiriesManagement() {
                         <div className="flex items-center justify-center gap-1.5">
                           {/* Whatsapp Chat */}
                           <a
-                            href={`https://wa.me/${enq.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello Mr/Ms ${enq.name}, ${BUSINESS_CONFIG.consultantName} here from Shiv Saya Properties. I received your enquiry about: ${enq.propertyName}. I would be glad to share layout details.`)}`}
+                            href={`https://wa.me/${enq.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello Mr/Ms ${enq.name}, ${BUSINESS_CONFIG.consultantName} here from ${BUSINESS_CONFIG.businessName}. I received your enquiry about: ${enq.propertyName}. I would be glad to share layout details.`)}`}
                             target="_blank"
                             rel="noreferrer"
                             className="p-2 rounded-lg bg-gold-accent/10 hover:bg-gold-accent/20 text-success-green border border-success-green/25 cursor-pointer"
@@ -172,7 +172,7 @@ export default function EnquiriesManagement() {
 
                           {/* Email directly */}
                           <a
-                            href={`mailto:${enq.email}?subject=Response on your property enquiry - Shiv Saya Properties&body=Hello ${enq.name},%0D%0AThank you for reaching out regarding ${enq.propertyName}.`}
+                            href={`mailto:${enq.email}?subject=Response on your property enquiry - ${BUSINESS_CONFIG.businessName}&body=Hello ${enq.name},%0D%0AThank you for reaching out regarding ${enq.propertyName}.`}
                             className="p-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/25"
                             title="Send Email response"
                             aria-label="Send Email response"
@@ -183,7 +183,7 @@ export default function EnquiriesManagement() {
                           {/* Delete Enquiry */}
                           <button
                             onClick={() => handleDeleteEnquiry(enq.id)}
-                            className="p-2 rounded-lg bg-slate-850 hover:bg-red-500/10 border border-outline-variant/50 hover:border-red-500/20 text-on-surface-variant hover:text-red-400 cursor-pointer"
+                            className="p-2 rounded-lg bg-slate-850 hover:bg-red-500/10 border border-outline-variant/50 hover:border-red-500/20 text-on-surface-variant hover:text-red-600 cursor-pointer"
                             title="Delete Enquiry Record"
                             aria-label="Delete Enquiry Record"
                           >

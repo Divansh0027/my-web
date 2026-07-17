@@ -93,7 +93,7 @@ export default function SearchView() {
         console.error('Geolocation is not supported by this browser')
         setIsLocating(false)
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error getting location:', error)
       setIsLocating(false)
     }
@@ -142,7 +142,7 @@ export default function SearchView() {
                   disabled={isLocating}
                   className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border font-bold transition-colors ${
                     userLocation
-                      ? 'bg-gold-accent text-white border-gold-accent'
+                      ? 'bg-gold-accent text-[var(--on-gold)] border-gold-accent'
                       : 'border-outline-variant text-on-surface hover:bg-surface-container'
                   }`}
                 >
@@ -152,9 +152,9 @@ export default function SearchView() {
               </div>
 
               <div>
-                <h3 className="font-bold text-on-surface mb-4 tracking-wide uppercase text-sm">
+                <h2 className="font-bold text-on-surface mb-4 tracking-wide uppercase text-sm">
                   City
-                </h3>
+                </h2>
                 <RefinementList
                   attribute="city"
                   classNames={{
@@ -169,9 +169,9 @@ export default function SearchView() {
               </div>
 
               <div>
-                <h3 className="font-bold text-on-surface mb-4 tracking-wide uppercase text-sm">
+                <h2 className="font-bold text-on-surface mb-4 tracking-wide uppercase text-sm">
                   Property Type
-                </h3>
+                </h2>
                 <RefinementList
                   attribute="type"
                   classNames={{
@@ -186,9 +186,9 @@ export default function SearchView() {
               </div>
 
               <div>
-                <h3 className="font-bold text-on-surface mb-4 tracking-wide uppercase text-sm">
+                <h2 className="font-bold text-on-surface mb-4 tracking-wide uppercase text-sm">
                   BHK
-                </h3>
+                </h2>
                 <RefinementList
                   attribute="bhk"
                   classNames={{
@@ -203,9 +203,9 @@ export default function SearchView() {
               </div>
 
               <div>
-                <h3 className="font-bold text-on-surface mb-4 tracking-wide uppercase text-sm">
+                <h2 className="font-bold text-on-surface mb-4 tracking-wide uppercase text-sm">
                   Amenities
-                </h3>
+                </h2>
                 <RefinementList
                   attribute="amenities"
                   searchable={true}
@@ -216,16 +216,14 @@ export default function SearchView() {
                     checkbox:
                       'rounded border-outline-variant text-gold-accent focus:ring-gold-accent',
                     count: 'bg-surface text-xs px-2 py-0.5 rounded-full ml-auto',
-                    input:
-                      'w-full bg-surface border border-outline-variant/50 rounded-lg px-3 py-2 text-sm text-on-surface focus:border-gold-accent focus:ring-1 focus:ring-gold-accent outline-none',
                   }}
                 />
               </div>
 
               <div>
-                <h3 className="font-bold text-on-surface mb-4 tracking-wide uppercase text-sm">
+                <h2 className="font-bold text-on-surface mb-4 tracking-wide uppercase text-sm">
                   Price Range (₹)
-                </h3>
+                </h2>
                 <RangeInput
                   attribute="price"
                   classNames={{
@@ -234,15 +232,15 @@ export default function SearchView() {
                       'w-full bg-surface border border-outline-variant/50 rounded-lg px-3 py-2 text-sm text-on-surface focus:border-gold-accent focus:ring-1 focus:ring-gold-accent outline-none',
                     separator: 'text-on-surface-variant',
                     submit:
-                      'bg-gold-accent text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-gold-hover transition-colors',
+                      'bg-gold-accent text-[var(--on-gold)] px-3 py-2 rounded-lg text-sm font-bold hover:bg-gold-hover transition-colors',
                   }}
                 />
               </div>
 
               <div>
-                <h3 className="font-bold text-on-surface mb-4 tracking-wide uppercase text-sm">
+                <h2 className="font-bold text-on-surface mb-4 tracking-wide uppercase text-sm">
                   Possession Status
-                </h3>
+                </h2>
                 <RefinementList
                   attribute="possession"
                   classNames={{
@@ -297,8 +295,8 @@ export default function SearchView() {
                   classNames={{
                     list: 'flex items-center gap-2',
                     item: 'w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm text-on-surface-variant hover:bg-surface hover:text-on-surface transition-colors cursor-pointer',
-                    selectedItem: 'bg-gold-accent text-white hover:bg-gold-hover hover:text-white',
-                    disabledItem: 'opacity-50 cursor-not-allowed',
+                    selectedItem: 'bg-gold-accent text-[var(--on-gold)] hover:bg-gold-hover hover:text-[var(--on-gold)]',
+                    disabledItem: 'text-on-surface-variant cursor-not-allowed',
                   }}
                 />
               </div>

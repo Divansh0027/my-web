@@ -1,75 +1,60 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Settings, X, CheckSquare, Server, FileText, Globe, Users, Check } from 'lucide-react'
+import { Settings, CheckSquare, X, Check, Server, Globe, Shield, Paintbrush, TestTube, Share } from 'lucide-react'
 
-interface ChecklistState {
-  [key: string]: boolean
-}
+type ChecklistState = Record<string, boolean>
 
 const SECTIONS = [
   {
-    id: 'firebase',
-    title: 'FIREBASE INTEGRATION',
+    id: 'visuals',
+    title: 'Visual Identity',
+    icon: Paintbrush,
+    items: [
+      { id: 'logo', label: 'Upload SVG logo & favicons' },
+      { id: 'colors', label: 'Verify primary & secondary Tailwind theme palette' },
+      { id: 'fonts', label: 'Verify Google Fonts loaded & weights display correctly' },
+      { id: 'responsive', label: 'Test mobile navbar drawer & hero layout' },
+    ],
+  },
+  {
+    id: 'db',
+    title: 'Data & Services',
     icon: Server,
     items: [
-      { id: 'fb_project', label: 'Firebase project created' },
-      { id: 'fb_auth', label: 'Authentication enabled (Email + Google)' },
-      { id: 'fb_firestore', label: 'Firestore database active' },
-      { id: 'fb_storage', label: 'Storage bucket enabled' },
-      { id: 'fb_rules', label: 'firestore.rules deployed' },
-      { id: 'fb_api_keys', label: 'API key restricted in Google Console' },
+      { id: 'firebase', label: 'Configure Firebase project (Applet config JSON)' },
+      { id: 'rules', label: 'Deploy secure Firestore Rules (set_up_firebase)' },
+      { id: 'auth', label: 'Verify Auth providers (Email/Password & Google)' },
+      { id: 'indexes', label: 'Create Firestore Composite Indexes' },
     ],
   },
   {
-    id: 'content',
-    title: 'CONTENT & DETAILS',
-    icon: FileText,
+    id: 'security',
+    title: 'Security & Access',
+    icon: Shield,
     items: [
-      { id: 'c_whatsapp', label: 'WhatsApp number updated in config.ts' },
-      { id: 'c_rera', label: 'RERA number updated in config.ts' },
-      { id: 'c_address', label: 'Business address updated in config.ts' },
-      { id: 'c_listings', label: 'Real property listings added' },
-      { id: 'c_sample', label: 'Sample test data removed' },
-      { id: 'c_testimonials', label: 'Real client testimonials added' },
+      { id: 'admin', label: 'Configure custom claims (Admin SDK)' },
+      { id: 'env', label: 'Set API keys via environment variables (no hardcoding)' },
+      { id: 'cors', label: 'Validate API endpoints CORS config' },
     ],
   },
   {
-    id: 'deployment',
-    title: 'DEPLOYMENT PIPELINE',
-    icon: Globe,
+    id: 'seo',
+    title: 'Performance & SEO',
+    icon: Share,
     items: [
-      { id: 'd_account', label: 'Vercel account created' },
-      { id: 'd_repo', label: 'GitHub repo connected to Vercel' },
-      { id: 'd_env', label: 'Environment variables added in Vercel' },
-      { id: 'd_godaddy', label: 'GoDaddy domain connected to Vercel' },
-      { id: 'd_ssl', label: 'SSL active on custom domain' },
-      { id: 'd_domain', label: 'Site loads at custom domain correctly' },
+      { id: 'meta', label: 'Update <title> and meta description in SEO component' },
+      { id: 'images', label: 'Optimize hero banners and mockups (WEBP)' },
+      { id: 'lighthouse', label: 'Run Lighthouse audit (>90 scores)' },
     ],
   },
   {
-    id: 'admin',
-    title: 'ADMINISTRATIVE CONTROL',
-    icon: Users,
+    id: 'qa',
+    title: 'Functional QA',
+    icon: TestTube,
     items: [
-      { id: 'a_emails', label: 'Admin user assigned in Firestore' },
-      { id: 'a_login', label: 'Admin login tested successfully' },
-      { id: 'a_flow', label: 'Approve and reject flow tested' },
-      { id: 'a_csv', label: 'Enquiry CSV export tested' },
-    ],
-  },
-  {
-    id: 'phase4_deployment',
-    title: 'PHASE 4 DEPLOYMENT CHECKLIST',
-    icon: CheckSquare,
-    items: [
-      { id: 'p4_accessibility', label: 'Accessibility score ≥ 95 on Lighthouse' },
-      { id: 'p4_ux_tested', label: 'All UX improvements tested on staging' },
-      { id: 'p4_ci_cd', label: 'CI/CD pipeline deploys to staging on every PR' },
-      { id: 'p4_prod_deploy', label: 'Production deployment on main merge' },
-      { id: 'p4_sec_headers', label: 'Security headers active on production' },
-      { id: 'p4_monitoring', label: 'Monitoring dashboard shows healthy status' },
-      { id: 'p4_rollback', label: 'Rollback procedure tested and documented' },
-      { id: 'p4_feature_flags', label: 'Feature flags working for gradual rollouts' },
+      { id: 'crud', label: 'E2E test core CRUD flow (Properties/Admin)' },
+      { id: 'upload', label: 'Verify Image upload size limits and compression' },
+      { id: '404', label: 'Check 404 Route & redirect bounds' },
     ],
   },
 ]
@@ -78,21 +63,15 @@ const TOTAL_ITEMS = SECTIONS.reduce((acc, sec) => acc + sec.items.length, 0)
 
 export default function DevChecklist() {
   const isDev = (import.meta as any).env?.DEV
-
   const [isOpen, setIsOpen] = useState(false)
-  const [checkedState, setCheckedState] = useState<ChecklistState>({})
-
-  // Hydrate on mount
-  useEffect(() => {
+  const [checkedState, setCheckedState] = useState<ChecklistState>(() => {
     try {
       const stored = localStorage.getItem('ssp_dev_checklist')
-      if (stored) {
-        setCheckedState(JSON.parse(stored))
-      }
-    } catch (e) {
-      console.warn('Error parsing ssp_dev_checklist from storage', e)
+      return stored ? JSON.parse(stored) : {}
+    } catch(e) {
+      return {}
     }
-  }, [])
+  })
 
   const handleToggle = (id: string) => {
     const newState = {
@@ -100,37 +79,31 @@ export default function DevChecklist() {
       [id]: !checkedState[id],
     }
     setCheckedState(newState)
-    localStorage.setItem('ssp_dev_checklist', JSON.stringify(newState))
+    try {
+      localStorage.setItem('ssp_dev_checklist', JSON.stringify(newState))
+    } catch (e) {
+      console.warn('Storage error', e)
+    }
   }
 
-  const getCheckedLength = () => {
-    return Object.values(checkedState).filter(Boolean).length
-  }
+  const completedCount = Object.values(checkedState).filter(Boolean).length
+  const percentage = Math.round((completedCount / TOTAL_ITEMS) * 100) || 0
 
-  const completedCount = getCheckedLength()
-  const percentage = Math.round((completedCount / TOTAL_ITEMS) * 100)
-
-  if (!isDev) {
-    return null
-  }
+  if (!isDev) return null
 
   return (
     <>
-      {/* Trigger floating button */}
       <button
-        id="dev-checklist-trigger-btn"
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-26 left-6 z-[9999] h-12 w-12 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center text-gold-accent hover:bg-surface-container-high hover:text-on-surface transition-all shadow-md active:scale-95 cursor-pointer group"
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-6 left-6 z-[9999] h-12 w-12 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center text-gold-accent hover:bg-surface-container-high hover:text-on-surface transition-all shadow-md active:scale-95 cursor-pointer group"
         title="Open Pre-Launch Checklist"
       >
         <Settings className="h-5 w-5 animate-spin-slow group-hover:rotate-45 transition-transform duration-500" />
       </button>
 
-      {/* Slide-out Panel Overlay & Slider */}
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.5 }}
@@ -139,7 +112,6 @@ export default function DevChecklist() {
               className="fixed inset-0 bg-surface/80 z-[10000] backdrop-blur-xs"
             />
 
-            {/* Sidebar drawer */}
             <motion.div
               id="dev-checklist-panel"
               initial={{ x: '-100%' }}
@@ -149,7 +121,6 @@ export default function DevChecklist() {
               className="fixed top-0 bottom-0 left-0 w-full sm:w-[420px] bg-surface-container border-r border-outline-variant/50 z-[10001] shadow-md flex flex-col justify-between"
             >
               <div className="flex flex-col h-full overflow-hidden">
-                {/* Header */}
                 <div className="p-6 border-b border-outline-variant/50 bg-surface flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckSquare className="h-5 w-5 text-gold-accent" />
@@ -165,7 +136,6 @@ export default function DevChecklist() {
                   </button>
                 </div>
 
-                {/* Progress bar info */}
                 <div className="p-6 bg-surface/50 border-b border-outline-variant/50 space-y-2">
                   <div className="flex items-center justify-between text-xs font-bold leading-none">
                     <span className="text-on-surface-variant uppercase tracking-widest text-[9px]">
@@ -183,14 +153,12 @@ export default function DevChecklist() {
                   </div>
                 </div>
 
-                {/* Checklist Categories & Scroll List */}
                 <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 scrollbar-thin scrollbar-thumb-white/5">
                   {SECTIONS.map((section) => {
                     const SecIcon = section.icon
                     if (!isDev) {
                       return null
                     }
-
                     return (
                       <div key={section.id} className="space-y-3">
                         <div className="flex items-center gap-2 pb-1 border-b border-outline-variant/50">
@@ -199,14 +167,12 @@ export default function DevChecklist() {
                             {section.title}
                           </h3>
                         </div>
-
                         <div className="space-y-2.5">
                           {section.items.map((item) => {
                             const isChecked = !!checkedState[item.id]
                             if (!isDev) {
                               return null
                             }
-
                             return (
                               <label
                                 htmlFor={`checklist-item-${item.id}`}
@@ -247,7 +213,6 @@ export default function DevChecklist() {
                   })}
                 </div>
 
-                {/* Footer status quote & Links */}
                 <div className="p-4 bg-surface border-t border-outline-variant/50 flex flex-col gap-3">
                   <div className="flex gap-2 justify-center">
                     <a

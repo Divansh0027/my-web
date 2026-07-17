@@ -1,0 +1,19 @@
+[debug] [2026-07-12T08:46:32.930Z] ----------------------------------------------------------------------
+[debug] [2026-07-12T08:46:32.934Z] Command:       /usr/local/bin/node /usr/local/bin/firebase projects:list
+[debug] [2026-07-12T08:46:32.947Z] CLI Version:   15.22.1
+[debug] [2026-07-12T08:46:32.948Z] Platform:      linux
+[debug] [2026-07-12T08:46:32.948Z] Node Version:  v22.23.0
+[debug] [2026-07-12T08:46:32.948Z] Detected Agent: unknown
+[debug] [2026-07-12T08:46:32.948Z] Time:          Sun Jul 12 2026 08:46:32 GMT+0000 (Coordinated Universal Time)
+[debug] [2026-07-12T08:46:32.949Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-07-12T08:46:33.721Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-07-12T08:46:33.825Z] Running auto auth
+[debug] [2026-07-12T08:46:33.852Z] No OAuth tokens found
+[debug] [2026-07-12T08:46:33.854Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2026-07-12T08:46:34.008Z] FetchError: Invalid response body while trying to fetch https://firebase.googleapis.com/v1beta1/projects?pageSize=1000: Premature close
+[debug] [2026-07-12T08:46:34.012Z] FirebaseError: FetchError: Invalid response body while trying to fetch https://firebase.googleapis.com/v1beta1/projects?pageSize=1000: Premature close
+    at RetryOperation._fn (/usr/local/lib/node_modules/firebase-tools/lib/apiv2.js:317:88)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[error] 
+[error] Error: Failed to list Firebase projects. See firebase-debug.log for more info.

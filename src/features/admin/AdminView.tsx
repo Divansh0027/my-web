@@ -7,6 +7,7 @@ import { Property, EnquiryRecord, ClientUser } from '@/shared/types/types'
 import { AdminProvider } from '@/features/admin'
 import { useAdminState } from '@/features/admin'
 import { AdminSidebar } from '@/features/admin/components/AdminSidebar'
+import { useConfig } from '@/shared/context/ConfigContext'
 
 import AdminOverview from '@/features/admin/components/AdminOverview'
 import AdminProperties from '@/features/admin/components/AdminProperties'
@@ -40,10 +41,11 @@ interface AdminViewProps {
 
 export default function AdminView(props: AdminViewProps) {
   const adminState = useAdminState(props)
+  const config = useConfig()
 
   return (
     <>
-      <SEO title="Admin Dashboard | Shiv Saya Properties" noindex={true} />
+      <SEO title={`Admin Dashboard | ${config.businessName}`} noindex={true} />
       <div className="font-sans text-on-surface bg-surface min-h-screen pt-24 pb-16 flex flex-col md:flex-row">
         <AdminProvider value={adminState}>
           <AdminSidebar />

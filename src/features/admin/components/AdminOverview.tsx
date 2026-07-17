@@ -1,6 +1,7 @@
 import { motion } from 'motion/react'
 import { Mail, Check, X, ExternalLink, AlertTriangle, ShieldCheck, MapPin } from 'lucide-react'
 import React, { Suspense } from 'react'
+import { useConfig } from '@/shared/context/ConfigContext'
 
 const AnalyticsChart = React.lazy(() => import('@/features/admin/components/AnalyticsChart'))
 import {
@@ -12,6 +13,7 @@ import { useAdmin } from '@/features/admin'
 
 export default function AdminOverview() {
   const props = useAdmin()
+  const config = useConfig()
   const { formatCurrency, estimatedRevenue, enquiries, dbUsers } = props
 
   const { data: pendingData } = useAdminPendingPropertiesQuery()
@@ -30,7 +32,7 @@ export default function AdminOverview() {
               Executive Dashboard
             </h1>
             <p className="text-xs text-on-surface-variant">
-              Shiv Saya Properties listing approvals, direct client requests, and operations.
+              {config.businessName} listing approvals, direct client requests, and operations.
             </p>
           </div>
         </div>
@@ -92,7 +94,7 @@ export default function AdminOverview() {
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-outline-variant/50">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
-                <h3 className="font-extrabold text-on-surface text-sm">Pending Approvals</h3>
+                <h2 className="font-extrabold text-on-surface text-sm">Pending Approvals</h2>
               </div>
               <span className="text-[10px] text-on-surface-variant font-bold bg-surface px-2 py-0.5 rounded-md">
                 {pendingApprovalsCount} Queue
@@ -116,9 +118,9 @@ export default function AdminOverview() {
                     className="p-3.5 bg-surface/40 rounded-xl border border-outline-variant/50 flex items-center justify-between gap-4 hover:border-outline-variant transition-all"
                   >
                     <div className="min-w-0">
-                      <h4 className="font-bold text-on-surface text-xs truncate leading-snug">
+                      <h3 className="font-bold text-on-surface text-xs truncate leading-snug">
                         {prop.title}
-                      </h4>
+                      </h3>
                       <p className="text-[10px] text-on-surface-variant mt-1 flex items-center gap-1.5 font-semibold">
                         <MapPin className="h-3 w-3 text-gold-accent shrink-0" /> {prop.location}
                       </p>
@@ -138,7 +140,7 @@ export default function AdminOverview() {
                       </button>
                       <button
                         onClick={() => props.handlePropertyHideToggle(prop)}
-                        className="p-2 rounded-lg bg-surface-container-high hover:bg-red-500/10 border border-outline-variant/50 hover:border-red-500/20 text-on-surface-variant hover:text-red-400 cursor-pointer transition-all"
+                        className="p-2 rounded-lg bg-surface-container-high hover:bg-red-500/10 border border-outline-variant/50 hover:border-red-500/20 text-on-surface-variant hover:text-red-600 cursor-pointer transition-all"
                         title="Reject Listing"
                       >
                         <X className="h-3.5 w-3.5" />
@@ -155,7 +157,7 @@ export default function AdminOverview() {
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-outline-variant/50">
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-gold-accent" />
-                <h3 className="font-extrabold text-on-surface text-sm">Recent Client Inquiries</h3>
+                <h2 className="font-extrabold text-on-surface text-sm">Recent Client Inquiries</h2>
               </div>
               <button
                 onClick={() => props.setActiveTab('enquiries')}
@@ -165,14 +167,14 @@ export default function AdminOverview() {
               </button>
             </div>
             <div className="space-y-3 max-h-[340px] overflow-y-auto pr-1 scrollbar-thin">
-              {enquiries.slice(0, 5).map((enq, idx) => (
+              {enquiries.slice(0, 5).map((enq: any, idx: number) => (
                 <div
                   key={enq.id || `enq-short-${idx}`}
                   className="p-3.5 bg-surface/40 rounded-xl border border-outline-variant/50 space-y-2 hover:border-gold-accent/20 transition-all"
                 >
                   <div className="flex items-center justify-between gap-2.5">
                     <div>
-                      <h4 className="font-extrabold text-on-surface text-xs">{enq.name}</h4>
+                      <h3 className="font-extrabold text-on-surface text-xs">{enq.name}</h3>
                       <span className="text-[9px] text-on-surface-variant font-medium">
                         {new Date(enq.dateStr).toLocaleString()}
                       </span>
@@ -180,7 +182,7 @@ export default function AdminOverview() {
                     <span
                       className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
                         enq.status === 'New'
-                          ? 'bg-red-500/15 text-red-400 border border-red-500/10 animate-pulse'
+                          ? 'bg-red-500/15 text-red-600 border border-red-500/10 animate-pulse'
                           : enq.status === 'Contacted'
                             ? 'bg-amber-500/15 text-amber-400 border border-amber-500/10'
                             : 'bg-gold-accent/15 text-gold-accent border border-gold-accent/20'
@@ -203,9 +205,9 @@ export default function AdminOverview() {
 
         {/* Quick Activity Chart Reference */}
         <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
-          <h3 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">
+          <h2 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">
             Indexed Actions (Overview)
-          </h3>
+          </h2>
           <div className="h-44 w-full">
             <Suspense
               fallback={

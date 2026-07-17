@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Check } from 'lucide-react'
+import { Check, Plus, X } from 'lucide-react'
 import FocusLock from 'react-focus-lock'
 
 export function AddPropertyModal({
@@ -30,9 +30,9 @@ export function AddPropertyModal({
               >
                 <X className="h-4 w-4" />
               </button>
-              <h3 className="text-base font-extrabold text-gold-accent uppercase tracking-wide border-b border-outline-variant/50 pb-3.5 mb-5 flex items-center gap-1.5">
+              <h2 className="text-base font-extrabold text-gold-accent uppercase tracking-wide border-b border-outline-variant/50 pb-3.5 mb-5 flex items-center gap-1.5">
                 <Plus className="h-4 w-4" /> Direct manual property addition
-              </h3>
+              </h2>
               <form
                 onSubmit={onSubmit}
                 className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-on-surface-variant"

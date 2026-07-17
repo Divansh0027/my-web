@@ -147,7 +147,7 @@ export function HelpCenterModal({ isOpen, onClose }: HelpCenterModalProps) {
                       href={`tel:${BUSINESS_CONFIG.businessPhone}`}
                       className="flex items-center gap-4 p-4 rounded-xl border border-outline-variant/50 bg-surface hover:border-gold-accent hover:shadow-sm transition-all group"
                     >
-                      <div className="h-10 w-10 bg-surface-container-high rounded-full flex items-center justify-center group-hover:bg-gold-accent group-hover:text-surface transition-colors">
+                      <div className="h-10 w-10 bg-surface-container-high rounded-full flex items-center justify-center group-hover:bg-gold-accent group-hover:text-\[var(--on-gold)\] transition-colors">
                         <Phone className="h-5 w-5" />
                       </div>
                       <div>
@@ -161,7 +161,7 @@ export function HelpCenterModal({ isOpen, onClose }: HelpCenterModalProps) {
                       href={`mailto:${BUSINESS_CONFIG.businessEmail}`}
                       className="flex items-center gap-4 p-4 rounded-xl border border-outline-variant/50 bg-surface hover:border-gold-accent hover:shadow-sm transition-all group"
                     >
-                      <div className="h-10 w-10 bg-surface-container-high rounded-full flex items-center justify-center group-hover:bg-gold-accent group-hover:text-surface transition-colors">
+                      <div className="h-10 w-10 bg-surface-container-high rounded-full flex items-center justify-center group-hover:bg-gold-accent group-hover:text-\[var(--on-gold)\] transition-colors">
                         <Mail className="h-5 w-5" />
                       </div>
                       <div>

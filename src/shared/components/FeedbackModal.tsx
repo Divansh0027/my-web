@@ -34,7 +34,7 @@ export function FeedbackModal({ isOpen, onClose, onShowNotification }: FeedbackM
       } else {
         onShowNotification('Failed to submit feedback. Please try again.', 'error')
       }
-    } catch (error) {
+    } catch (err: unknown) {
       onShowNotification('Failed to submit feedback. Please try again.', 'error')
     } finally {
       setIsSubmitting(false)
@@ -119,14 +119,14 @@ export function FeedbackModal({ isOpen, onClose, onShowNotification }: FeedbackM
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
                     placeholder="What did you like or dislike?"
-                    className="w-full bg-surface border border-outline-variant/50 rounded-xl px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-gold-accent resize-none placeholder-on-surface-variant/50"
+                    className="w-full bg-surface border border-outline-variant/50 rounded-xl px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-gold-accent resize-none placeholder-on-surface-variant"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-gold-accent text-[var(--on-gold)] font-bold rounded-xl hover:bg-gold-hover transition-colors disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-gold-accent text-[var(--on-gold)] font-bold rounded-xl hover:bg-gold-hover transition-colors disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:border-none disabled:shadow-none disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     'Submitting...'

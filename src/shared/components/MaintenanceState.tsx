@@ -2,7 +2,7 @@ import React from 'react'
 import { useConfig } from '@/shared/context/ConfigContext'
 
 export const MaintenanceState: React.FC = () => {
-  const BUSINESS_CONFIG = useConfig()
+  const config = useConfig()
   return (
     <main className="min-h-screen bg-surface text-on-surface font-sans flex items-center justify-center p-6 select-none relative overflow-hidden">
       <div className="flex flex-col items-center text-center space-y-6 max-w-lg px-4 relative z-10">
@@ -11,12 +11,12 @@ export const MaintenanceState: React.FC = () => {
             We'll Be Right Back
           </h1>
           <p className="text-sm text-on-surface-variant leading-relaxed max-w-md">
-            Shiv Saya Properties is currently undergoing scheduled maintenance.
+            {config.businessName} is currently undergoing scheduled maintenance.
           </p>
         </div>
         <div className="pt-4">
           <a
-            href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=Hi`}
+            href={`https://wa.me/${config.whatsappNumber}?text=Hi`}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 bg-gold-accent hover:bg-gold-hover hover:scale-105 shadow-md text-[var(--on-gold)] font-bold rounded-xl text-xs transition-all active:scale-98"

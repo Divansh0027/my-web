@@ -188,7 +188,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
         setAuthError(result.error)
       }
     } catch (err: unknown) {
-      let friendlyMessage = err.message || 'Failed to log in with Google.'
+      let friendlyMessage = (err as any).message || 'Failed to log in with Google.'
       if (
         friendlyMessage.includes('auth/operation-not-allowed') ||
         friendlyMessage.includes('operation-not-allowed')
@@ -224,7 +224,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
         setAuthError(result.error)
       }
     } catch (err: unknown) {
-      let friendlyMessage = err.message || 'Failed to login. Please try again.'
+      let friendlyMessage = (err as any).message || 'Failed to login. Please try again.'
       if (
         friendlyMessage.includes('auth/user-not-found') ||
         friendlyMessage.includes('user-not-found')
@@ -272,7 +272,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
       await signUpWithEmailPassword(signupName, signupEmail, formattedPhone, signupPassword)
       onClose()
     } catch (err: unknown) {
-      let friendlyMessage = err.message || 'Failed to sign up. Please try again.'
+      let friendlyMessage = (err as any).message || 'Failed to sign up. Please try again.'
       if (
         friendlyMessage.includes('auth/email-already-in-use') ||
         friendlyMessage.includes('email-already-in-use')
@@ -313,7 +313,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
       setForgotSuccess('Password reset link has been dispatched to your email!')
       setForgotEmail('')
     } catch (err: unknown) {
-      let friendlyErr = err.message || 'Could not dispatch password reset link.'
+      let friendlyErr = (err as any).message || 'Could not dispatch password reset link.'
       if (friendlyErr.includes('auth/user-not-found') || friendlyErr.includes('user-not-found')) {
         friendlyErr = 'No matching account was found with this email.'
       }
@@ -355,9 +355,9 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
               <div>
                 <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant/50 bg-surface-container/60 sticky top-0 z-10 backdrop-blur-sm">
                   <div>
-                    <h3 id="login-modal-title" className="text-on-surface text-md font-bold">
+                    <h2 id="login-modal-title" className="text-on-surface text-md font-bold">
                       Secure Gateway
-                    </h3>
+                    </h2>
                     <p className="text-on-surface-variant text-[10px] mt-0.5">
                       Access your direct-to-owner panel
                     </p>
@@ -366,7 +366,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                     id="close-login-modal"
                     onClick={onClose}
                     aria-label="Close modal"
-                    className="h-9 w-9 rounded-full bg-surface-container-high/80 hover:bg-red-500/10 hover:text-red-400 text-on-surface-variant flex items-center justify-center transition-colors border border-outline-variant/50 cursor-pointer"
+                    className="h-9 w-9 rounded-full bg-surface-container-high/80 hover:bg-red-500/10 hover:text-red-600 text-on-surface-variant flex items-center justify-center transition-colors border border-outline-variant/50 cursor-pointer"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -378,7 +378,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                   {authError && (
                     <div
                       role="alert"
-                      className="p-3.5 bg-red-500/10 border border-red-500/25 rounded-xl text-red-400 text-xs flex gap-2.5 items-start"
+                      className="p-3.5 bg-red-500/10 border border-red-500/25 rounded-xl text-red-600 text-xs flex gap-2.5 items-start"
                     >
                       <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                       <span>{authError}</span>
@@ -472,7 +472,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                             <span
                               id="login-email-error"
                               aria-live="polite"
-                              className="text-[10px] text-red-400 flex gap-1 items-center font-medium"
+                              className="text-[10px] text-red-600 flex gap-1 items-center font-medium"
                             >
                               <AlertCircle className="h-3.5 w-3.5" /> {errors.loginEmail}
                             </span>
@@ -524,7 +524,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                           id="login-submit-btn"
                           disabled={isLoginDisabled}
                           type="submit"
-                          className="w-full py-3 rounded-xl bg-gold-accent text-[var(--on-gold)] text-xs font-black uppercase tracking-wider shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 transition-all disabled:opacity-40 select-none cursor-pointer flex items-center justify-center gap-1"
+                          className="w-full py-3 rounded-xl bg-gold-accent text-[var(--on-gold)] text-xs font-black uppercase tracking-wider shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 transition-all disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:border-none disabled:shadow-none disabled:cursor-not-allowed select-none cursor-pointer flex items-center justify-center gap-1"
                         >
                           {isSubmitting ? (
                             <>
@@ -563,7 +563,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                             <span
                               id="signup-name-error"
                               aria-live="polite"
-                              className="text-[10px] text-red-400 flex gap-1 items-center font-medium"
+                              className="text-[10px] text-red-600 flex gap-1 items-center font-medium"
                             >
                               <AlertCircle className="h-3.5 w-3.5" /> {errors.signupName}
                             </span>
@@ -595,7 +595,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                             <span
                               id="signup-email-error"
                               aria-live="polite"
-                              className="text-[10px] text-red-400 flex gap-1 items-center font-medium"
+                              className="text-[10px] text-red-600 flex gap-1 items-center font-medium"
                             >
                               <AlertCircle className="h-3.5 w-3.5" /> {errors.signupEmail}
                             </span>
@@ -629,7 +629,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                             <span
                               id="signup-phone-error"
                               aria-live="polite"
-                              className="text-[10px] text-red-400 flex gap-1 items-center font-medium"
+                              className="text-[10px] text-red-600 flex gap-1 items-center font-medium"
                             >
                               <AlertCircle className="h-3.5 w-3.5" /> {errors.signupPhone}
                             </span>
@@ -737,7 +737,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                           <span
                             id="signup-password-error"
                             aria-live="polite"
-                            className="text-[10px] text-red-400 flex gap-1 items-center font-medium"
+                            className="text-[10px] text-red-600 flex gap-1 items-center font-medium"
                           >
                             <AlertCircle className="h-3.5 w-3.5" /> {errors.signupPassword}
                           </span>
@@ -746,7 +746,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                           <span
                             id="signup-confirm-error"
                             aria-live="polite"
-                            className="text-[10px] text-red-400 flex gap-1 items-center font-medium"
+                            className="text-[10px] text-red-600 flex gap-1 items-center font-medium"
                           >
                             <AlertCircle className="h-3.5 w-3.5" /> {errors.signupConfirm}
                           </span>
@@ -765,7 +765,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                             className="mt-0.5 rounded border-outline-variant text-gold-accent focus:ring-gold-accent/50 h-4 w-4 bg-surface"
                           />
                           <span>
-                            I understand that Shiv Saya Properties performs background physical
+                            I understand that {BUSINESS_CONFIG.businessName} performs background physical
                             audits on listings and book consultation schedules under Indian law.
                           </span>
                         </label>
@@ -775,7 +775,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                           id="signup-submit-btn"
                           disabled={isSignupDisabled}
                           type="submit"
-                          className="w-full py-3 rounded-xl bg-gold-accent text-[var(--on-gold)] text-xs font-black uppercase tracking-wider shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 transition-all disabled:opacity-40 select-none cursor-pointer flex items-center justify-center gap-1"
+                          className="w-full py-3 rounded-xl bg-gold-accent text-[var(--on-gold)] text-xs font-black uppercase tracking-wider shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 transition-all disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:border-none disabled:shadow-none disabled:cursor-not-allowed select-none cursor-pointer flex items-center justify-center gap-1"
                         >
                           {isSubmitting ? (
                             <>
@@ -825,7 +825,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                           {forgotError && (
                             <div
                               role="alert"
-                              className="p-3.5 bg-red-500/10 border border-red-500/25 rounded-xl text-red-400 text-xs flex gap-2.5 items-start"
+                              className="p-3.5 bg-red-500/10 border border-red-500/25 rounded-xl text-red-600 text-xs flex gap-2.5 items-start"
                             >
                               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                               <span>{forgotError}</span>
@@ -868,7 +868,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                               id="forgot-submit-btn"
                               disabled={isForgotSubmitting || !forgotEmail}
                               type="submit"
-                              className="flex-1 py-3 bg-gold-accent text-[var(--on-gold)] text-xs font-bold rounded-xl text-center shadow uppercase hover:bg-gold-hover hover:scale-105 shadow-md disabled:opacity-40 cursor-pointer"
+                              className="flex-1 py-3 bg-gold-accent text-[var(--on-gold)] text-xs font-bold rounded-xl text-center shadow uppercase hover:bg-gold-hover hover:scale-105 shadow-md disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:border-none disabled:shadow-none disabled:cursor-not-allowed cursor-pointer"
                             >
                               {isForgotSubmitting ? 'Sending...' : 'Send Reset Link'}
                             </button>
@@ -894,7 +894,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                         type="button"
                         disabled={isSubmitting}
                         onClick={handleGoogleSignIn}
-                        className="w-full py-3 flex items-center justify-center gap-3 bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-900 text-xs font-bold rounded-xl border border-outline-variant shadow active:scale-98 transition-all select-none cursor-pointer"
+                        className="w-full py-3 flex items-center justify-center gap-3 bg-white hover:bg-slate-50 disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:border-none disabled:shadow-none disabled:cursor-not-allowed text-slate-900 text-xs font-bold rounded-xl border border-outline-variant shadow active:scale-98 transition-all select-none cursor-pointer"
                       >
                         {isSubmitting ? (
                           <>

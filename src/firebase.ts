@@ -1,3 +1,4 @@
+import { ClientUser } from "@/shared/types/types"
 import imageCompression from 'browser-image-compression'
 import { sanitizeText } from '@/shared/utils/sanitize'
 import { isValidPhone, maxLength } from '@/shared/utils/validate'
@@ -39,7 +40,7 @@ import {
 
 import { enableIndexedDbPersistence } from 'firebase/firestore'
 import { initializeApp, getApp, getApps } from 'firebase/app'
-import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging'
+import { getMessaging, getToken, onMessage, isSupported as isMessagingSupported } from 'firebase/messaging'
 import {
   getAuth,
   onAuthStateChanged,
@@ -59,11 +60,11 @@ import {
   uploadBytesResumable,
   getDownloadURL,
 } from 'firebase/storage'
-import { getAnalytics, logEvent, isSupported } from 'firebase/analytics'
+import { getAnalytics, logEvent, isSupported as isAnalyticsSupported } from 'firebase/analytics'
 import { getPerformance, trace, FirebasePerformance } from 'firebase/performance'
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check'
 
-import { Property, Enquiry } from '@/shared/types/types'
+import { Property, Enquiry, City } from '@/shared/types/types'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -101,12 +102,19 @@ try {
   console.warn('Could not set Firestore log level', e)
 }
 
-let app: any
+import type { FirebaseApp } from 'firebase/app';
+let app: FirebaseApp | undefined
 let authInstance: Auth | undefined
 export let dbInstance: Firestore | undefined
 let storageInstance: FirebaseStorage | undefined
-export let analyticsInstance: any = undefined
+import type { Analytics } from 'firebase/analytics';
+export let analyticsInstance: Analytics | undefined = undefined
 export let perfInstance: FirebasePerformance | undefined
+
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  // @ts-expect-error global Window property for App Check
+  self.FIREBASE_APPCHECK_DEBUG_TOKEN = true
+}
 
 try {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
@@ -128,21 +136,19 @@ try {
 
   try {
     const appCheckKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY
-    if (appCheckKey && typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && appCheckKey && !import.meta.env.DEV) {
+      // Only initialize AppCheck in Production to avoid ReCAPTCHA domain errors in AI Studio previews.
       initializeAppCheck(app, {
-        provider: new ReCaptchaEnterpriseProvider(appCheckKey),
+        provider: new ReCaptchaV3Provider(appCheckKey),
         isTokenAutoRefreshEnabled: true,
       })
-    } else if (import.meta.env.DEV) {
-      // Allow App check in dev with debug token if we want, but usually it relies on self.FIREBASE_APPCHECK_DEBUG_TOKEN
-      // Just initialize with a dummy if needed, but safe to skip if no key
     }
   } catch (appCheckError) {
     console.warn('Failed to initialize App Check', appCheckError)
   }
 
   // Initialize Analytics and Performance only if supported (browser)
-  isSupported()
+  isAnalyticsSupported()
     .then((supported) => {
       if (supported) {
         analyticsInstance = getAnalytics(app)
@@ -152,7 +158,7 @@ try {
     .catch(() => {
       // Ignore errors checking for analytics support
     })
-} catch (error: any) {
+} catch (error: unknown) {
   console.warn('Failed to initialize remote Firebase. Falling back to local state.', error)
 }
 
@@ -190,7 +196,7 @@ export function handleFirestoreError(
 ): FirestoreErrorInfo {
   const currentAuth = authInstance
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: error instanceof Error ? (error as any).message : String(error),
     authInfo: {
       userId: currentAuth?.currentUser?.uid ?? null,
       isAnonymous: currentAuth?.currentUser?.isAnonymous ?? null,
@@ -226,18 +232,18 @@ export async function testFirestoreConnection(): Promise<{
     // Attempting to read a public or dummy document to force a backend network call
     await getDocFromServer(doc(dbInstance as Firestore, 'test', 'network_diagnostic_check'))
     return { success: true, message: 'Firestore connection successful.' }
-  } catch (error: any) {
+  } catch (error: unknown) {
     let message = 'Firestore connection failed.'
-    if (error?.code === 'unavailable') {
+    if ((error as any)?.code === 'unavailable') {
       message = 'Network unavailable. Client may be offline or firestore blocked by firewall.'
-    } else if (error?.code === 'permission-denied') {
+    } else if ((error as any)?.code === 'permission-denied') {
       // Permission denied still indicates reachability
       return {
         success: true,
         message: 'Firestore reachable (permission denied, which verifies network connectivity).',
       }
     }
-    return { success: false, message, details: error?.message || error }
+    return { success: false, message, details: (error as any)?.message || error }
   }
 }
 
@@ -285,19 +291,13 @@ export const trackEvent = (eventName: string, eventParams?: any) => {
 // Local state for LocalStorage fallback
 const LOCAL_STORAGE_FAVORITES_KEY = 'ssp_local_favorites'
 
-export interface ClientUser {
-  uid: string
-  email: string
-  displayName: string
-  photoURL?: string | undefined
-  phone?: string | undefined
-  isAdmin?: boolean | undefined
-}
 
 export type AuthResult =
   { success: true; user: ClientUser } | { success: false; error: string; banned?: boolean }
 
 const authListeners = new Set<(user: ClientUser | null) => void>()
+
+export type { ClientUser } from "@/shared/types/types"
 
 export interface PropertyFilters {
   query?: string
@@ -355,7 +355,7 @@ export const getProperties = async (
       list.push(docSnap.data() as Property)
     })
     return list
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (searchTrace) searchTrace.stop()
     console.warn('Error reading from Firestore properties.', error)
     return []
@@ -405,7 +405,7 @@ export const getNextPage = async (
     })
     const lastDoc = snapshot.docs[snapshot.docs.length - 1]
     return { data: list, lastDoc, hasMore: snapshot.docs.length === pageLimit }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.warn('Error fetching next page of properties.', error)
     return { data: [], lastDoc: null, hasMore: false }
   }
@@ -437,7 +437,7 @@ export const getPropertyCount = async (filters?: PropertyFilters): Promise<numbe
     const q = query(collection(dbInstance as Firestore, 'properties'), ...constraints)
     const snapshot = await getCountFromServer(q)
     return snapshot.data().count
-  } catch (error) {
+  } catch (error: unknown) {
     console.warn('Error getting property count', error)
     return 0
   }
@@ -451,7 +451,7 @@ export const getPropertyById = async (id: string): Promise<Property | null> => {
       return docSnap.data() as Property
     }
     return null
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.warn('Error getting property by ID, using local.', error)
     return null
   }
@@ -463,7 +463,7 @@ export const getUserEnquiries = async (userId: string): Promise<Enquiry[]> => {
     const q = query(collection(dbInstance as Firestore, 'enquiries'), where('userId', '==', userId))
     const snap = await getDocs(q)
     return snap.docs.map((doc) => doc.data() as Enquiry)
-  } catch (_err: any) {
+  } catch (_err: unknown) {
     console.error('Error:', _err)
     return []
   }
@@ -495,6 +495,7 @@ export const submitEnquiry = async (
     ...enquiry,
     id: enquiry.id || `enq-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     dateStr: enquiry.dateStr || new Date().toISOString(),
+    createdAt: serverTimestamp(),
   }
 
   localStorage.setItem('ssp_last_enquiry_time', Date.now().toString())
@@ -505,7 +506,7 @@ export const submitEnquiry = async (
       cleanForFirestore(completeEnquiry),
     )
     return { success: true, savedLocally: false }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Firestore submitEnquiry failed:', error)
     return { success: false, savedLocally: false, error: 'Failed to submit enquiry to server.' }
   }
@@ -533,7 +534,7 @@ export const toggleFavorite = async (userId: string, propertyId: string): Promis
       await setDoc(favRef, { userId, propertyId, savedAt: new Date().toISOString() })
     }
     return true
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('toggleFavorite failed:', error)
     return false
   }
@@ -556,7 +557,7 @@ export const getFavorites = async (userId: string): Promise<string[]> => {
       }
     })
     return list
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.warn('Error fetching favorites', error)
     // Return local fallback on security/connectivity issues
     const localFavsStr = localStorage.getItem(LOCAL_STORAGE_FAVORITES_KEY)
@@ -579,7 +580,7 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
           if (uDoc.exists() && uDoc.data()?.banned === true) {
             isBanned = true
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           const fireErr = err as { code?: string }
           if (fireErr?.code === 'unavailable') {
             console.info('Client offline, assuming not banned for now.')
@@ -628,7 +629,7 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
               }
             }
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           const fireErr = err as { code?: string }
           if (fireErr?.code === 'unavailable') {
             console.info('Client offline, assuming not admin for now.')
@@ -647,7 +648,7 @@ export const subscribeAuth = (callback: (user: ClientUser | null) => void) => {
       } else {
         callback(null)
       }
-    } catch (_err: any) {
+    } catch (_err: unknown) {
       console.error('Error:', _err)
       callback(null)
     }
@@ -689,39 +690,6 @@ export const isAdminUser = (user: ClientUser | null | undefined): boolean => {
 }
 
 // Real-time Database Config synchronizers (Issue 3, 8 & 11)
-export const subscribeRemoteAdmins = (callback: (emails: string[]) => void): (() => void) => {
-  if (!dbInstance) {
-    callback([])
-    return () => {}
-  }
-  try {
-    const unsub = onSnapshot(
-      collection(dbInstance as Firestore, 'admins'),
-      (snapshot) => {
-        const list: string[] = []
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data()
-          if (data.email) {
-            list.push(data.email.toLowerCase())
-          } else if (docSnap.id.includes('@')) {
-            list.push(docSnap.id.toLowerCase())
-          }
-        })
-        const uniqueAdmins = Array.from(new Set([...list]))
-        callback(uniqueAdmins)
-      },
-      (err) => {
-        console.error('Info: failed to sync admins from firestore:', err?.message || err)
-        callback([])
-      },
-    )
-    return unsub
-  } catch (_err: any) {
-    console.error('Error:', _err)
-    callback([])
-    return () => {}
-  }
-}
 
 export const addRemoteAdmin = async (email: string): Promise<boolean> => {
   email = sanitizeText(email)
@@ -754,7 +722,7 @@ export const addRemoteAdmin = async (email: string): Promise<boolean> => {
       addedAt: new Date().toISOString(),
     })
     return true
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.warn('Failed adding remote admin', err)
     return false
   }
@@ -776,14 +744,14 @@ export const removeRemoteAdmin = async (email: string): Promise<boolean> => {
     // Also try checking the pending admins keyed by email
     await deleteDoc(doc(dbInstance as Firestore, 'admins', cleanEmail))
     return true
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.warn('Failed removing remote admin', err)
     return false
   }
 }
 
 // System Controls Sync (Issue 8)
-export const subscribeRemoteControls = (callback: (controls: any) => void): (() => void) => {
+export const subscribeRemoteControls = (callback: (controls: Record<string, boolean>) => void): (() => void) => {
   const localVal = localStorage.getItem('ssp_controls')
   const fallback = localVal
     ? JSON.parse(localVal)
@@ -800,7 +768,7 @@ export const subscribeRemoteControls = (callback: (controls: any) => void): (() 
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data()
-          callback(data)
+          callback(data as Record<string, boolean>)
           localStorage.setItem('ssp_controls', JSON.stringify(data))
         } else {
           callback(fallback)
@@ -809,19 +777,19 @@ export const subscribeRemoteControls = (callback: (controls: any) => void): (() 
       (err) => {
         console.log(
           'Info: using local/cached controls fallback (dynamic sync active):',
-          err?.message || err,
+          (err as any)?.message || err,
         )
         callback(fallback)
       },
     )
     return unsub
-  } catch (_err: any) {
+  } catch (_err: unknown) {
     callback(fallback)
     return () => {}
   }
 }
 
-export const updateRemoteControls = async (controls: any): Promise<boolean> => {
+export const updateRemoteControls = async (controls: Record<string, boolean>): Promise<boolean> => {
   localStorage.setItem('ssp_controls', JSON.stringify(controls))
   if (!dbInstance) return false
   try {
@@ -831,14 +799,15 @@ export const updateRemoteControls = async (controls: any): Promise<boolean> => {
       { merge: true },
     )
     return true
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.warn('Failed updating remote controls', err)
     return false
   }
 }
 
 // Business Settings Sync (Issue 11)
-export const subscribeRemoteSettings = (callback: (settings: any) => void): (() => void) => {
+import type { AdminSettings } from '@/shared/types/types';
+export const subscribeRemoteSettings = (callback: (settings: AdminSettings) => void): (() => void) => {
   const localVal = localStorage.getItem('ssp_settings')
   const fallback = localVal ? JSON.parse(localVal) : null
 
@@ -853,7 +822,7 @@ export const subscribeRemoteSettings = (callback: (settings: any) => void): (() 
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data()
-          callback(data)
+          callback(data as AdminSettings)
           localStorage.setItem('ssp_settings', JSON.stringify(data))
         } else {
           if (fallback) {
@@ -864,19 +833,19 @@ export const subscribeRemoteSettings = (callback: (settings: any) => void): (() 
       (err) => {
         console.log(
           'Info: using local/cached settings fallback (dynamic sync active):',
-          err?.message || err,
+          (err as any)?.message || err,
         )
         if (fallback) callback(fallback)
       },
     )
     return unsub
-  } catch (_err: any) {
+  } catch (_err: unknown) {
     if (fallback) callback(fallback)
     return () => {}
   }
 }
 
-export const updateRemoteSettings = async (settings: any): Promise<boolean> => {
+export const updateRemoteSettings = async (settings: AdminSettings): Promise<boolean> => {
   localStorage.setItem('ssp_settings', JSON.stringify(settings))
   if (!dbInstance) return false
   try {
@@ -886,7 +855,7 @@ export const updateRemoteSettings = async (settings: any): Promise<boolean> => {
       { merge: true },
     )
     return true
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.warn('Failed updating remote settings', err)
     return false
   }
@@ -940,30 +909,30 @@ export const loginWithGoogle = async (): Promise<AuthResult> => {
           },
         }
       }
-    } catch (error: any) {
-      if (error instanceof Error && error.message.includes('suspended')) {
-        return { success: false, error: error.message, banned: true }
+    } catch (error: unknown) {
+      if (error instanceof Error && (error as any).message.includes('suspended')) {
+        return { success: false, error: (error as any).message, banned: true }
       }
-      if (error?.code === 'auth/internal-error' || error?.message?.includes('internal-error')) {
+      if ((error as any)?.code === 'auth/internal-error' || (error as any)?.message?.includes('internal-error')) {
         return {
           success: false,
           error:
             "Firebase Error (auth/internal-error): Google Sign-in failed. Please verify in your Firebase Console that 'Google' is enabled under Authentication -> Sign-in Method, AND that you have selected a 'Support Email'. Ensure VITE_FIREBASE_AUTH_DOMAIN is correctly set.",
         }
       }
-      if (error?.code === 'auth/popup-blocked') {
+      if ((error as any)?.code === 'auth/popup-blocked') {
         return {
           success: false,
           error:
             'Google Sign-in popup was blocked. Please open this app in a new tab to sign in, or allow popups.',
         }
       }
-      if (error?.code === 'auth/popup-closed-by-user') {
+      if ((error as any)?.code === 'auth/popup-closed-by-user') {
         return { success: false, error: 'Sign-in was cancelled.' }
       }
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Authentication failed',
+        error: error instanceof Error ? (error as any).message : 'Authentication failed',
       }
     }
   }
@@ -1009,7 +978,7 @@ export const loginWithEmailPassword = async (
             banMsg = uDoc.data().bannedMessage
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.warn('Banned check failed on Firebase:', err)
       }
 
@@ -1027,13 +996,13 @@ export const loginWithEmailPassword = async (
           photoURL: result.user.photoURL || undefined,
         },
       }
-    } catch (error: any) {
-      if (error instanceof Error && error.message.includes('suspended')) {
-        return { success: false, error: error.message, banned: true }
+    } catch (error: unknown) {
+      if (error instanceof Error && (error as any).message.includes('suspended')) {
+        return { success: false, error: (error as any).message, banned: true }
       }
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Authentication failed',
+        error: error instanceof Error ? (error as any).message : 'Authentication failed',
       }
     }
   }
@@ -1066,7 +1035,7 @@ export const signUpWithEmailPassword = async (
 
       try {
         await sendEmailVerification(result.user)
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.warn('Failed to send verification email:', err)
       }
 
@@ -1075,7 +1044,7 @@ export const signUpWithEmailPassword = async (
           uid: result.user.uid,
           email,
           displayName: name,
-          phone,
+          phoneNumber: phone,
           createdAt: new Date().toISOString(),
         })
       } catch (dbErr) {
@@ -1086,7 +1055,7 @@ export const signUpWithEmailPassword = async (
       throw new Error(
         'Account created successfully. Please check your email inbox to verify your account before logging in.',
       )
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Sign up error:', error)
       throw error
     }
@@ -1102,7 +1071,7 @@ export const sendPasswordReset = async (email: string): Promise<boolean> => {
     try {
       await sendPasswordResetEmail(authInstance, email)
       return true
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Password reset error:', error)
       throw error
     }
@@ -1124,6 +1093,7 @@ export const logoutUser = async (): Promise<boolean> => {
   localStorage.removeItem('ssp_property_draft_v2')
 
   authListeners.forEach((cb) => cb(null))
+  return true
 }
 
 export const updateUserProfileDetails = async (
@@ -1134,26 +1104,27 @@ export const updateUserProfileDetails = async (
   if (data.phoneNumber) data.phoneNumber = sanitizeText(data.phoneNumber)
   if (authInstance?.currentUser) {
     try {
-      await updateProfile(authInstance.currentUser, { displayName: name })
+      if (data.displayName) {
+        await updateProfile(authInstance.currentUser, { displayName: data.displayName })
+      }
       const docRef = doc(dbInstance as Firestore, 'users', authInstance.currentUser.uid)
       await setDoc(
         docRef,
         {
           uid: authInstance.currentUser.uid,
-          displayName: name,
-          email,
-          phone,
+          displayName: data.displayName || authInstance.currentUser.displayName,
+          email: authInstance.currentUser.email,
+          phone: data.phoneNumber || '',
           updatedAt: new Date().toISOString(),
         },
         { merge: true },
       )
       return true
-    } catch (_err: any) {
+    } catch (_err: unknown) {
       console.error('Error:', _err)
       return false
     }
   }
-
   return false
 }
 
@@ -1162,7 +1133,7 @@ export const addProperty = async (property: Property): Promise<boolean> => {
     const docRef = doc(dbInstance as Firestore, 'properties', property.id)
     await setDoc(docRef, cleanForFirestore(property))
     return true
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('addProperty failed:', error)
     return false
   }
@@ -1221,7 +1192,7 @@ export const updatePropertyInDb = async (
     const docRef = doc(dbInstance as Firestore, 'properties', propertyId)
     await setDoc(docRef, cleanForFirestore(updates), { merge: true })
     return true
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('updatePropertyInDb failed:', error)
     return false
   }
@@ -1235,14 +1206,14 @@ export const logAdminAction = async (
 ) => {
   if (!dbInstance) return
   try {
-    await addDoc(collection(dbInstance as Firestore, 'audit_logs'), {
+    await addDoc(collection(dbInstance as Firestore, 'auditLogs'), {
       action,
       targetId,
       adminEmail,
       details: cleanForFirestore(details || {}),
       timestamp: serverTimestamp(),
     })
-  } catch (_err: any) {
+  } catch (_err: unknown) {
     console.error('Error:', _err)
   }
 }
@@ -1252,7 +1223,7 @@ export const deletePropertyFromDb = async (id: string): Promise<boolean> => {
     const docRef = doc(dbInstance as Firestore, 'properties', id)
     await deleteDoc(docRef)
     return true
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('deletePropertyFromDb failed:', error)
     return false
   }
@@ -1344,7 +1315,7 @@ export async function uploadPropertyImage(
         },
       )
     })
-  } catch (_err: any) {
+  } catch (_err: unknown) {
     if (uploadTrace) uploadTrace.stop()
     console.error('Error:', _err)
     throw new Error('Image upload failed. Please try again.')
@@ -1368,7 +1339,7 @@ export const updateEnquiryStatusInDb = async (
     const docRef = doc(dbInstance as Firestore, 'enquiries', enquiryId)
     await updateDoc(docRef, { status })
     return true
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error updating enquiry status:', error)
     return false
   }
@@ -1380,7 +1351,7 @@ export const deleteEnquiryFromDb = async (enquiryId: string): Promise<boolean> =
     const docRef = doc(dbInstance as Firestore, 'enquiries', enquiryId)
     await deleteDoc(docRef)
     return true
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error deleting enquiry:', error)
     return false
   }
@@ -1413,6 +1384,7 @@ export const toggleUserBan = async (uid: string, currentBanState: boolean): Prom
   })
 
   await batch.commit()
+  return true
 }
 
 export const subscribeToAdminStatus = (
@@ -1433,11 +1405,12 @@ export const subscribeToAdminStatus = (
   )
 }
 
-let messagingInstance: any = null
+import type { Messaging, MessagePayload } from 'firebase/messaging';
+let messagingInstance: Messaging | null = null
 
 export const requestNotificationPermission = async () => {
   try {
-    const supported = await isSupported()
+    const supported = await isMessagingSupported()
     if (!supported) {
       console.log('Firebase Messaging is not supported in this browser.')
       return null
@@ -1455,13 +1428,13 @@ export const requestNotificationPermission = async () => {
       console.log('Notification permission denied.')
       return null
     }
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Error requesting notification permission:', err)
     return null
   }
 }
 
-export const onMessageListener = (callback: (payload: any) => void) => {
+export const onMessageListener = (callback: (payload: MessagePayload) => void) => {
   if (messagingInstance) {
     return onMessage(messagingInstance, callback)
   }
@@ -1478,7 +1451,7 @@ export const submitFeedback = async (rating: number, feedback: string): Promise<
       createdAt: serverTimestamp(),
     })
     return true
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error submitting feedback:', error)
     return false
   }

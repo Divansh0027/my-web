@@ -31,12 +31,12 @@ export const useRecommendations = (allProperties: Property[]) => {
 
         const sortedIds = Object.keys(counts).sort((a, b) => counts[b] - counts[a])
         setTrendingIds(sortedIds.slice(0, 4))
-      } catch (err) {
-        console.error('Failed to fetch trending', err)
+      } catch (err: unknown) {
+        // console.warn('Failed to fetch trending', err) // Suppressed due to permissions/index fallback
         // Fallback: random
         setTrendingIds(
           allProperties
-            .map((p) => p.id)
+            .map((p: Property) => p.id)
             .sort(() => 0.5 - Math.random())
             .slice(0, 4),
         )
@@ -49,13 +49,13 @@ export const useRecommendations = (allProperties: Property[]) => {
   const recommendedProperties = useMemo(() => {
     const recommended: Property[] = []
     const recentProps = recentIds
-      .map((id) => allProperties.find((p) => p.id === id))
+      .map((id) => allProperties.find((p: Property) => p.id === id))
       .filter(Boolean) as Property[]
 
     if (recentProps.length > 0) {
       // Find similar properties based on type and city of recently viewed
-      const targetTypes = new Set(recentProps.map((p) => p.type))
-      const targetCities = new Set(recentProps.map((p) => p.city))
+      const targetTypes = new Set(recentProps.map((p: Property) => p.type))
+      const targetCities = new Set(recentProps.map((p: Property) => p.city))
 
       const candidates = allProperties.filter((p) => !recentIds.includes(p.id))
 
@@ -80,7 +80,7 @@ export const useRecommendations = (allProperties: Property[]) => {
 
   const trendingProperties = useMemo(() => {
     return trendingIds
-      .map((id) => allProperties.find((p) => p.id === id))
+      .map((id) => allProperties.find((p: Property) => p.id === id))
       .filter((p): p is Property => p !== undefined)
   }, [allProperties, trendingIds])
 

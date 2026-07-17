@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import * as Sentry from '@sentry/react'
-import { subscribeAuth, ClientUser, subscribeRemoteAdmins } from '@/firebase'
-import { checkIsAdmin } from '@/features/admin'
+import { subscribeAuth, ClientUser, subscribeToAdminStatus } from '@/firebase'
 
 export interface UseAuthReturn {
   currentUser: ClientUser | null
@@ -16,21 +15,25 @@ export interface UseAuthReturn {
  */
 export function useAuth(): UseAuthReturn {
   const [currentUser, setCurrentUser] = useState<ClientUser | null>(null)
-  const [adminsList, setAdminsList] = useState<string[]>([])
+  const [isAdmin, setIsAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isAppReady, setIsAppReady] = useState(false)
 
   useEffect(() => {
-    const unsub = subscribeRemoteAdmins((emails) => {
-      setAdminsList(emails)
-    })
-    return () => unsub()
-  }, [])
+    let unsubAdmin: (() => void) | undefined
 
-  const isAdmin = useMemo(
-    () => checkIsAdmin(currentUser as unknown, adminsList),
-    [currentUser, adminsList],
-  )
+    if (currentUser?.uid) {
+      unsubAdmin = subscribeToAdminStatus(currentUser.uid, (status) => {
+        setIsAdmin(status)
+      })
+    } else {
+      setIsAdmin(false)
+    }
+
+    return () => {
+      if (unsubAdmin) unsubAdmin()
+    }
+  }, [currentUser?.uid])
 
   useEffect(() => {
     const unsubscribe = subscribeAuth((user) => {
@@ -50,7 +53,9 @@ export function useAuth(): UseAuthReturn {
     }, 4000)
 
     return () => {
-      unsubscribe()
+      if (typeof unsubscribe === 'function') {
+        unsubscribe()
+      }
       clearTimeout(failsafe)
     }
   }, [])

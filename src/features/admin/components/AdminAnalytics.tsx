@@ -4,11 +4,27 @@ import { useAdmin } from '@/features/admin'
 import { collection, query, getDocs, orderBy, Timestamp } from 'firebase/firestore'
 import { dbInstance as db } from '@/firebase'
 
+interface BehaviorEvent {
+  id: string;
+  eventName?: string;
+  timestamp?: any;
+  userId?: string;
+  sessionId?: string;
+  [key: string]: any;
+}
+
+interface ChartData {
+  [key: string]: string | number;
+  name: string;
+  views: number;
+  properties: number;
+}
+
 export default function AnalyticsPanel() {
   const props = useAdmin()
   const { properties, threeBhkCount, villaCount, commercialCount, standardFlatsCount } = props
 
-  const [behaviorData, setBehaviorData] = useState<any[]>([])
+  const [behaviorData, setBehaviorData] = useState<BehaviorEvent[]>([])
   const [cohorts, setCohorts] = useState({ wau: 0, mau: 0 })
   const [funnel, setFunnel] = useState({
     searches: 0,
@@ -17,14 +33,15 @@ export default function AnalyticsPanel() {
     enquiries: 0,
     contacts: 0,
   })
-  const [chartData, setChartData] = useState<any[]>([])
+  const [chartData, setChartData] = useState<ChartData[]>([])
 
   useEffect(() => {
     const fetchBehavior = async () => {
       try {
+        if (!db) return;
         const q = query(collection(db, 'user_behavior'), orderBy('timestamp', 'asc'))
         const snapshot = await getDocs(q)
-        const events: any[] = []
+        const events: BehaviorEvent[] = []
         snapshot.forEach((doc) => {
           events.push({ id: doc.id, ...doc.data() })
         })
@@ -82,7 +99,7 @@ export default function AnalyticsPanel() {
           properties: dailyStats[day]?.properties || 0,
         }))
         setChartData(formattedChartData)
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Failed to fetch behavior', error)
       }
     }
@@ -105,9 +122,9 @@ export default function AnalyticsPanel() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Visual Breakdown of items */}
           <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
-            <h3 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">
+            <h2 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">
               Indexed Listing Types
-            </h3>
+            </h2>
             <div className="space-y-4 pt-3.5">
               {[
                 { name: '3 BHK Builder Floors', count: threeBhkCount, color: 'bg-gold-accent' },
@@ -146,9 +163,9 @@ export default function AnalyticsPanel() {
 
           {/* User Journey Funnel */}
           <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
-            <h3 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">
+            <h2 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">
               User Journey Funnel (Real-Time)
-            </h3>
+            </h2>
             <div className="space-y-3 pt-2">
               {[
                 { title: 'Searches Performed', count: funnel.searches, color: 'bg-blue-500' },
@@ -190,9 +207,9 @@ export default function AnalyticsPanel() {
 
         {/* Activity Chart Area */}
         <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
-          <h3 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">
+          <h2 className="font-extrabold text-on-surface text-xs uppercase tracking-wider">
             Property Views & Listing Activity (Past 7 Days)
-          </h3>
+          </h2>
           <div className="h-[300px] w-full pt-4">
             <Suspense
               fallback={

@@ -6,7 +6,7 @@ export default function PropertyModeration() {
   const props = useAdmin()
   const { formatCurrency, properties } = props
 
-  const pendingProperties = properties.filter((p) => p.moderationStatus === 'pending')
+  const pendingProperties = properties.filter((p: any) => p.moderationStatus === 'pending')
 
   return (
     <>
@@ -50,7 +50,7 @@ export default function PropertyModeration() {
                     </td>
                   </tr>
                 ) : (
-                  pendingProperties.map((prop, idx) => (
+                  pendingProperties.map((prop: any, idx: number) => (
                     <tr
                       key={prop.id}
                       className="hover:bg-surface/20 transition-all text-xs font-sans"
@@ -62,9 +62,9 @@ export default function PropertyModeration() {
 
                       {/* Title & locality column */}
                       <td className="py-4 px-4 min-w-0">
-                        <h4 className="font-extrabold text-on-surface leading-normal truncate max-w-sm sm:max-w-md">
+                        <h3 className="font-extrabold text-on-surface leading-normal truncate max-w-sm sm:max-w-md">
                           {prop.title}
-                        </h4>
+                        </h3>
                         <p className="text-[10px] text-on-surface-variant mt-1 flex items-center gap-1">
                           <MapPin className="h-3 w-3 text-gold-accent" /> {prop.location}
                         </p>
@@ -97,7 +97,7 @@ export default function PropertyModeration() {
                           </button>
                           <button
                             onClick={() => props.handlePropertyHideToggle(prop)}
-                            className="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-red-500/20 text-on-surface-variant hover:text-red-400 border border-outline-variant/50 hover:border-red-500/30 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
+                            className="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-red-500/20 text-on-surface-variant hover:text-red-600 border border-outline-variant/50 hover:border-red-500/30 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
                             title="Reject Listing"
                             aria-label="Reject Listing"
                           >

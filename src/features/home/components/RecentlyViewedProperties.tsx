@@ -41,7 +41,7 @@ export function RecentlyViewedProperties({ allProperties }: RecentlyViewedProper
                   width={400}
                   height={300}
                   src={prop.images[0] || '/placeholder-property.jpg'}
-                  alt={`${prop.title} — ${prop.location}`}
+                  alt=""
                   loading="lazy"
                   className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -50,9 +50,9 @@ export function RecentlyViewedProperties({ allProperties }: RecentlyViewedProper
                 <span className="text-base font-black text-gold-accent">
                   {typeof prop.price === 'number' ? formatPrice(prop.price) : String(prop.price)}
                 </span>
-                <h4 className="text-on-surface text-xs font-semibold truncate group-hover:text-gold-accent transition-colors">
+                <h3 className="text-on-surface text-xs font-semibold truncate group-hover:text-gold-accent transition-colors">
                   {prop.title}
-                </h4>
+                </h3>
                 <div className="flex items-center gap-1.5 text-on-surface-variant text-[10px]">
                   <MapPin className="h-3 w-3 text-gold-accent" />
                   <span className="truncate">{prop.location}</span>

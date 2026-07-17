@@ -88,8 +88,8 @@ export function FeaturedProperties({
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProperties.map((prop) => {
-                const isSaved = savedProperties.includes(prop.id)
+              {(filteredProperties || []).map((prop, idx) => {
+                const isSaved = savedProperties?.includes(prop.id)
                 return (
                   <motion.div
                     key={prop.id}
@@ -104,7 +104,7 @@ export function FeaturedProperties({
                     <div className="relative h-64 w-full overflow-hidden shrink-0">
                       <OptimizedImage
                         src={Array.isArray(prop.images) ? prop.images[0] : prop.images}
-                        alt={`${prop.title} — ${prop.location}`}
+                        alt=""
                         className="h-full w-full group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -137,7 +137,7 @@ export function FeaturedProperties({
                         onClick={() => onToggleSaved(prop.id)}
                         aria-pressed={isSaved}
                         aria-label={isSaved ? 'Remove from favorites' : 'Add to favorites'}
-                        className="absolute top-4 right-4 h-9 w-9 bg-surface/60 backdrop-blur-md rounded-full flex items-center justify-center border border-outline-variant text-on-surface-variant hover:text-red-400 transition-colors"
+                        className="absolute top-4 right-4 h-9 w-9 bg-surface/60 backdrop-blur-md rounded-full flex items-center justify-center border border-outline-variant text-on-surface-variant hover:text-red-600 transition-colors"
                       >
                         <Heart
                           className={`h-5 w-5 ${isSaved ? 'fill-red-500 text-red-500' : ''}`}

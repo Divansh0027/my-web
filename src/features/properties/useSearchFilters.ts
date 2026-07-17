@@ -38,6 +38,7 @@ export function useSearchFilters(): UseSearchFiltersReturn {
 
   useEffect(() => {
     if (urlFilters) {
+       
       setActiveSearchFilters(urlFilters)
     }
   }, [urlFilters])

@@ -13,6 +13,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { useAdmin } from '@/features/admin'
+import { OptimizedImage } from '@/shared/components/OptimizedImage'
 import {
   useAdminPropertiesQuery,
   useAdminCountsQuery,
@@ -183,7 +184,7 @@ export default function PropertyManagement() {
               <thead>
                 <tr className="bg-surface border-b border-outline-variant/50 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                   <th className="py-4 px-4 w-12 text-center">
-                    <CheckSquare className="h-4 w-4 text-on-surface-variant inline-block opacity-50" />
+                    <CheckSquare className="h-4 w-4 text-on-surface-variant inline-block" />
                   </th>
                   <th className="py-4 px-4">Title & Locality</th>
                   <th className="py-4 px-4 w-28">Price Scale</th>
@@ -227,16 +228,19 @@ export default function PropertyManagement() {
                       <td className="py-4 px-4 min-w-0">
                         <div className="flex items-center gap-3">
                           {prop.imageUrls?.[0] && (
-                            <img
+                            <OptimizedImage
+                              width={48}
+                              height={48}
                               src={prop.imageUrls?.[0]}
-                              alt={prop.title}
+                              alt=""
                               className="w-12 h-12 rounded-lg object-cover border border-outline-variant/50"
+                              sizes="48px"
                             />
                           )}
                           <div>
-                            <h4 className="font-extrabold text-on-surface leading-normal truncate max-w-[200px] sm:max-w-xs">
+                            <h3 className="font-extrabold text-on-surface leading-normal truncate max-w-[200px] sm:max-w-xs">
                               {prop.title}
-                            </h4>
+                            </h3>
                             <p className="text-[10px] text-on-surface-variant mt-1 flex items-center gap-1">
                               <MapPin className="h-3 w-3 text-gold-accent" /> {prop.location}
                             </p>
@@ -252,7 +256,7 @@ export default function PropertyManagement() {
                             prop.moderationStatus === 'live'
                               ? 'bg-success-green/10 text-success-green border-success-green/20'
                               : prop.moderationStatus === 'rejected'
-                                ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                                ? 'bg-red-500/10 text-red-600 border-red-500/20'
                                 : 'bg-amber-500/15 text-amber-400 border-amber-500/20 animate-pulse'
                           }`}
                         >
@@ -294,7 +298,7 @@ export default function PropertyManagement() {
                             className={`p-1.5 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
                               prop.moderationStatus === 'rejected'
                                 ? 'bg-surface-container-high text-on-surface-variant border-outline-variant/50 hover:bg-surface hover:text-on-surface'
-                                : 'bg-surface hover:bg-red-500/10 text-on-surface-variant hover:text-red-400 border-outline-variant/50 hover:border-red-500/30'
+                                : 'bg-surface hover:bg-red-500/10 text-on-surface-variant hover:text-red-600 border-outline-variant/50 hover:border-red-500/30'
                             }`}
                             aria-label={prop.title}
                             title={
@@ -322,7 +326,7 @@ export default function PropertyManagement() {
 
                           <button
                             onClick={() => handlePropertyDelete(prop.id)}
-                            className="p-1.5 rounded-lg bg-surface hover:bg-red-500/10 text-on-surface-variant hover:text-red-400 border border-outline-variant/50 hover:border-red-500/30 transition-all cursor-pointer"
+                            className="p-1.5 rounded-lg bg-surface hover:bg-red-500/10 text-on-surface-variant hover:text-red-600 border border-outline-variant/50 hover:border-red-500/30 transition-all cursor-pointer"
                             title="Delete Permanently"
                             aria-label="Delete Permanently"
                           >
@@ -347,14 +351,14 @@ export default function PropertyManagement() {
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  className="px-3 py-1.5 bg-surface border border-outline-variant rounded hover:bg-surface-container-high disabled:opacity-50 text-on-surface cursor-pointer"
+                  className="px-3 py-1.5 bg-surface border border-outline-variant rounded hover:bg-surface-container-high disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:border-none disabled:shadow-none disabled:cursor-not-allowed text-on-surface cursor-pointer"
                 >
                   Previous
                 </button>
                 <button
                   disabled={currentPage * itemsPerPage >= totalFilteredCount}
                   onClick={() => setCurrentPage((prev) => prev + 1)}
-                  className="px-3 py-1.5 bg-surface border border-outline-variant rounded hover:bg-surface-container-high disabled:opacity-50 text-on-surface cursor-pointer"
+                  className="px-3 py-1.5 bg-surface border border-outline-variant rounded hover:bg-surface-container-high disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:border-none disabled:shadow-none disabled:cursor-not-allowed text-on-surface cursor-pointer"
                 >
                   Next
                 </button>

@@ -42,7 +42,7 @@ export function HeroSection({
   setSearchLocation?: any
   searchType?: string
   setSearchType?: any
-  searchBudget?: string
+  searchBudget?: number
   setSearchBudget?: any
   searchBhk?: string
   setSearchBhk?: any

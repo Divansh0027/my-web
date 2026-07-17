@@ -1,4 +1,4 @@
-import { useEffect, useEffect, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getFavorites, toggleFavorite } from '@/firebase'
 import { ClientUser } from '@/firebase'
@@ -22,7 +22,10 @@ export function useFavorites(
   const { data: savedPropertyIds = [] } = useQuery({
     queryKey: ['favorites', currentUser?.uid],
     queryFn: async () => {
-      if (!currentUser) return []
+      if (!currentUser) {
+        const localFavsStr = localStorage.getItem('ssp_local_favorites')
+        return localFavsStr ? JSON.parse(localFavsStr) : []
+      }
 
       const dbFavs = await getFavorites(currentUser.uid)
       const localFavsStr = localStorage.getItem('ssp_local_favorites')
@@ -41,7 +44,7 @@ export function useFavorites(
       }
       return dbFavs
     },
-    enabled: !!currentUser,
+    // enabled removed to run for guests too
   })
 
   // Also handle redirect view logic after merging favorites
@@ -66,8 +69,15 @@ export function useFavorites(
   const handleToggleSaved = useCallback(
     async (propertyId: string) => {
       if (!currentUser) {
-        triggerToast('Please sign in to save properties.', 'info')
-        setIsLoginModalOpen(true)
+        // Save to local storage for guests
+        queryClient.setQueryData(['favorites', undefined], (old: string[] = []) => {
+          const updated = old.includes(propertyId)
+            ? old.filter((id) => id !== propertyId)
+            : [...old, propertyId]
+          localStorage.setItem('ssp_local_favorites', JSON.stringify(updated))
+          return updated
+        })
+        triggerToast('Saved locally. Sign in to sync across devices.', 'info')
         return
       }
 
@@ -92,7 +102,7 @@ export function useFavorites(
       // Re-fetch to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['favorites', currentUser.uid] })
     },
-    [currentUser, queryClient, triggerToast, setIsLoginModalOpen],
+    [currentUser, queryClient, triggerToast],
   )
 
   return { savedPropertyIds, handleToggleSaved }

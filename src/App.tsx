@@ -14,6 +14,8 @@ import LoginModal from '@/features/auth/LoginModal'
 import HomeView from '@/features/home/HomeView'
 import { LoadingState } from '@/shared/components/LoadingState'
 import { MaintenanceState } from '@/shared/components/MaintenanceState'
+import NotFound from '@/shared/components/NotFound'
+import StatusPage from '@/features/status/StatusPage'
 
 const ListingsView = React.lazy(() => import('@/features/properties/ListingsView'))
 const DetailView = React.lazy(() => import('@/features/properties/DetailView'))
@@ -22,8 +24,6 @@ const ListPropertyView = React.lazy(() => import('@/features/properties/ListProp
 const ProfileView = React.lazy(() => import('@/features/auth/ProfileView'))
 const AdminView = React.lazy(() => import('@/features/admin/AdminView'))
 const AdvancedSearchView = React.lazy(() => import('@/features/properties/SearchView'))
-const NotFound = React.lazy(() => import('@/shared/components/NotFound'))
-const StatusPage = React.lazy(() => import('@/features/status/StatusPage'))
 const DevChecklist = import.meta.env.DEV
   ? React.lazy(() => import('@/shared/components/DevChecklist'))
   : () => null
@@ -33,6 +33,9 @@ function App() {
   const { currentUser, isAdmin, isAppReady } = useAuth()
   const maintenanceMode = useMaintenanceMode()
   const location = useLocation()
+
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+  const { toastMessage, toastType, triggerToast, closeToast } = useToast()
 
   // Handle deep linking from protocol handler (web+shivsaya://)
   useEffect(() => {
@@ -56,20 +59,16 @@ function App() {
     const unsubscribe = onMessageListener((payload: any) => {
       console.log('Foreground Push Notification received.', payload)
       if (payload.notification) {
-        triggerToast({
-          title: payload.notification.title || 'New Notification',
-          message: payload.notification.body || 'You have a new message',
-          type: 'success',
-        })
+        triggerToast(
+          `${payload.notification.title || 'New Notification'}: ${payload.notification.body || 'You have a new message'}`,
+          'success'
+        )
       }
     })
     return () => {
       if (unsubscribe) unsubscribe()
     }
   }, [triggerToast])
-
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
-  const { toastMessage, toastType, triggerToast, closeToast } = useToast()
 
   const { activeSearchFilters, handleSearchTrigger } = useSearchFilters()
 
@@ -220,7 +219,7 @@ function App() {
                     onUpdateProperty={handleUpdatePropertyInApp}
                     onAddProperty={handleAddProperty}
                     onShowNotification={triggerToast}
-                    currentUser={currentUser as unknown}
+                    currentUser={currentUser}
                   />
                 ) : (
                   <div className="flex-grow flex items-center justify-center p-6 text-center text-red-500 font-bold">

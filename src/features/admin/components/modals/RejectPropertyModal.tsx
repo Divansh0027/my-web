@@ -1,4 +1,5 @@
 import React from 'react'
+import { AlertTriangle, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 
 import { Property } from '@/shared/types/types'
@@ -39,9 +40,9 @@ export function RejectPropertyModal({
               >
                 <X className="h-4 w-4" />
               </button>
-              <h3 className="text-sm font-extrabold text-red-400 uppercase tracking-wide border-b border-outline-variant/50 pb-3 mb-5 flex items-center gap-1.5 font-sans">
+              <h2 className="text-sm font-extrabold text-red-600 uppercase tracking-wide border-b border-outline-variant/50 pb-3 mb-5 flex items-center gap-1.5 font-sans">
                 <AlertTriangle className="h-4 w-4 text-red-550" /> Reject Property Listing
-              </h3>
+              </h2>
               <div className="space-y-4 text-xs text-on-surface-variant font-sans">
                 <div className="space-y-1.5">
                   <label

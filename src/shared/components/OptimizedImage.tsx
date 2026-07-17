@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { getOptimizedImageUrl } from '../utils/image'
-import { Building2 } from 'lucide-react'
 
 interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string

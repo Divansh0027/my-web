@@ -13,7 +13,7 @@ import {
 } from './chatService'
 
 export const ChatWidget: React.FC = () => {
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [session, setSession] = useState<ChatSession | null>(null)
@@ -28,21 +28,26 @@ export const ChatWidget: React.FC = () => {
       currentGuestId = `guest-${Math.random().toString(36).substring(2, 9)}`
       localStorage.setItem('ssp_guest_chat_id', currentGuestId)
     }
+     
     setGuestId(currentGuestId)
   }, [])
 
-  const chatId = user ? user.uid : guestId
-  const userName = user ? user.displayName || 'User' : 'Guest User'
-  const isAdmin = user?.isAdmin || false
+  const chatId = currentUser ? currentUser.uid : guestId
+  const userName = currentUser ? currentUser.displayName || 'User' : 'Guest User'
+  const isAdmin = currentUser?.isAdmin || false
 
   useEffect(() => {
-    if (isOpen && chatId && user?.uid) {
-      requestAndSaveFCMToken(user.uid)
+    if (isOpen && chatId && currentUser?.uid) {
+      requestAndSaveFCMToken(currentUser.uid)
     }
-  }, [isOpen, chatId, user?.uid])
+  }, [isOpen, chatId, currentUser?.uid])
 
   useEffect(() => {
     if (!chatId || isAdmin) return // Admins use dashboard
+
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
 
     const unsubMessages = subscribeToChatMessages(chatId, (msgs) => {
       setMessages(msgs)
@@ -65,9 +70,6 @@ export const ChatWidget: React.FC = () => {
     }
   }, [isOpen, messages, session?.unreadUserCount, chatId, isAdmin])
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -75,7 +77,7 @@ export const ChatWidget: React.FC = () => {
 
     const text = inputText
     setInputText('')
-    await sendMessage(chatId, user?.uid || guestId, userName, text, false)
+    await sendMessage(chatId, currentUser?.uid || guestId, userName, text, false)
   }
 
   const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,9 +94,9 @@ export const ChatWidget: React.FC = () => {
         <div className="bg-surface-container-high rounded-2xl shadow-2xl w-80 sm:w-96 h-[500px] flex flex-col mb-4 overflow-hidden border border-outline-variant/50 transition-all">
           <div className="bg-surface-container-highest text-on-surface p-4 flex justify-between items-center shrink-0 border-b border-outline-variant/50">
             <div>
-              <h3 className="font-bold text-sm tracking-widest uppercase text-gold-accent">
+              <h2 className="font-bold text-sm tracking-widest uppercase text-gold-accent">
                 Support Chat
-              </h3>
+              </h2>
               <p className="text-on-surface-variant text-[10px] uppercase tracking-wide mt-0.5">
                 We typically reply in a few minutes.
               </p>
@@ -115,7 +117,7 @@ export const ChatWidget: React.FC = () => {
               </div>
             ) : (
               messages.map((msg, i) => {
-                const isMine = msg.senderId === (user?.uid || guestId)
+                const isMine = msg.senderId === (currentUser?.uid || guestId)
                 return (
                   <div
                     key={msg.id || i}
@@ -157,7 +159,7 @@ export const ChatWidget: React.FC = () => {
             <button
               type="submit"
               disabled={!inputText.trim()}
-              className="bg-gold-accent text-[var(--on-gold)] p-2.5 rounded-full disabled:opacity-50 hover:bg-gold-hover transition-colors shadow-md flex items-center justify-center"
+              className="bg-gold-accent text-[var(--on-gold)] p-2.5 rounded-full disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:border-none disabled:shadow-none disabled:cursor-not-allowed hover:bg-gold-hover transition-colors shadow-md flex items-center justify-center"
               aria-label="Send Message"
             >
               <Send size={16} />
@@ -174,7 +176,7 @@ export const ChatWidget: React.FC = () => {
         >
           <MessageCircle size={24} />
           {(session?.unreadUserCount ?? 0) > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full animate-pulse border-2 border-surface">
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full animate-pulse border-2 border-surface">
               {session?.unreadUserCount}
             </span>
           )}

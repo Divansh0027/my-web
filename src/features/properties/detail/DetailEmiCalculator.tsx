@@ -21,6 +21,7 @@ export function DetailEmiCalculator({ price }: DetailEmiCalculatorProps) {
   const [showAmortization, setShowAmortization] = useState(false)
 
   useEffect(() => {
+     
     setLoanPrincipal(Math.round(price * 0.8))
   }, [price])
 
@@ -30,6 +31,7 @@ export function DetailEmiCalculator({ price }: DetailEmiCalculatorProps) {
     const n = loanTenure * 12 // Total monthly installments
 
     if (r === 0) {
+       
       setMonthlyEmi(Math.round(P / n))
       return
     }
@@ -188,7 +190,7 @@ export function DetailEmiCalculator({ price }: DetailEmiCalculatorProps) {
                   ))}
                 </Pie>
                 <RechartsTooltip
-                  formatter={(value: number) => `₹${value.toLocaleString('en-IN')}`}
+                  formatter={(value: string | number | undefined | null | any) => `₹${Number(value || 0).toLocaleString('en-IN')}`}
                   contentStyle={{
                     backgroundColor: '#1e293b',
                     border: 'none',

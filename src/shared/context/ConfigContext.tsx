@@ -16,7 +16,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const newSettings: Partial<typeof BUSINESS_CONFIG> = {}
           for (const key of Object.keys(settings)) {
             if (Object.prototype.hasOwnProperty.call(prev, key)) {
-              newSettings[key as keyof typeof BUSINESS_CONFIG] = settings[key]
+              newSettings[key as keyof typeof BUSINESS_CONFIG] = settings[key] as any
             }
           }
           return {

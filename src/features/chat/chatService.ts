@@ -44,7 +44,7 @@ export const requestAndSaveFCMToken = async (userId: string) => {
         { merge: true },
       )
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.log('FCM token error:', error)
   }
 }
@@ -153,8 +153,8 @@ export const sendMessage = async (
     })
 
     await Promise.all([p1, p2])
-  } catch (error: any) {
-    if (error?.code === 'unavailable' || (error?.message && error.message.includes('offline'))) {
+  } catch (error: unknown) {
+    if ((error as any)?.code === 'unavailable' || ((error as any)?.message && (error as any).message.includes('offline'))) {
       return
     }
     console.warn('Failed to send message:', error)
@@ -171,7 +171,7 @@ export const markMessagesAsRead = async (chatId: string, isAdmin: boolean) => {
     } else {
       await updateDoc(chatRef, { unreadUserCount: 0 })
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.warn('Failed to mark as read:', error)
   }
 }
@@ -188,8 +188,8 @@ export const setTypingStatus = async (chatId: string, isAdmin: boolean, isTyping
         await updateDoc(chatRef, { userTyping: isTyping })
       }
     }
-  } catch (e: any) {
-    if (e?.code === 'unavailable' || (e?.message && e.message.includes('offline'))) {
+  } catch (e: unknown) {
+    if ((e as any)?.code === 'unavailable' || ((e as any)?.message && (e as any).message.includes('offline'))) {
       return
     }
     console.warn('Failed to set typing status:', e)

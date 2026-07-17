@@ -8,6 +8,7 @@ export const useRecentlyViewed = (currentPropertyId?: string) => {
     try {
       const stored = localStorage.getItem('ssp_recently_viewed')
       if (stored) {
+         
         setRecentIds(JSON.parse(stored))
       }
     } catch (e) {

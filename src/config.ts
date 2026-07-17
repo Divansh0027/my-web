@@ -25,7 +25,7 @@ try {
 }
 
 export const WHATSAPP_MESSAGES = {
-  general: "Hi Shiv Saya Properties! I'm interested.",
+  general: `Hi ${defaults.businessName}! I'm interested.`,
   propertyEnquiry: (title: string) => `Hi! I'm interested in: ${title}. Please share more details.`,
   consultation: "Hi! I'd love a free consultation.",
   investment: "Hi! I'd love to chat with your expert.",

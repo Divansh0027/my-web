@@ -60,7 +60,7 @@ export function isValidUrl(url: string): boolean {
   try {
     new URL(url)
     return true
-  } catch (_e) {
+  } catch (e) {
     return false
   }
 }

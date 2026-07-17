@@ -9,11 +9,11 @@ import {
   ChatMessage,
   ChatSession,
 } from './chatService'
-import { Send, Check, CheckCheck, Clock } from 'lucide-react'
+import { Send, MessageCircle, Check, CheckCheck, Clock } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
 export const AdminChatDashboard: React.FC = () => {
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -51,11 +51,11 @@ export const AdminChatDashboard: React.FC = () => {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputText.trim() || !activeSessionId || !user) return
+    if (!inputText.trim() || !activeSessionId || !currentUser) return
 
     const text = inputText
     setInputText('')
-    await sendMessage(activeSessionId, user.uid, 'Admin', text, true)
+    await sendMessage(activeSessionId, currentUser.uid, 'Admin', text, true)
   }
 
   const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,7 +106,7 @@ export const AdminChatDashboard: React.FC = () => {
                   {session.lastMessage}
                 </p>
                 {session.unreadAdminCount > 0 && (
-                  <span className="absolute right-4 bottom-4 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                  <span className="absolute right-4 bottom-4 bg-red-600 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
                     {session.unreadAdminCount}
                   </span>
                 )}
@@ -138,7 +138,7 @@ export const AdminChatDashboard: React.FC = () => {
                 </div>
               ) : (
                 messages.map((msg, i) => {
-                  const isAdminMsg = msg.senderId === user?.uid || msg.senderId === 'admin'
+                  const isAdminMsg = msg.senderId === currentUser?.uid || msg.senderId === 'admin'
                   return (
                     <div
                       key={msg.id || i}
@@ -187,7 +187,7 @@ export const AdminChatDashboard: React.FC = () => {
               <button
                 type="submit"
                 disabled={!inputText.trim()}
-                className="bg-gold-accent text-[var(--on-gold)] p-2.5 rounded-full disabled:opacity-50 hover:bg-gold-hover transition-colors shadow-md flex items-center justify-center"
+                className="bg-gold-accent text-[var(--on-gold)] p-2.5 rounded-full disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:border-none disabled:shadow-none disabled:cursor-not-allowed hover:bg-gold-hover transition-colors shadow-md flex items-center justify-center"
                 aria-label="Send Message"
               >
                 <Send size={18} />

@@ -40,17 +40,17 @@ export default function DetailView({
   onShowNotification,
 }: DetailViewProps) {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
   const { addRecentlyViewed } = useRecentlyViewed()
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
     if (property?.id) {
       trackUserEvent('property_view', { property_id: property.id })
-      trackBehavior(user?.uid || null, 'view', { propertyId: property.id })
+      trackBehavior(currentUser?.uid || null, 'view', { propertyId: property.id })
       addRecentlyViewed(property.id)
     }
-  }, [property, user?.uid, addRecentlyViewed])
+  }, [property, currentUser?.uid, addRecentlyViewed])
 
   const handleShareClick = useCallback(() => {
     if (!property) return

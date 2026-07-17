@@ -70,10 +70,10 @@ export default function SavedView({
         ) : wishlistedItems.length === 0 ? (
           /* EMPTY STATE */
           <div className="text-center py-20 bg-surface-container/40 border border-outline-variant/50 rounded-3xl max-w-lg mx-auto p-8">
-            <div className="h-14 w-14 bg-red-500/10 text-red-400 rounded-full flex items-center justify-center mx-auto mb-5">
+            <div className="h-14 w-14 bg-red-500/10 text-red-600 rounded-full flex items-center justify-center mx-auto mb-5">
               <Heart className="h-7 w-7" />
             </div>
-            <h3 className="text-lg font-bold text-on-surface">Your Saved List Is Empty</h3>
+            <h2 className="text-lg font-bold text-on-surface">Your Saved List Is Empty</h2>
             <p className="text-on-surface-variant text-xs leading-relaxed mt-2.5 mb-6">
               {user
                 ? 'Browse through our premium builder floors, luxury apartments, and plots in Delhi NCR and tap the heart icon to start saving!'
@@ -113,7 +113,7 @@ export default function SavedView({
                     width={800}
                     height={600}
                     src={prop.images[0]}
-                    alt={`${prop.title} — ${prop.location}`}
+                    alt=""
                     className="h-full w-full group-hover:scale-105 transition-transform"
                     loading="lazy"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

@@ -1,6 +1,5 @@
 import React from 'react'
 import { ShieldCheck, Activity, Database, Server } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card'
 
 export default function StatusPage() {
   const systems = [
@@ -33,30 +32,33 @@ export default function StatusPage() {
         {systems.map((system) => {
           const Icon = system.icon
           return (
-            <Card key={system.name}>
-              <CardContent className="p-6 flex items-center justify-between">
+            <div
+              key={system.name}
+              className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden"
+            >
+              <div className="p-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="p-2 bg-gray-100 rounded-lg">
                     <Icon className="w-6 h-6 text-gray-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{system.name}</h3>
+                    <h2 className="font-semibold text-gray-900">{system.name}</h2>
                   </div>
                 </div>
                 <div className="text-green-600 font-medium capitalize text-sm bg-green-50 px-3 py-1 rounded-full">
                   {system.status}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )
         })}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Incidents</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-6 pb-2">
+          <h2 className="font-semibold text-gray-900">Recent Incidents</h2>
+        </div>
+        <div className="p-6 pt-2">
           <div className="space-y-6">
             {incidents.map((incident, i) => (
               <div key={i} className="border-l-2 border-gray-200 pl-4 py-2">
@@ -65,8 +67,8 @@ export default function StatusPage() {
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

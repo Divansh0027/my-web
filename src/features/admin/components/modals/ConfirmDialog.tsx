@@ -1,4 +1,5 @@
 import React from 'react'
+import { AlertCircle, CheckSquare } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import FocusLock from 'react-focus-lock'
 
@@ -34,13 +35,13 @@ export function ConfirmDialog({
             >
               <div className="flex items-center gap-2 mb-3">
                 {isDanger ? (
-                  <AlertCircle className="h-5 w-5 text-red-400" />
+                  <AlertCircle className="h-5 w-5 text-red-600" />
                 ) : (
                   <CheckSquare className="h-5 w-5 text-gold-accent" />
                 )}
-                <h4 className="font-extrabold text-gold-accent text-xs uppercase tracking-wider">
+                <h2 className="font-extrabold text-gold-accent text-xs uppercase tracking-wider">
                   {title}
-                </h4>
+                </h2>
               </div>
               <p className="text-on-surface-variant text-xs leading-relaxed mb-6 font-medium">
                 {message}

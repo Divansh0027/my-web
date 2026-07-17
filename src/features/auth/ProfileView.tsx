@@ -6,6 +6,7 @@ import { formatPrice } from '@/shared/utils/format'
 
 import { useNavigate } from 'react-router-dom'
 import React, { useState, useEffect } from 'react'
+import { OptimizedImage } from '@/shared/components/OptimizedImage'
 import {
   UserCheck,
   Shield,
@@ -29,6 +30,7 @@ import { Enquiry, Property } from '@/shared/types/types'
 import { useConfig } from '@/shared/context/ConfigContext'
 
 import { useAuth } from '@/features/auth'
+import { requestNotificationPermission } from '../../firebase'
 
 interface ProfileViewProps {
   userProperties: Property[]
@@ -62,7 +64,9 @@ export default function ProfileView({
   const [editEmail, setEditEmail] = useState('')
   const [editPhone, setEditPhone] = useState('')
   const [isSaving, setIsSaving] = useState(false)
-  const [pushEnabled, setPushEnabled] = useState(Notification.permission === 'granted')
+  const [pushEnabled, setPushEnabled] = useState(
+    typeof Notification !== 'undefined' ? Notification.permission === 'granted' : false,
+  )
   const [animationsEnabled, setAnimationsEnabled] = useState(
     localStorage.getItem('ssp_animations_enabled') !== 'false',
   )
@@ -79,7 +83,7 @@ export default function ProfileView({
       setEditEmail(currentUser.email || '')
       // Fetch phone if saved in DB or local fallback
       const savedPhone =
-        currentUser.phone || localStorage.getItem(`ssp_phone_${currentUser.uid}`) || ''
+        currentUser.phoneNumber || localStorage.getItem(`ssp_phone_${currentUser.uid}`) || ''
       setEditPhone(savedPhone)
     }
   }, [currentUser])
@@ -105,11 +109,10 @@ export default function ProfileView({
 
     setIsSaving(true)
     const formattedPhone = phoneNo ? `+91 ${phoneNo.slice(0, 5)} ${phoneNo.slice(5)}` : ''
-    const success = await updateUserProfileDetails(
-      editName.trim(),
-      editEmail.trim(),
-      formattedPhone,
-    )
+    const success = await updateUserProfileDetails(user!.uid, {
+      displayName: editName.trim(),
+      phoneNumber: formattedPhone,
+    })
     if (success) {
       if (user?.uid) {
         localStorage.setItem(`ssp_phone_${user.uid}`, formattedPhone)
@@ -158,7 +161,7 @@ export default function ProfileView({
                     width={128}
                     height={128}
                     src={user.photoURL}
-                    alt={user.displayName || 'User Profile'}
+                    alt=""
                     className="h-full w-full object-cover"
                     loading="lazy"
                   />
@@ -171,9 +174,9 @@ export default function ProfileView({
               {!isEditing ? (
                 <div className="space-y-1.5 text-center sm:text-left">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <h3 className="text-base font-extrabold text-on-surface">
+                    <h2 className="text-base font-extrabold text-on-surface">
                       {user?.displayName || 'Guest Client'}
-                    </h3>
+                    </h2>
                     <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider self-center sm:self-auto gap-1 items-center flex">
                       ✓ Active Customer
                     </span>
@@ -332,10 +335,10 @@ export default function ProfileView({
         {/* Tab A: LISTINGS VIEW WITH BADGES */}
         {activeTab === 'listings' && (
           <div className="bg-surface-container border border-outline-variant/50 rounded-3xl p-6 sm:p-8 space-y-6">
-            <h3 className="text-on-surface font-extrabold text-sm border-b border-outline-variant/50 pb-2.5 flex items-center gap-2">
+            <h2 className="text-on-surface font-extrabold text-sm border-b border-outline-variant/50 pb-2.5 flex items-center gap-2">
               <Building className="h-4 w-4 text-gold-accent" />
               Property Audit & Approvals
-            </h3>
+            </h2>
 
             {userProperties.length === 0 ? (
               <div className="text-center py-10 space-y-3">
@@ -370,7 +373,7 @@ export default function ProfileView({
                           await onDeleteProperty(prop.id)
                         } catch (err: unknown) {
                           onShowNotification(
-                            `Could not delete: ${err.message || 'Network Error'}`,
+                            `Could not delete: ${(err as any).message || 'Network Error'}`,
                             'error',
                           )
                         }
@@ -389,9 +392,9 @@ export default function ProfileView({
                         className="cursor-pointer flex-1 space-y-1 block text-left outline-none focus:ring-2 focus:ring-gold-accent/50 rounded-lg p-1"
                         onClick={() => navigate(`/property/${prop.id}`)}
                       >
-                        <h4 className="font-extrabold text-on-surface text-xs hover:text-gold-accent transition-all leading-snug">
+                        <h2 className="font-extrabold text-on-surface text-xs hover:text-gold-accent transition-all leading-snug">
                           {prop.title}
-                        </h4>
+                        </h2>
                         <p className="text-[10px] text-on-surface-variant font-semibold flex items-center gap-1.5 pt-0.5">
                           <MapPin className="h-3 w-3 text-on-surface-variant shrink-0" />
                           {prop.locality}, {prop.city}
@@ -424,7 +427,7 @@ export default function ProfileView({
                                 Audit: Rejected
                               </span>
                               {prop.rejectionReason && (
-                                <p className="text-[9px] text-red-400 max-w-xs text-left md:text-right italic font-medium">
+                                <p className="text-[9px] text-red-600 max-w-xs text-left md:text-right italic font-medium">
                                   Reason: {prop.rejectionReason}
                                 </p>
                               )}
@@ -436,7 +439,7 @@ export default function ProfileView({
                         <button
                           type="button"
                           onClick={handleDeleteClick}
-                          className="p-2.5 bg-surface-container border border-outline-variant/50 hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 text-on-surface-variant rounded-xl transition-all cursor-pointer"
+                          className="p-2.5 bg-surface-container border border-outline-variant/50 hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-600 text-on-surface-variant rounded-xl transition-all cursor-pointer"
                           title="Delete Listing permanently"
                           aria-label="Delete Listing permanently"
                         >
@@ -454,10 +457,10 @@ export default function ProfileView({
         {/* Tab B: SAVED PROPERTIES CARD LISTING */}
         {activeTab === 'favorites' && (
           <div className="bg-surface-container border border-outline-variant/50 rounded-3xl p-6 sm:p-8 space-y-6">
-            <h3 className="text-on-surface font-extrabold text-sm border-b border-outline-variant/50 pb-2.5 flex items-center gap-2">
+            <h2 className="text-on-surface font-extrabold text-sm border-b border-outline-variant/50 pb-2.5 flex items-center gap-2">
               <Heart className="h-4 w-4 text-rose-500 fill-rose-500/20" />
               My Saved Shortlists
-            </h3>
+            </h2>
 
             {favoriteProperties.length === 0 ? (
               <div className="text-center py-10">
@@ -480,15 +483,18 @@ export default function ProfileView({
                   >
                     <div className="space-y-2">
                       <div className="relative h-28 rounded-xl overflow-hidden bg-surface-container">
-                        <img
+                        <OptimizedImage
+                          width={400}
+                          height={300}
                           src={
                             prop.images?.[0]
-                              ? `${prop.images[0]}&w=400&q=80`
-                              : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=400&q=80'
+                              ? prop.images[0]
+                              : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa'
                           }
-                          alt={`${prop.title} — ${prop.location}`}
+                          alt=""
                           className="h-full w-full object-cover group-hover:scale-105 transition-all duration-300"
                           loading="lazy"
+                          sizes="(max-width: 768px) 50vw, 25vw"
                         />
                         <button
                           onClick={(e) => {
@@ -507,9 +513,9 @@ export default function ProfileView({
                         className="cursor-pointer space-y-1.5 block text-left outline-none focus:ring-2 focus:ring-gold-accent/50 rounded-lg"
                         onClick={() => navigate(`/property/${prop.id}`)}
                       >
-                        <h4 className="font-extrabold text-on-surface text-xs line-clamp-1 group-hover:text-gold-accent transition-all pt-1">
+                        <h2 className="font-extrabold text-on-surface text-xs line-clamp-1 group-hover:text-gold-accent transition-all pt-1">
                           {prop.title}
-                        </h4>
+                        </h2>
                         <p className="text-[10px] text-on-surface-variant flex items-center gap-1">
                           <MapPin className="h-3 w-3 shrink-0" />
                           {prop.locality}, {prop.city}
@@ -544,14 +550,14 @@ export default function ProfileView({
         {activeTab === 'enquiries' && (
           <div className="bg-surface-container border border-outline-variant/50 rounded-3xl p-6 sm:p-8 space-y-6">
             <div className="flex items-center justify-between border-b border-outline-variant/50 pb-3">
-              <h3 className="text-on-surface font-extrabold text-sm flex items-center gap-2">
+              <h2 className="text-on-surface font-extrabold text-sm flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-gold-accent" />
                 Scheduled Site Visits & Enquiries
-              </h3>
+              </h2>
               {enquiries.length > 0 && (
                 <button
                   onClick={handleClearEnquiries}
-                  className="text-xs text-red-400 font-bold hover:underline py-1"
+                  className="text-xs text-red-600 font-bold hover:underline py-1"
                 >
                   Clear History
                 </button>
@@ -580,9 +586,9 @@ export default function ProfileView({
                     </div>
 
                     <div>
-                      <h4 className="font-bold text-on-surface text-xs leading-snug">
+                      <h2 className="font-bold text-on-surface text-xs leading-snug">
                         {enq.propertyName}
-                      </h4>
+                      </h2>
                       <p className="text-[10px] text-on-surface-variant mt-1.5 whitespace-pre-wrap leading-relaxed">
                         Message Notes:{' '}
                         <span className="text-on-surface-variant italic">"{enq.message}"</span>
@@ -599,10 +605,10 @@ export default function ProfileView({
         {activeTab === 'settings' && (
           <div className="bg-surface-container border border-outline-variant/50 rounded-3xl p-6 sm:p-8 space-y-8">
             <div>
-              <h3 className="text-on-surface font-extrabold text-sm border-b border-outline-variant/50 pb-2.5 flex items-center gap-2">
+              <h2 className="text-on-surface font-extrabold text-sm border-b border-outline-variant/50 pb-2.5 flex items-center gap-2">
                 <Settings className="h-4 w-4 text-gold-accent" />
                 Account Settings & Preferences
-              </h3>
+              </h2>
               <p className="text-on-surface-variant text-xs mt-2 font-medium leading-relaxed">
                 Configure your display behavior, toggle system telemetry indicators, and verify
                 legal brokerage credentials.
@@ -611,14 +617,14 @@ export default function ProfileView({
 
             {/* Sub-section 1: Platform Credentials */}
             <div className="space-y-3">
-              <h4 className="text-on-surface text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+              <h2 className="text-on-surface text-xs font-bold uppercase tracking-wider text-on-surface-variant">
                 Brokerage Verification Details
-              </h4>
+              </h2>
               <div className="p-4 bg-surface border border-outline-variant/50 rounded-2xl flex flex-col sm:flex-row items-center gap-4 justify-between">
                 <div className="space-y-1 text-center sm:text-left">
                   <div className="text-xs font-bold text-on-surface flex items-center justify-center sm:justify-start gap-1.5">
                     <Shield className="h-4 w-4 text-gold-accent" />
-                    Shiv Saya Properties RERA License
+                    {BUSINESS_CONFIG.businessName} RERA License
                   </div>
                   <p className="text-[10px] text-on-surface-variant leading-relaxed font-semibold">
                     Authorized Real Estate Brokerage License No.{' '}
@@ -633,15 +639,15 @@ export default function ProfileView({
 
             {/* Sub-section 2: Cached Storage Management */}
             <div className="space-y-3">
-              <h4 className="text-on-surface text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+              <h2 className="text-on-surface text-xs font-bold uppercase tracking-wider text-on-surface-variant">
                 Browser Storage & Cache Control
-              </h4>
+              </h2>
               <div className="p-4 bg-surface border border-outline-variant/50 rounded-2xl space-y-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
-                    <h5 className="text-[11px] font-extrabold text-on-surface">
+                    <h2 className="text-[11px] font-extrabold text-on-surface">
                       Clear Shortlisted Bookmarks
-                    </h5>
+                    </h2>
                     <p className="text-[9px] text-on-surface-variant leading-relaxed mt-0.5 font-semibold">
                       This will reset your interest flags for any customized real estate listings.
                     </p>
@@ -650,15 +656,16 @@ export default function ProfileView({
                     type="button"
                     onClick={() => {
                       if (window.confirm('Do you want to clear your bookmarked shortlist?')) {
-                        localStorage.removeItem('ssp_saved_properties')
+                        // Not doing anything for Firebase favorites, maybe we just clear local cache
+                        localStorage.removeItem('ssp_local_favorites')
                         onShowNotification(
                           'Bookmarked shortlists have been successfully cleared.',
                           'success',
                         )
-                        setTimeout(() => window.location.reload(), 1200)
+                        // Replaced reload
                       }
                     }}
-                    className="px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-505 text-[10px] font-bold rounded-lg cursor-pointer transition-all shrink-0"
+                    className="px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-700 text-[10px] font-bold rounded-lg cursor-pointer transition-all shrink-0"
                   >
                     Reset Bookmarks
                   </button>
@@ -668,9 +675,9 @@ export default function ProfileView({
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
-                    <h5 className="text-[11px] font-extrabold text-on-surface">
+                    <h2 className="text-[11px] font-extrabold text-on-surface">
                       Reset Account Cache Record
-                    </h5>
+                    </h2>
                     <p className="text-[9px] text-on-surface-variant leading-relaxed mt-0.5 font-semibold">
                       Forced log out of this secure real estate terminal and delete temporary
                       session preferences.
@@ -690,7 +697,7 @@ export default function ProfileView({
                           'All local user caches have been securely invalidated.',
                           'success',
                         )
-                        setTimeout(() => window.location.reload(), 1200)
+                        // Replaced reload
                       }
                     }}
                     className="px-3.5 py-1.5 bg-surface-container-high hover:bg-outline-variant text-on-surface-variant border border-outline-variant/50 text-[10px] font-bold rounded-lg cursor-pointer transition-all shrink-0"
@@ -703,14 +710,14 @@ export default function ProfileView({
 
             {/* Sub-section 3: Push Notifications */}
             <div className="space-y-3">
-              <h4 className="text-on-surface text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+              <h2 className="text-on-surface text-xs font-bold uppercase tracking-wider text-on-surface-variant">
                 Push Notifications
-              </h4>
+              </h2>
               <div className="p-4 bg-surface border border-outline-variant/50 rounded-2xl flex items-center justify-between gap-3">
                 <div>
-                  <h5 className="text-[11px] font-extrabold text-on-surface">
+                  <h2 className="text-[11px] font-extrabold text-on-surface">
                     Enable Push Notifications
-                  </h5>
+                  </h2>
                   <p className="text-[9px] text-on-surface-variant leading-relaxed mt-0.5 font-semibold">
                     Receive instant alerts for new listings and messages.
                   </p>
@@ -752,14 +759,14 @@ export default function ProfileView({
 
             {/* Sub-section 4: Preferences */}
             <div className="space-y-3">
-              <h4 className="text-on-surface text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+              <h2 className="text-on-surface text-xs font-bold uppercase tracking-wider text-on-surface-variant">
                 Display Settings
-              </h4>
+              </h2>
               <div className="p-4 bg-surface border border-outline-variant/50 rounded-2xl flex items-center justify-between gap-3">
                 <div>
-                  <h5 className="text-[11px] font-extrabold text-on-surface">
+                  <h2 className="text-[11px] font-extrabold text-on-surface">
                     Enable Golden Accent Animations
-                  </h5>
+                  </h2>
                   <p className="text-[9px] text-on-surface-variant leading-relaxed mt-0.5 font-semibold">
                     Toggle active sparkling effect animations on gold accents.
                   </p>

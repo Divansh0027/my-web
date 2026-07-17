@@ -41,7 +41,7 @@ export default function SystemSettings() {
           >
             <div className="flex items-center gap-2 pb-2.5 border-b border-outline-variant/50">
               <Sliders className="h-4 w-4 text-gold-accent" />
-              <h3 className="font-extrabold text-on-surface text-sm">Site Business Information</h3>
+              <h2 className="font-extrabold text-on-surface text-sm">Site Business Information</h2>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -176,7 +176,7 @@ export default function SystemSettings() {
             <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b border-outline-variant/50">
                 <ShieldCheck className="h-4 w-4 text-gold-accent" />
-                <h3 className="font-extrabold text-on-surface text-sm">Admin Access list</h3>
+                <h2 className="font-extrabold text-on-surface text-sm">Admin Access list</h2>
               </div>
 
               <form onSubmit={handleAddAdmin} className="flex gap-2">
@@ -205,7 +205,7 @@ export default function SystemSettings() {
               </p>
 
               <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
-                {adminsList.map((adm) => (
+                {adminsList.map((adm: any) => (
                   <div
                     key={adm}
                     className="flex items-center justify-between p-2 rounded-xl bg-surface/40 border border-outline-variant/50 text-[11px] font-mono select-all"
@@ -213,7 +213,7 @@ export default function SystemSettings() {
                     <span>{adm}</span>
                     <button
                       onClick={() => handleRemoveAdmin(adm)}
-                      className="text-on-surface-variant hover:text-red-400 p-1 rounded transition-colors cursor-pointer"
+                      className="text-on-surface-variant hover:text-red-600 p-1 rounded transition-colors cursor-pointer"
                       title="Strip admin privileges"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -227,7 +227,7 @@ export default function SystemSettings() {
             <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b border-outline-variant/50">
                 <Power className="h-4 w-4 text-gold-accent" />
-                <h3 className="font-extrabold text-on-surface text-sm">System Controls</h3>
+                <h2 className="font-extrabold text-on-surface text-sm">System Controls</h2>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -303,7 +303,7 @@ export default function SystemSettings() {
             <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b border-outline-variant/50">
                 <Database className="h-4 w-4 text-gold-accent" />
-                <h3 className="font-extrabold text-on-surface text-sm">Data Management</h3>
+                <h2 className="font-extrabold text-on-surface text-sm">Data Management</h2>
               </div>
 
               <div className="space-y-2.5">
@@ -326,9 +326,9 @@ export default function SystemSettings() {
                 <button
                   type="button"
                   onClick={handleClearTestData}
-                  className="w-full py-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/40 border border-red-500/10 hover:border-red-500/30 text-red-400 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/40 border border-red-500/10 hover:border-red-500/30 text-red-600 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
-                  <Database className="h-3.5 w-3.5 text-red-400 animate-pulse" /> Clear Test Data
+                  <Database className="h-3.5 w-3.5 text-red-600 animate-pulse" /> Clear Test Data
                 </button>
               </div>
             </div>

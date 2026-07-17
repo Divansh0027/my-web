@@ -69,6 +69,18 @@ export const onPropertyWritten = functions.firestore
 
 // We could also have an HTTP endpoint to manually trigger a full sync
 export const fullSyncProperties = functions.https.onRequest(async (req, res) => {
+  const appCheckToken = req.headers['x-firebase-appcheck']
+  if (!appCheckToken) {
+    res.status(401).send('Unauthorized: Missing App Check token')
+    return
+  }
+  try {
+    await admin.appCheck().verifyToken(appCheckToken as string)
+  } catch (err) {
+    res.status(403).send('Unauthorized: Invalid App Check token')
+    return
+  }
+
   try {
     const propertiesSnapshot = await admin.firestore().collection('properties').get()
     const records: any[] = []

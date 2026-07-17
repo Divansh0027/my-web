@@ -64,9 +64,8 @@ export default React.memo(function Footer() {
   return (
     <>
       <Notification
-        message={notification?.message || ''}
+        message={notification?.message || null}
         type={notification?.type || 'success'}
-        isVisible={!!notification}
         onClose={() => setNotification(null)}
       />
       <FeedbackModal
@@ -138,10 +137,10 @@ export default React.memo(function Footer() {
 
             {/* Column 2: Quick Links */}
             <div>
-              <h3 className="text-on-surface font-semibold text-base mb-6 relative pl-3">
+              <h2 className="text-on-surface font-semibold text-base mb-6 relative pl-3">
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-gold-accent rounded-full"></span>
                 {t('footer.quickLinks')}
-              </h3>
+              </h2>
               <ul className="space-y-3.5 text-sm">
                 <li>
                   <Link
@@ -220,10 +219,10 @@ export default React.memo(function Footer() {
 
             {/* Column 3: Property Types */}
             <div>
-              <h3 className="text-on-surface font-semibold text-base mb-6 relative pl-3">
+              <h2 className="text-on-surface font-semibold text-base mb-6 relative pl-3">
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-gold-accent rounded-full"></span>
                 Property Types
-              </h3>
+              </h2>
               <ul className="space-y-3.5 text-sm">
                 <li>
                   <Link
@@ -290,10 +289,10 @@ export default React.memo(function Footer() {
 
             {/* Column 4: Contact Info */}
             <div className="space-y-4">
-              <h3 className="text-on-surface font-semibold text-base mb-6 relative pl-3">
+              <h2 className="text-on-surface font-semibold text-base mb-6 relative pl-3">
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-gold-accent rounded-full"></span>
                 Contact Info
-              </h3>
+              </h2>
 
               <div className="flex gap-3 text-sm">
                 <MapPin className="h-5 w-5 text-gold-accent shrink-0 mt-0.5" />
@@ -382,7 +381,7 @@ export default React.memo(function Footer() {
             href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent("Hi! I'd love to get more details about your premium RERA properties!")}`}
             target="_blank"
             rel="noreferrer"
-            className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-success-green shadow-md flex items-center justify-center text-on-surface transition-transform hover:scale-110 active:scale-95 group focus:outline-none"
+            className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-success-green shadow-md flex items-center justify-center text-white transition-transform hover:scale-110 active:scale-95 group focus:outline-none"
             title="Chat with property specialists"
             aria-label="Chat with property specialists on WhatsApp"
           >

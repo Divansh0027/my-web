@@ -135,9 +135,11 @@ export interface ClientUser {
   lastLoginAt?: string
   savedPropertyIds?: string[]
   isAdmin?: boolean
+  photoURL?: string
 }
 
 export interface AdminSettings {
+  [key: string]: string | number | boolean | undefined | object;
   businessName: string
   whatsappNumber: string
   businessEmail: string

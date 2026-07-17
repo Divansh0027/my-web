@@ -49,8 +49,8 @@ export const identifyUser = (uid: string, email?: string, name?: string) => {
     mixpanel.identify(uid)
     if (email || name) {
       mixpanel.people.set({
-        $email: email,
-        $name: name,
+        $email: email || 'No email',
+        $name: name || 'User',
       })
     }
   }
@@ -61,8 +61,8 @@ export const identifyUser = (uid: string, email?: string, name?: string) => {
         .then((module) => {
           const LogRocket = module.default
           LogRocket.identify(uid, {
-            name,
-            email,
+            name: name || 'User',
+            email: email || 'No email',
           })
         })
         .catch((e) => {
@@ -82,13 +82,14 @@ export const trackUserEvent = async (eventName: string, props?: Record<string, a
 
   // Also track to Firestore for Admin Dashboard (Real Charts)
   try {
+    if (!db) return;
     const behaviorRef = collection(db, 'user_behavior')
     await addDoc(behaviorRef, {
       eventName,
       ...props,
       timestamp: serverTimestamp(),
     })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to log event to Firestore', error)
   }
 }

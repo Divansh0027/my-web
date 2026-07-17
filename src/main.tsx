@@ -49,7 +49,7 @@ if (sentryDsn && (sentryDsn.startsWith('http://') || sentryDsn.startsWith('https
       replaysSessionSampleRate: 0.05,
       replaysOnErrorSampleRate: 1.0,
     })
-  } catch (error) {
+  } catch (error: unknown) {
     console.warn('Failed to initialize Sentry:', error)
   }
 }

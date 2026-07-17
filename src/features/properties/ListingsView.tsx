@@ -22,6 +22,7 @@ import {
   Search,
 } from 'lucide-react'
 import { Property } from '@/shared/types/types'
+import { OptimizedImage } from '@/shared/components/OptimizedImage'
 import { useConfig } from '@/shared/context/ConfigContext'
 import PropertyCardSkeleton from './PropertyCardSkeleton'
 import { trackUserEvent } from '@/analytics'
@@ -37,6 +38,9 @@ interface ListingsViewProps {
     bhk: string
   } | null
   savedProperties: string[]
+  fetchNextPage?: () => void
+  hasNextPage?: boolean
+  isFetchingNextPage?: boolean
   onToggleSaved: (id: string) => void
 }
 
@@ -84,8 +88,10 @@ export default function ListingsView({
     if (!initialFilters) return
 
     if (initialFilters.query) {
+       
       setSearchQuery(initialFilters.query)
     } else {
+       
       setSearchQuery('')
     }
     if (initialFilters.location) {
@@ -289,10 +295,10 @@ export default function ListingsView({
             aria-label="Search Filters"
             className="hidden lg:block bg-surface-container border border-outline-variant/50 p-6 rounded-2xl h-fit space-y-6"
           >
-            <h3 className="text-on-surface font-bold text-base border-b border-outline-variant/50 pb-3 flex items-center justify-between">
+            <h2 className="text-on-surface font-bold text-base border-b border-outline-variant/50 pb-3 flex items-center justify-between">
               Filter Properties
               <SlidersHorizontal className="h-4 w-4 text-gold-accent" />
-            </h3>
+            </h2>
 
             {/* Keyword Search */}
             <div className="space-y-3">
@@ -530,7 +536,7 @@ export default function ListingsView({
                   <ArrowUpDown className="h-3.5 w-3.5 text-on-surface-variant" />
                   <select
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as unknown)}
+                    onChange={(e) => setSortBy(e.target.value as 'latest' | 'low-high' | 'high-low' | 'popular')}
                     className="bg-surface-container-high text-on-surface-variant text-xs font-bold px-3 py-1.5 rounded-lg border border-outline-variant outline-none focus:border-gold-accent/50 cursor-pointer"
                     aria-label="Sort properties"
                   >
@@ -574,7 +580,7 @@ export default function ListingsView({
               /* ================= NO RESULTS FOUND STATE ================= */
               <div className="bg-surface-container border border-outline-variant/50 text-center p-16 rounded-2xl max-w-lg mx-auto">
                 <HelpCircle className="h-14 w-14 text-gold-accent mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-on-surface">No Properties Match</h3>
+                <h2 className="text-xl font-bold text-on-surface">No Properties Match</h2>
                 <p className="text-on-surface-variant text-xs leading-relaxed mt-2.5 mb-6">
                   We currently do not have verified listings matching your specific parameters. Try
                   clearing some filters or widening your budget thresholds.
@@ -610,13 +616,14 @@ export default function ListingsView({
                       <div
                         className={`relative overflow-hidden ${viewMode === 'list' ? 'w-full md:w-2/5 shrink-0 h-56 md:h-full' : 'h-60 w-full shrink-0'}`}
                       >
-                        <img
+                        <OptimizedImage
                           width={800}
                           height={600}
-                          src={`${prop.images[0]}&w=600&q=80`}
-                          alt={`${prop.title} — ${prop.location}`}
+                          src={prop.images[0]}
+                          alt=""
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                           loading="lazy"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
 
                         <div className="absolute top-3 left-3 flex gap-1">
@@ -638,7 +645,7 @@ export default function ListingsView({
 
                         <button
                           onClick={() => onToggleSaved(prop.id)}
-                          className="absolute top-3 right-3 h-8 w-8 bg-surface/60 rounded-full flex items-center justify-center border border-outline-variant text-on-surface-variant hover:text-red-400 transition-colors"
+                          className="absolute top-3 right-3 h-8 w-8 bg-surface/60 rounded-full flex items-center justify-center border border-outline-variant text-on-surface-variant hover:text-red-600 transition-colors"
                           title="Save to favorites"
                           aria-pressed={isSaved}
                           aria-label={
@@ -739,7 +746,7 @@ export default function ListingsView({
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                     window.scrollTo({ top: 0, behavior: 'smooth' })
                   }}
-                  className="px-4 py-2 bg-surface-container border border-outline-variant rounded-lg text-on-surface-variant disabled:opacity-40 hover:text-on-surface transition-all font-bold cursor-pointer"
+                  className="px-4 py-2 bg-surface-container border border-outline-variant rounded-lg text-on-surface-variant disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:border-none disabled:shadow-none disabled:cursor-not-allowed hover:text-on-surface transition-all font-bold cursor-pointer"
                 >
                   ◄ Previous Page
                 </button>
@@ -772,7 +779,7 @@ export default function ListingsView({
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                     window.scrollTo({ top: 0, behavior: 'smooth' })
                   }}
-                  className="px-4 py-2 bg-surface-container border border-outline-variant rounded-lg text-on-surface-variant disabled:opacity-40 hover:text-on-surface transition-all font-bold cursor-pointer"
+                  className="px-4 py-2 bg-surface-container border border-outline-variant rounded-lg text-on-surface-variant disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:border-none disabled:shadow-none disabled:cursor-not-allowed hover:text-on-surface transition-all font-bold cursor-pointer"
                 >
                   Next Page ►
                 </button>
@@ -802,10 +809,10 @@ export default function ListingsView({
               className="fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-outline-variant rounded-t-3xl max-h-[85vh] overflow-y-auto p-6 space-y-6"
             >
               <div className="flex items-center justify-between border-b border-outline-variant/50 pb-3">
-                <h3 className="text-on-surface font-extrabold text-base flex items-center gap-2">
+                <h2 className="text-on-surface font-extrabold text-base flex items-center gap-2">
                   <SlidersHorizontal className="h-4 w-4 text-gold-accent" />
                   Refine Search
-                </h3>
+                </h2>
                 <button
                   onClick={() => setIsMobileFilterOpen(false)}
                   className="p-1 text-on-surface-variant hover:text-on-surface"

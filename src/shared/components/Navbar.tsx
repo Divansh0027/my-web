@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, Link, useNavigate } from 'react-router-dom'
 import FocusLock from 'react-focus-lock'
 import {
   Menu,
@@ -207,7 +207,7 @@ export default React.memo(function Navbar({
                     width={24}
                     height={24}
                     src={user.photoURL}
-                    alt={user.displayName || 'User Profile'}
+                    alt=""
                     referrerPolicy="no-referrer"
                     className="h-6 w-6 rounded-full object-cover"
                     loading="lazy"
@@ -235,46 +235,40 @@ export default React.memo(function Navbar({
                     exit={{ opacity: 0, y: 10 }}
                     className="absolute right-0 mt-2.5 w-48 rounded-xl bg-surface border border-outline-variant p-1.5 shadow-md z-50 text-xs text-on-surface-variant font-sans"
                   >
-                    <button
+                    <Link
+                      to="/profile"
                       role="menuitem"
-                      onClick={() => {
-                        setIsDropdownOpen(false)
-                        handleLinkClick('profile')
-                      }}
+                      onClick={() => setIsDropdownOpen(false)}
                       className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-surface-container-low hover:text-on-surface transition-colors text-left cursor-pointer"
                     >
                       <UserIcon className="h-4 w-4 text-gold-accent" />
                       My Profile
-                    </button>
-                    <button
+                    </Link>
+                    <Link
+                      to="/saved"
                       role="menuitem"
-                      onClick={() => {
-                        setIsDropdownOpen(false)
-                        handleLinkClick('saved')
-                      }}
+                      onClick={() => setIsDropdownOpen(false)}
                       className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-surface-container-low hover:text-on-surface transition-colors text-left cursor-pointer"
                     >
                       <Heart className="h-4 w-4 text-rose-500 fill-rose-500/20" />
                       Saved ({savedCount})
-                    </button>
+                    </Link>
                     {isAdmin && (
-                      <button
+                      <Link
+                        to="/admin"
                         role="menuitem"
-                        onClick={() => {
-                          setIsDropdownOpen(false)
-                          handleLinkClick('admin')
-                        }}
+                        onClick={() => setIsDropdownOpen(false)}
                         className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-surface-container-low hover:text-on-surface transition-colors text-left cursor-pointer"
                       >
                         <Shield className="h-4 w-4 text-gold-accent" />
                         Admin Panel
-                      </button>
+                      </Link>
                     )}
                     <div className="border-t border-outline-variant/50 my-1" />
                     <button
                       role="menuitem"
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-red-500/10 hover:text-red-400 transition-colors text-left font-semibold cursor-pointer"
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-red-500/10 hover:text-red-600 transition-colors text-left font-semibold cursor-pointer"
                     >
                       <LogOut className="h-4 w-4 text-red-500" />
                       Sign Out
@@ -294,21 +288,21 @@ export default React.memo(function Navbar({
           )}
 
           {/* List Your Property CTA */}
-          <button
+          <Link
+            to="/list-property"
             id="nav-list-property"
-            onClick={() => handleLinkClick('list_property')}
-            className="px-4 py-1.5 rounded-full bg-gold-accent text-slate-900 text-xs font-bold shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-95 transition-all"
+            className="px-4 py-1.5 rounded-full bg-gold-accent text-[var(--on-gold)] text-xs font-bold shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-95 transition-all flex items-center justify-center"
           >
             List Your Property
-          </button>
+          </Link>
         </div>
 
         {/* Mobile Right Bar */}
         <div className="flex lg:hidden items-center gap-3">
-          <button
-            onClick={() => handleLinkClick('saved')}
+          <Link
+            to="/saved"
             aria-label="View saved properties"
-            className="relative p-2 text-on-surface-variant"
+            className="relative p-2 text-on-surface-variant flex items-center justify-center"
           >
             <Heart className="h-5 w-5 text-on-surface-variant" />
             {savedCount > 0 && (
@@ -316,7 +310,7 @@ export default React.memo(function Navbar({
                 {savedCount}
               </span>
             )}
-          </button>
+          </Link>
 
           {/* Hamburger button */}
           <button
@@ -360,7 +354,7 @@ export default React.memo(function Navbar({
                 <div className="flex items-center justify-between border-b border-outline-variant/50 pb-4 mb-6">
                   <div className="flex items-center gap-2">
                     <Logo size={36} className="shrink-0" />
-                    <span className="font-bold text-on-surface text-md">Shiv Saya Properties</span>
+                    <span className="font-bold text-on-surface text-md">{BUSINESS_CONFIG.businessName}</span>
                   </div>
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -373,12 +367,13 @@ export default React.memo(function Navbar({
 
                 {/* List Your Property in Mobile Header */}
                 <div className="mb-6 flex justify-end">
-                  <button
-                    onClick={() => handleLinkClick('list_property')}
-                    className="w-full py-2.5 rounded-xl bg-gold-accent text-slate-900 text-sm font-bold text-center shadow-md shadow-gold-accent/10"
+                  <Link
+                    to="/list-property"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full py-2.5 rounded-xl bg-gold-accent text-[var(--on-gold)] text-sm font-bold flex items-center justify-center shadow-md shadow-gold-accent/10"
                   >
                     List Your Property
-                  </button>
+                  </Link>
                 </div>
 
                 {/* Profile in Mobile */}
@@ -391,7 +386,7 @@ export default React.memo(function Navbar({
                             width={40}
                             height={40}
                             src={user.photoURL}
-                            alt={user.displayName || 'User Profile'}
+                            alt=""
                             className="h-10 w-10 rounded-full object-cover border border-gold-accent/30"
                             loading="lazy"
                           />
@@ -412,33 +407,36 @@ export default React.memo(function Navbar({
 
                       {/* Extra authenticated options on mobile */}
                       <div className="flex flex-col gap-2.5">
-                        <button
-                          onClick={() => handleLinkClick('profile')}
+                        <Link
+                          to="/profile"
+                          onClick={() => setIsMobileMenuOpen(false)}
                           className="flex items-center gap-2.5 text-xs text-on-surface-variant hover:text-on-surface font-medium text-left"
                         >
                           <UserIcon className="h-4 w-4 text-gold-accent" />
                           My Profile
-                        </button>
-                        <button
-                          onClick={() => handleLinkClick('profile')}
+                        </Link>
+                        <Link
+                          to="/profile"
+                          onClick={() => setIsMobileMenuOpen(false)}
                           className="flex items-center gap-2.5 text-xs text-on-surface-variant hover:text-on-surface font-medium text-left"
                         >
                           <Clipboard className="h-4 w-4 text-gold-accent" />
                           My Listings
-                        </button>
-                        <button
-                          onClick={() => handleLinkClick('saved')}
+                        </Link>
+                        <Link
+                          to="/saved"
+                          onClick={() => setIsMobileMenuOpen(false)}
                           className="flex items-center gap-2.5 text-xs text-on-surface-variant hover:text-on-surface font-medium text-left"
                         >
                           <Heart className="h-4 w-4 text-rose-500 fill-rose-500/20" />
                           Saved Properties ({savedCount})
-                        </button>
+                        </Link>
                       </div>
 
                       <div className="border-t border-outline-variant/50 pt-2.5">
                         <button
                           onClick={handleLogout}
-                          className="w-full py-2 hover:bg-red-500/10 border border-red-500/10 rounded-lg text-xs text-red-400 font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                          className="w-full py-2 hover:bg-red-500/10 border border-red-500/10 rounded-lg text-xs text-red-600 font-bold flex items-center justify-center gap-1.5 cursor-pointer"
                         >
                           <LogOut className="h-3.5 w-3.5" />
                           Sign Out Session
@@ -501,13 +499,14 @@ export default React.memo(function Navbar({
                   })}
 
                   {isAdmin && (
-                    <button
-                      onClick={() => handleLinkClick('admin')}
+                    <Link
+                      to="/admin"
+                      onClick={() => setIsMobileMenuOpen(false)}
                       className="text-left py-2 text-base font-bold text-gold-accent flex items-center gap-2 border-b border-outline-variant/50"
                     >
                       <Shield className="h-5 w-5 text-gold-accent" />
                       Admin Panel
-                    </button>
+                    </Link>
                   )}
                 </div>
               </div>
@@ -527,7 +526,7 @@ export default React.memo(function Navbar({
                   target="_blank"
                   rel="noreferrer"
                   aria-label="Chat on WhatsApp"
-                  className="w-full py-3 rounded-xl bg-success-green text-on-surface text-sm font-bold flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl bg-success-green text-white text-sm font-bold flex items-center justify-center gap-2"
                 >
                   <PhoneCall className="h-4 w-4" />
                   Chat on WhatsApp

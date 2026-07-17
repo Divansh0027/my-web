@@ -56,7 +56,7 @@ export default function UserManagement() {
                     </td>
                   </tr>
                 ) : (
-                  filteredUsers.map((usr) => (
+                  filteredUsers.map((usr: any) => (
                     <tr key={usr.uid} className="hover:bg-surface/20 transition-all">
                       <td className="py-4 px-4 font-extrabold text-on-surface flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-surface-container-high text-gold-accent font-black text-xs flex items-center justify-center uppercase border border-outline-variant/50">
@@ -82,7 +82,7 @@ export default function UserManagement() {
                         <span
                           className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase leading-none border ${
                             usr.banned === true
-                              ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                              ? 'bg-red-500/10 text-red-600 border-red-500/20'
                               : 'bg-gold-accent/10 text-success-green border-emerald-500/20 animate-none'
                           }`}
                         >
@@ -102,7 +102,7 @@ export default function UserManagement() {
                         ) : (
                           <button
                             onClick={() => handleToggleBanUser(usr.uid, false)}
-                            className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/25 hover:text-on-surface text-red-450 border border-red-500/25 cursor-pointer font-bold text-[10px]"
+                            className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/25 hover:text-on-surface text-red-700 border border-red-500/25 cursor-pointer font-bold text-[10px]"
                           >
                             Suspend
                           </button>

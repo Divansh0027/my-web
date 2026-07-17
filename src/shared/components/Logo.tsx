@@ -10,13 +10,6 @@ interface LogoProps {
 
 export default function Logo({ className = '', size = 40 }: LogoProps) {
   return (
-    <img
-      src="/logo.svg"
-      alt="Shiv Saya"
-      width={size}
-      height={size}
-      className={className}
-      loading="lazy"
-    />
+    <img src="/logo.svg" alt="" width={size} height={size} className={className} loading="lazy" />
   )
 }

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import { BadgeCheck, PhoneCall } from 'lucide-react'
 import { Property, Enquiry } from '@/shared/types/types'
+import { OptimizedImage } from '@/shared/components/OptimizedImage'
 import { submitEnquiry } from '@/firebase'
 import { trackUserEvent } from '@/analytics'
 import { useConfig } from '@/shared/context/ConfigContext'
@@ -47,6 +48,7 @@ export function DetailContactForm({ property, onShowNotification }: DetailContac
           email: currentUser.email || 'unknown@email.com',
           phone: cleanPhone,
           message: senderMessage,
+          type: 'enquiry',
           status: 'New',
         }
         const result = await submitEnquiry(enqObj)
@@ -93,17 +95,20 @@ export function DetailContactForm({ property, onShowNotification }: DetailContac
     <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-6 shadow-md space-y-6">
       {/* Agent Badge Profile */}
       <div className="flex items-center gap-4 border-b border-outline-variant/50 pb-4">
-        <img
-          src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80"
-          alt={BUSINESS_CONFIG.consultantName}
+        <OptimizedImage
+          width={150}
+          height={150}
+          src="https://images.unsplash.com/photo-1560250097-0b93528c311a"
+          alt=""
           loading="lazy"
           className="h-14 w-14 rounded-full object-cover border border-gold-accent/30"
+          sizes="56px"
         />
         <div>
           <div className="flex items-center gap-1">
-            <h4 className="font-extrabold text-on-surface text-sm">
+            <h3 className="font-extrabold text-on-surface text-sm">
               {BUSINESS_CONFIG.consultantName}
-            </h4>
+            </h3>
             <BadgeCheck className="h-4 w-4 text-emerald-400 shrink-0" />
           </div>
           <p className="text-xs text-gold-accent font-semibold mt-0.5">Real Estate Consultant</p>
@@ -195,7 +200,7 @@ export function DetailContactForm({ property, onShowNotification }: DetailContac
         <button
           disabled={isSubmitting}
           type="submit"
-          className="w-full py-3 rounded-xl bg-gold-accent text-[var(--on-gold)] text-xs font-bold shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+          className="w-full py-3 rounded-xl bg-gold-accent text-[var(--on-gold)] text-xs font-bold shadow hover:bg-gold-hover hover:scale-105 shadow-md active:scale-98 transition-all flex items-center justify-center gap-1 cursor-pointer disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:border-none disabled:shadow-none disabled:cursor-not-allowed"
         >
           {isSubmitting ? (
             <span>Submitting Details...</span>
@@ -242,7 +247,7 @@ export function DetailContactForm({ property, onShowNotification }: DetailContac
               property_id: property.id,
             })
           }
-          className="flex-1 py-3 bg-success-green hover:brightness-110 rounded-xl text-on-surface font-bold text-xs flex items-center justify-center gap-2 transition-all shadow"
+          className="flex-1 py-3 bg-success-green hover:brightness-110 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow"
         >
           <PhoneCall className="h-4 w-4" />
           WhatsApp

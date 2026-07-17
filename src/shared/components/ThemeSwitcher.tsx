@@ -4,19 +4,11 @@ import { Monitor, Moon, Sun } from 'lucide-react'
 type Theme = 'light' | 'dark' | 'system'
 
 export default function ThemeSwitcher() {
-  const [theme, setTheme] = useState<Theme>('system')
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme | null
-    if (savedTheme) {
-      setTheme(savedTheme)
-    }
-  }, [])
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('theme') as Theme | null) || 'system')
 
   useEffect(() => {
     localStorage.setItem('theme', theme)
     const root = window.document.documentElement
-
     const applyTheme = () => {
       root.classList.remove('light', 'dark')
       if (theme === 'system') {

@@ -12,6 +12,8 @@ import {
   dbInstance,
 } from '@/firebase'
 import { formatCurrency } from '@/features/admin/components/utils'
+import { isPositiveNumber, maxLength } from '@/shared/utils/validate'
+import { sanitizeText } from '@/shared/utils/sanitize'
 
 export interface AdminStateProps {
   currentUser?: ClientUser | null
@@ -214,7 +216,7 @@ export function useAdminState({
   // USER / BAN ACTIONS
   // ----------------------------------------------------
   const handleToggleBanUser = async (uid: string, currentBanState: boolean) => {
-    const userObj = dbUsers.find((u: unknown) => u.uid === uid)
+    const userObj = dbUsers.find((u: any) => u.uid === uid)
     if (!userObj) return
 
     setConfirmDialog({
@@ -235,7 +237,7 @@ export function useAdminState({
               // Firestore listener handles property updates via batch commit in toggleUserBan
               onShowNotification(`User account suspension state toggled.`, 'success')
             } catch (err: unknown) {
-              onShowNotification(`Database write failed: ${(err as unknown).message}`, 'error')
+              onShowNotification(`Database write failed: ${(err as any).message}`, 'error')
             }
           }
         })
@@ -302,7 +304,7 @@ export function useAdminState({
       onConfirm: () => {
         executeOperation(async () => {
           const newList = adminsList.filter(
-            (e: unknown) => e.toLowerCase() !== emailToRemove.toLowerCase(),
+            (e: any) => e.toLowerCase() !== emailToRemove.toLowerCase(),
           )
           setAdminsList(newList)
           await removeRemoteAdmin(emailToRemove)
@@ -326,9 +328,7 @@ export function useAdminState({
           localStorage.removeItem('ssp_admin_emails')
           localStorage.removeItem('ssp_properties') // If custom property addition used it
           onShowNotification('System storage cold purged. Reloading container...', 'success')
-          setTimeout(() => {
-            window.location.reload()
-          }, 1200)
+          // No reload needed
         })
       },
     })
@@ -345,7 +345,7 @@ export function useAdminState({
         message:
           'Are you sure you want to approve this property? It will be visible to the public.',
         onConfirm: () => {
-          setConfirmDialog((prev: unknown) => ({ ...prev, isOpen: false }))
+          setConfirmDialog((prev: any) => ({ ...prev, isOpen: false }))
           executeOperation(() => {
             onToggleApproval(id)
           }, `Listing approved and published successfully`)
@@ -359,7 +359,7 @@ export function useAdminState({
           'Are you sure you want to revoke approval? This will hide the property from the public.',
         isDanger: true,
         onConfirm: () => {
-          setConfirmDialog((prev: unknown) => ({ ...prev, isOpen: false }))
+          setConfirmDialog((prev: any) => ({ ...prev, isOpen: false }))
           executeOperation(() => {
             onToggleApproval(id)
           }, `Listing approval revoked`)
@@ -379,7 +379,7 @@ export function useAdminState({
         title: 'Restore Property',
         message: 'Are you sure you want to restore this rejected property back to pending?',
         onConfirm: () => {
-          setConfirmDialog((prev: unknown) => ({ ...prev, isOpen: false }))
+          setConfirmDialog((prev: any) => ({ ...prev, isOpen: false }))
           executeOperation(() => {
             onUpdateProperty({
               ...prop,
@@ -396,7 +396,7 @@ export function useAdminState({
   }
 
   const handlePropertyDelete = (id: string) => {
-    const matchedProp = properties.find((p: unknown) => p.id === id)
+    const matchedProp = properties.find((p: any) => p.id === id)
     setConfirmDialog({
       isOpen: true,
       title: 'Delete Real Estate Listing',
@@ -413,6 +413,21 @@ export function useAdminState({
   }
 
   // ----------------------------------------------------
+
+  const handleSelectProperty = (id: string) => {
+    setSelectedProperties((prev) =>
+      prev.includes(id) ? prev.filter((pId) => pId !== id) : [...prev, id],
+    )
+  }
+
+  const handleSelectAllProperties = (ids: string[]) => {
+    if (selectedProperties.length === ids.length && ids.length > 0) {
+      setSelectedProperties([])
+    } else {
+      setSelectedProperties(ids)
+    }
+  }
+
   // BULK MANIPULATIONS ON TABLE
 
   const handleBulkApprove = () => {
@@ -425,7 +440,7 @@ export function useAdminState({
       onConfirm: () => {
         executeOperation(() => {
           selectedProperties.forEach((id: string) => {
-            const found = properties.find((p: unknown) => p.id === id)
+            const found = properties.find((p: any) => p.id === id)
             if (found && found.moderationStatus !== 'live') {
               onToggleApproval(id)
             }
@@ -447,7 +462,7 @@ export function useAdminState({
       onConfirm: () => {
         executeOperation(() => {
           selectedProperties.forEach((id: string) => {
-            const found = properties.find((p: unknown) => p.id === id)
+            const found = properties.find((p: any) => p.id === id)
             if (found && found.moderationStatus !== 'rejected') {
               onUpdateProperty({ ...found, moderationStatus: 'rejected' })
             }
@@ -623,7 +638,7 @@ export function useAdminState({
   // 1. Properties filters
   const filteredProperties = useMemo(
     () =>
-      properties.filter((p: unknown) => {
+      properties.filter((p: any) => {
         const matchesSearch =
           p.title.toLowerCase().includes(propertySearch.toLowerCase()) ||
           p.location.toLowerCase().includes(propertySearch.toLowerCase())
@@ -660,7 +675,7 @@ export function useAdminState({
   // 2. Enquiries filters
   const filteredEnquiries = useMemo(
     () =>
-      enquiries.filter((e: unknown) => {
+      enquiries.filter((e: any) => {
         const matchesSearch =
           e.name.toLowerCase().includes(enquirySearch.toLowerCase()) ||
           e.email.toLowerCase().includes(enquirySearch.toLowerCase()) ||
@@ -676,7 +691,7 @@ export function useAdminState({
   // 3. User filters
   const filteredUsers = useMemo(
     () =>
-      dbUsers.filter((u: unknown) => {
+      dbUsers.filter((u: any) => {
         return (
           u.displayName.toLowerCase().includes(userSearch.toLowerCase()) ||
           u.email.toLowerCase().includes(userSearch.toLowerCase())
@@ -687,11 +702,11 @@ export function useAdminState({
 
   // 4. Stat counting variables
   const pendingProperties = useMemo(
-    () => properties.filter((p: unknown) => p.moderationStatus === 'pending'),
+    () => properties.filter((p: any) => p.moderationStatus === 'pending'),
     [properties],
   )
   const approvedListingsCount = useMemo(
-    () => properties.filter((p: unknown) => p.moderationStatus === 'live').length,
+    () => properties.filter((p: any) => p.moderationStatus === 'live').length,
     [properties],
   )
   const pendingApprovalsCount = pendingProperties.length
@@ -701,7 +716,7 @@ export function useAdminState({
     () =>
       properties
         .filter(
-          (p: unknown) =>
+          (p: any) =>
             p.moderationStatus === 'live' && (!p.transactionType || p.transactionType === 'Buy'),
         )
         .reduce((sum, p) => sum + p.price, 0),
@@ -713,13 +728,13 @@ export function useAdminState({
   const threeBhkCount = useMemo(
     () =>
       properties.filter(
-        (p: unknown) => String(p.bhk || '').includes('3 BHK') || String(p.bhk || '').includes('3'),
+        (p: any) => String(p.bhk || '').includes('3 BHK') || String(p.bhk || '').includes('3'),
       ).length,
     [properties],
   )
   const villaCount = useMemo(
     () =>
-      properties.filter((p: unknown) =>
+      properties.filter((p: any) =>
         String(p.type || '')
           .toLowerCase()
           .includes('villa'),
@@ -729,7 +744,7 @@ export function useAdminState({
   const commercialCount = useMemo(
     () =>
       properties.filter(
-        (p: unknown) =>
+        (p: any) =>
           String(p.type || '')
             .toLowerCase()
             .includes('plot') ||
@@ -745,7 +760,7 @@ export function useAdminState({
   const standardFlatsCount = useMemo(
     () =>
       properties.filter(
-        (p: unknown) =>
+        (p: any) =>
           String(p.bhk || '').includes('1 BHK') ||
           String(p.bhk || '').includes('2 BHK') ||
           String(p.bhk || '').includes('1') ||
@@ -754,15 +769,15 @@ export function useAdminState({
     [properties],
   )
   const newEnquiriesCount = useMemo(
-    () => enquiries.filter((e: unknown) => e.status === 'New').length,
+    () => enquiries.filter((e: any) => e.status === 'New').length,
     [enquiries],
   )
   const contactedEnquiriesCount = useMemo(
-    () => enquiries.filter((e: unknown) => e.status === 'Contacted').length,
+    () => enquiries.filter((e: any) => e.status === 'Contacted').length,
     [enquiries],
   )
   const resolvedEnquiriesCount = useMemo(
-    () => enquiries.filter((e: unknown) => e.status === 'Resolved').length,
+    () => enquiries.filter((e: any) => e.status === 'Resolved').length,
     [enquiries],
   )
 
@@ -782,6 +797,7 @@ export function useAdminState({
     setPropertySort,
     filteredProperties: sortedListings,
     selectedProperties,
+    handleSelectProperty,
     handleSelectAllProperties,
     handleExportCSV: () => {},
     handleExportPropertiesJSON,

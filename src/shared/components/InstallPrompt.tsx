@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { X, Download } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
+import { useConfig } from './../context/ConfigContext'
 
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
   const [showPrompt, setShowPrompt] = useState(false)
+  const config = useConfig()
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -45,14 +47,14 @@ export function InstallPrompt() {
           className="fixed top-24 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-surface border border-outline shadow-xl rounded-2xl p-4 z-[60] flex items-start gap-4"
         >
           <div className="flex-1">
-            <h3 className="font-bold text-on-surface mb-1">Add to Home Screen</h3>
+            <h2 className="font-bold text-on-surface mb-1">Add to Home Screen</h2>
             <p className="text-sm text-on-surface-variant mb-3">
-              Install Shiv Saya Properties for quick access and offline browsing.
+              Install {config.businessName} for quick access and offline browsing.
             </p>
             <div className="flex gap-2">
               <button
                 onClick={handleInstall}
-                className="bg-primary text-on-primary px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2"
+                className="bg-gold-accent text-[var(--on-gold)] px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2"
               >
                 <Download className="w-4 h-4" /> Install App
               </button>

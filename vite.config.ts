@@ -69,20 +69,56 @@ export default defineConfig(() => {
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom')) {
-                return 'vendor-react'
+              // 1. Sentry
+              if (id.includes('@sentry/')) {
+                return 'vendor-sentry'
               }
+              // 2. Firebase
               if (id.includes('firebase')) {
                 return 'vendor-firebase'
               }
+              // 3. Recharts
               if (id.includes('recharts')) {
                 return 'vendor-recharts'
               }
-              if (id.includes('motion')) {
+              // 4. Motion/Animations
+              if (id.includes('motion') || id.includes('framer-motion')) {
                 return 'vendor-motion'
               }
+              // 5. Algolia Search
+              if (id.includes('algoliasearch') || id.includes('react-instantsearch') || id.includes('@algolia/')) {
+                return 'vendor-algolia'
+              }
+              // 6. Joyride Tour
+              if (id.includes('react-joyride') || id.includes('react-floater')) {
+                return 'vendor-joyride'
+              }
+              // 7. Core React Framework (Strict Match)
+              if (
+                id.includes('/react/') ||
+                id.includes('/react-dom/') ||
+                id.includes('/react-router-dom/') ||
+                id.includes('/react-router/') ||
+                id.includes('/scheduler/')
+              ) {
+                return 'vendor-react'
+              }
+              // 8. Tanstack React Query
+              if (id.includes('@tanstack/')) {
+                return 'vendor-query'
+              }
+              // 9. Icons
               if (id.includes('lucide-react')) {
                 return 'vendor-icons'
+              }
+              // 10. Analytics trackers
+              if (
+                id.includes('logrocket') ||
+                id.includes('mixpanel-browser') ||
+                id.includes('@hotjar/') ||
+                id.includes('web-vitals')
+              ) {
+                return 'vendor-analytics'
               }
             }
           },

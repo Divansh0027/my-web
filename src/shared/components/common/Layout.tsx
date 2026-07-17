@@ -71,7 +71,7 @@ export default function Layout({
     return (
       <main className="min-h-screen bg-[#070b14] flex flex-col items-center justify-center p-6 text-center font-sans">
         <div className="max-w-md w-full">
-          <div className="h-20 w-20 mx-auto mb-8 text-gold-accent opacity-80">
+          <div className="h-20 w-20 mx-auto mb-8 text-gold-accent">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"

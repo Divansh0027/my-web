@@ -32,12 +32,8 @@ export function PropertyCard({
     >
       {/* Image Section */}
       <div className="relative h-56 w-full overflow-hidden bg-surface-container-high">
-        {property.imageUrl && (
-          <OptimizedImage
-            src={property.imageUrl}
-            alt={property.name || 'Property'}
-            className="w-full h-full object-cover"
-          />
+        {property.images?.[0] && (
+          <OptimizedImage src={property.images[0]} alt="" className="w-full h-full object-cover" />
         )}
 
         {/* Save Button */}
@@ -56,7 +52,7 @@ export function PropertyCard({
       {/* Content Section */}
       <div className="p-5 flex-1 flex flex-col">
         {/* Title */}
-        <h3 className="font-bold text-on-surface text-lg line-clamp-2 mb-2">{property.name}</h3>
+        <h3 className="font-bold text-on-surface text-lg line-clamp-2 mb-2">{property.title}</h3>
 
         {/* Location */}
         <div className="flex items-center gap-2 text-on-surface-variant text-sm mb-4">
@@ -75,10 +71,10 @@ export function PropertyCard({
                 <span>{property.bhk}</span>
               </div>
             )}
-            {property.size && (
+            {property.area && (
               <div className="flex items-center gap-1">
                 <Maximize className="w-4 h-4" />
-                <span>{property.size}</span>
+                <span>{property.area} sqft</span>
               </div>
             )}
           </div>

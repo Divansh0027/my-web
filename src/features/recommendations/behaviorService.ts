@@ -23,7 +23,7 @@ export const trackBehavior = async (
       metadata,
       timestamp: serverTimestamp(),
     })
-  } catch (error) {
-    console.error('Failed to track behavior:', error)
+  } catch (error: unknown) {
+    console.warn('Failed to track behavior:', error)
   }
 }

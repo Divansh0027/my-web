@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
+ 
 
 import { useEffect, useMemo, useCallback } from 'react'
 import { useQuery, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
@@ -108,9 +108,16 @@ export function useProperties(
         }
 
         // Optimistic update
-        queryClient.setQueryData(['properties'], (old: Property[] = []) =>
-          old.map((p) => (p.id === id ? updated : p)),
-        )
+        queryClient.setQueriesData({ queryKey: ['properties'] }, (old: any) => {
+          if (!old || !old.pages) return old
+          return {
+            ...old,
+            pages: old.pages.map((page: { data: Property[], nextCursor?: unknown }) => ({
+              ...page,
+              data: page.data.map((p: Property) => (p.id === id ? updated : p)),
+            })),
+          }
+        })
 
         const success = await updatePropertyInDb(updated.id, updated)
         if (success) {
@@ -125,7 +132,7 @@ export function useProperties(
           // Revert optimistic update by refetching/re-subscribing, but the subscription will handle it
           triggerToast('Failed to modify status. Try again.', 'error')
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.warn('handleToggleApproval error:', err)
         triggerToast('Unexpected error. Try again.', 'error')
       }
@@ -141,9 +148,16 @@ export function useProperties(
           return
         }
 
-        queryClient.setQueryData(['properties'], (old: Property[] = []) =>
-          old.filter((p) => p.id !== id),
-        )
+        queryClient.setQueriesData({ queryKey: ['properties'] }, (old: any) => {
+          if (!old || !old.pages) return old
+          return {
+            ...old,
+            pages: old.pages.map((page: { data: Property[], nextCursor?: unknown }) => ({
+              ...page,
+              data: page.data.filter((p: Property) => p.id !== id),
+            })),
+          }
+        })
 
         const success = await deletePropertyFromDb(id)
         if (success) {
@@ -154,7 +168,7 @@ export function useProperties(
         } else {
           triggerToast('Failed to delete. Try again.', 'error')
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.warn('handleDeleteProperty error:', err)
         triggerToast('Unexpected error. Try again.', 'error')
       }
@@ -165,9 +179,16 @@ export function useProperties(
   const handleUpdatePropertyInApp = useCallback(
     async (updated: Property) => {
       try {
-        queryClient.setQueryData(['properties'], (old: Property[] = []) =>
-          old.map((p) => (p.id === updated.id ? updated : p)),
-        )
+        queryClient.setQueriesData({ queryKey: ['properties'] }, (old: any) => {
+          if (!old || !old.pages) return old
+          return {
+            ...old,
+            pages: old.pages.map((page: { data: Property[], nextCursor?: unknown }) => ({
+              ...page,
+              data: page.data.map((p: Property) => (p.id === updated.id ? updated : p)),
+            })),
+          }
+        })
 
         const success = await updatePropertyInDb(updated.id, updated)
         if (success) {
@@ -180,7 +201,7 @@ export function useProperties(
         } else {
           triggerToast('Failed to update. Try again.', 'error')
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.warn('handleUpdateProperty error:', err)
         triggerToast('Unexpected error. Try again.', 'error')
       }
@@ -223,7 +244,20 @@ export function useProperties(
         completedProp.moderationStatus = 'pending'
       }
 
-      queryClient.setQueryData(['properties'], (old: Property[] = []) => [completedProp, ...old])
+      queryClient.setQueriesData({ queryKey: ['properties'] }, (old: any) => {
+        if (!old || !old.pages || old.pages.length === 0) return old
+
+        const newPages = [...old.pages]
+        newPages[0] = {
+          ...newPages[0],
+          data: [completedProp, ...newPages[0].data],
+        }
+
+        return {
+          ...old,
+          pages: newPages,
+        }
+      })
 
       const success = await addProperty(completedProp)
       if (success) {

@@ -14,7 +14,7 @@ export function EmptyState({ title, description, icon, action }: EmptyStateProps
       <div className="h-16 w-16 mb-4 text-outline flex items-center justify-center rounded-full bg-surface-container-high/50">
         {icon || <FolderOpen className="h-8 w-8" />}
       </div>
-      <h3 className="text-lg font-semibold text-on-surface mb-2">{title}</h3>
+      <h2 className="text-lg font-semibold text-on-surface mb-2">{title}</h2>
       {description && (
         <p className="text-sm text-on-surface-variant max-w-sm mb-6">{description}</p>
       )}

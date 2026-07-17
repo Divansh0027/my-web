@@ -6,26 +6,27 @@ import { CacheFirst, StaleWhileRevalidate, NetworkFirst } from 'workbox-strategi
 import { ExpirationPlugin } from 'workbox-expiration'
 import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { BackgroundSyncPlugin } from 'workbox-background-sync'
+import { BUSINESS_CONFIG } from './config'
 
 declare let self: ServiceWorkerGlobalScope & typeof globalThis
 declare const __WB_MANIFEST: any
-
-importScripts('https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js')
-importScripts('https://www.gstatic.com/firebasejs/10.8.1/firebase-messaging-compat.js')
+declare const firebase: any;
+importScripts('https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.8.1/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: 'AIzaSyC0KWiRxEc3hXEFGvsUD5cmiLns7RMCD1M',
-  authDomain: 'kinetic-shadow-kcf5x.firebaseapp.com',
-  projectId: 'kinetic-shadow-kcf5x',
-  storageBucket: 'kinetic-shadow-kcf5x.firebasestorage.app',
-  messagingSenderId: '752156925922',
-  appId: '1:752156925922:web:f0780756732901a62863bb',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 })
 
 const messaging = firebase.messaging()
-messaging.onBackgroundMessage((payload) => {
+messaging.onBackgroundMessage((payload: any) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload)
-  const notificationTitle = payload.notification?.title || 'Shiv Saya Properties'
+  const notificationTitle = payload.notification?.title || BUSINESS_CONFIG.businessName
   const notificationOptions = {
     body: payload.notification?.body || 'You have a new message.',
     icon: '/logo.svg',

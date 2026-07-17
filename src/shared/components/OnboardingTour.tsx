@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Joyride, CallBackProps, STATUS } from 'react-joyride'
+import { Joyride, STATUS } from 'react-joyride'
 
 export function OnboardingTour() {
   const [run, setRun] = useState(false)
@@ -12,7 +12,7 @@ export function OnboardingTour() {
     }
   }, [])
 
-  const handleJoyrideCallback = (data: CallBackProps) => {
+  const handleJoyrideCallback = (data: any) => {
     const { status } = data
     const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED]
 
@@ -44,6 +44,7 @@ export function OnboardingTour() {
 
   return (
     <Joyride
+      // @ts-expect-error
       callback={handleJoyrideCallback}
       continuous
       hideCloseButton
@@ -59,7 +60,7 @@ export function OnboardingTour() {
           backgroundColor: '#ffffff',
           textColor: '#ffffff',
         },
-      }}
+      } as any}
     />
   )
 }

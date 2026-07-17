@@ -2,14 +2,14 @@
 import React, { createContext, useContext } from 'react'
 import { AdminTabProps } from '@/shared/types/types'
 
-const AdminContext = createContext<AdminTabProps | null>(null)
+const AdminContext = createContext<any | null>(null)
 
 export const AdminProvider = ({
   children,
   value,
 }: {
   children: React.ReactNode
-  value: AdminTabProps
+  value: any
 }) => {
   return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>
 }
