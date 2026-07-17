@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@hotjar/browser": "^1.0.9",
-    "@sentry/react": "^10.65.0",
+    "@sentry/react": "^10.66.0",
     "@tanstack/react-query": "^5.101.2",
     "algoliasearch": "^5.55.2",
     "browser-image-compression": "^2.0.2",
