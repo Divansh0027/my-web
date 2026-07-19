@@ -44,7 +44,7 @@ export function DetailGallery({ property }: DetailGalleryProps) {
               🔍 Click to Enlarge (Lightbox Gallery)
             </span>
           </div>
-          <div className="absolute top-4 left-4 bg-surface/80 backdrop-blur-md border border-outline-variant text-emerald-400 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg select-none">
+          <div className="absolute top-4 left-4 bg-surface/80 backdrop-blur-md border border-outline-variant text-success-green text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg select-none">
             ✓ Pre-Verified Listing
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { SEO } from '@/shared/components/SEO'
+import { SEO } from '@/shared/components/Seo'
 import React, { useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'

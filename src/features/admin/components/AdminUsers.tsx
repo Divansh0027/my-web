@@ -82,7 +82,7 @@ export default function UserManagement() {
                         <span
                           className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase leading-none border ${
                             usr.banned === true
-                              ? 'bg-red-500/10 text-red-600 border-red-500/20'
+                              ? 'bg-red-500/10 text-red-700 dark:text-red-500 border-red-500/20'
                               : 'bg-gold-accent/10 text-success-green border-emerald-500/20 animate-none'
                           }`}
                         >

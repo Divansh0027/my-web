@@ -45,7 +45,7 @@ export default function StatusPage() {
                     <h2 className="font-semibold text-gray-900">{system.name}</h2>
                   </div>
                 </div>
-                <div className="text-green-600 font-medium capitalize text-sm bg-green-50 px-3 py-1 rounded-full">
+                <div className="text-green-700 font-medium capitalize text-sm bg-green-50 px-3 py-1 rounded-full">
                   {system.status}
                 </div>
               </div>

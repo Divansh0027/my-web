@@ -639,13 +639,13 @@ export default function ListingsView({
                           )}
                         </div>
 
-                        <span className="absolute bottom-3 left-3 bg-surface/80 text-emerald-400 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded">
+                        <span className="absolute bottom-3 left-3 bg-surface/80 text-success-green text-[9px] font-bold uppercase px-1.5 py-0.5 rounded">
                           ✓ Verified
                         </span>
 
                         <button
                           onClick={() => onToggleSaved(prop.id)}
-                          className="absolute top-3 right-3 h-8 w-8 bg-surface/60 rounded-full flex items-center justify-center border border-outline-variant text-on-surface-variant hover:text-red-600 transition-colors"
+                          className="absolute top-3 right-3 h-8 w-8 bg-surface/60 rounded-full flex items-center justify-center border border-outline-variant text-on-surface-variant hover:text-red-700 dark:text-red-500 transition-colors"
                           title="Save to favorites"
                           aria-pressed={isSaved}
                           aria-label={
@@ -655,7 +655,7 @@ export default function ListingsView({
                           }
                         >
                           <Heart
-                            className={`h-4 w-4 ${isSaved ? 'fill-red-500 text-red-500' : ''}`}
+                            className={`h-4 w-4 ${isSaved ? 'fill-red-500 text-red-700 dark:text-red-500' : ''}`}
                           />
                         </button>
                       </div>

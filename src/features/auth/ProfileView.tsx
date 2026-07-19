@@ -177,7 +177,7 @@ export default function ProfileView({
                     <h2 className="text-base font-extrabold text-on-surface">
                       {user?.displayName || 'Guest Client'}
                     </h2>
-                    <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider self-center sm:self-auto gap-1 items-center flex">
+                    <span className="bg-emerald-500/10 text-success-green border border-emerald-500/25 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider self-center sm:self-auto gap-1 items-center flex">
                       ✓ Active Customer
                     </span>
                   </div>
@@ -409,7 +409,7 @@ export default function ProfileView({
                       <div className="flex flex-wrap items-center justify-between md:justify-end gap-3 border-t border-outline-variant/50 md:border-none pt-3.5 md:pt-0">
                         <div className="flex flex-col items-start md:items-end gap-1.5">
                           {isLive && (
-                            <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-wider rounded-full border border-emerald-500/20 flex items-center gap-1.5">
+                            <span className="px-3 py-1 bg-emerald-500/10 text-success-green text-[9px] font-black uppercase tracking-wider rounded-full border border-emerald-500/20 flex items-center gap-1.5">
                               <span className="h-1.5 w-1.5 bg-emerald-400 rounded-full"></span>
                               Live approved
                             </span>
@@ -422,12 +422,12 @@ export default function ProfileView({
                           )}
                           {isRejected && (
                             <div className="flex flex-col items-start md:items-end gap-1">
-                              <span className="px-3 py-1 bg-red-500/10 text-red-500 text-[9px] font-black uppercase tracking-wider rounded-full border border-red-500/20 flex items-center gap-1.5">
+                              <span className="px-3 py-1 bg-red-500/10 text-red-700 dark:text-red-500 text-[9px] font-black uppercase tracking-wider rounded-full border border-red-500/20 flex items-center gap-1.5">
                                 <ShieldAlert className="h-3.5 w-3.5" />
                                 Audit: Rejected
                               </span>
                               {prop.rejectionReason && (
-                                <p className="text-[9px] text-red-600 max-w-xs text-left md:text-right italic font-medium">
+                                <p className="text-[9px] text-red-700 dark:text-red-500 max-w-xs text-left md:text-right italic font-medium">
                                   Reason: {prop.rejectionReason}
                                 </p>
                               )}
@@ -439,7 +439,7 @@ export default function ProfileView({
                         <button
                           type="button"
                           onClick={handleDeleteClick}
-                          className="p-2.5 bg-surface-container border border-outline-variant/50 hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-600 text-on-surface-variant rounded-xl transition-all cursor-pointer"
+                          className="p-2.5 bg-surface-container border border-outline-variant/50 hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-700 dark:text-red-500 text-on-surface-variant rounded-xl transition-all cursor-pointer"
                           title="Delete Listing permanently"
                           aria-label="Delete Listing permanently"
                         >
@@ -557,7 +557,7 @@ export default function ProfileView({
               {enquiries.length > 0 && (
                 <button
                   onClick={handleClearEnquiries}
-                  className="text-xs text-red-600 font-bold hover:underline py-1"
+                  className="text-xs text-red-700 dark:text-red-500 font-bold hover:underline py-1"
                 >
                   Clear History
                 </button>
@@ -577,7 +577,7 @@ export default function ProfileView({
                     className="p-4 bg-surface border border-outline-variant/50 rounded-xl space-y-2.5"
                   >
                     <div className="flex justify-between items-center flex-wrap gap-2 text-xs">
-                      <span className="text-emerald-400 font-bold uppercase text-[9px] bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                      <span className="text-success-green font-bold uppercase text-[9px] bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
                         🎯 {enq.type === 'visit' ? 'Site Visit Confirmed' : 'Callback Scheduled'}
                       </span>
                       <span className="text-on-surface-variant text-[10px]">
@@ -631,7 +631,7 @@ export default function ProfileView({
                     {BUSINESS_CONFIG.reraNumber || 'RERA-HR-REA-2026-X9'}
                   </p>
                 </div>
-                <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-wider rounded border border-emerald-500/20 shrink-0">
+                <span className="px-3 py-1 bg-emerald-500/10 text-success-green text-[10px] font-black uppercase tracking-wider rounded border border-emerald-500/20 shrink-0">
                   ✓ Verified Brokerage
                 </span>
               </div>

@@ -35,7 +35,7 @@ export function ConfirmDialog({
             >
               <div className="flex items-center gap-2 mb-3">
                 {isDanger ? (
-                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  <AlertCircle className="h-5 w-5 text-red-700 dark:text-red-500" />
                 ) : (
                   <CheckSquare className="h-5 w-5 text-gold-accent" />
                 )}

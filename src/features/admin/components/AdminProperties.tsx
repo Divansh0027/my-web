@@ -256,8 +256,8 @@ export default function PropertyManagement() {
                             prop.moderationStatus === 'live'
                               ? 'bg-success-green/10 text-success-green border-success-green/20'
                               : prop.moderationStatus === 'rejected'
-                                ? 'bg-red-500/10 text-red-600 border-red-500/20'
-                                : 'bg-amber-500/15 text-amber-400 border-amber-500/20 animate-pulse'
+                                ? 'bg-red-500/10 text-red-700 dark:text-red-500 border-red-500/20'
+                                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20 animate-pulse'
                           }`}
                         >
                           {prop.moderationStatus}
@@ -298,7 +298,7 @@ export default function PropertyManagement() {
                             className={`p-1.5 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
                               prop.moderationStatus === 'rejected'
                                 ? 'bg-surface-container-high text-on-surface-variant border-outline-variant/50 hover:bg-surface hover:text-on-surface'
-                                : 'bg-surface hover:bg-red-500/10 text-on-surface-variant hover:text-red-600 border-outline-variant/50 hover:border-red-500/30'
+                                : 'bg-surface hover:bg-red-500/10 text-on-surface-variant hover:text-red-700 dark:text-red-500 border-outline-variant/50 hover:border-red-500/30'
                             }`}
                             aria-label={prop.title}
                             title={
@@ -326,7 +326,7 @@ export default function PropertyManagement() {
 
                           <button
                             onClick={() => handlePropertyDelete(prop.id)}
-                            className="p-1.5 rounded-lg bg-surface hover:bg-red-500/10 text-on-surface-variant hover:text-red-600 border border-outline-variant/50 hover:border-red-500/30 transition-all cursor-pointer"
+                            className="p-1.5 rounded-lg bg-surface hover:bg-red-500/10 text-on-surface-variant hover:text-red-700 dark:text-red-500 border border-outline-variant/50 hover:border-red-500/30 transition-all cursor-pointer"
                             title="Delete Permanently"
                             aria-label="Delete Permanently"
                           >

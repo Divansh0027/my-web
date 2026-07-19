@@ -39,13 +39,13 @@
   --surface-container-high: #e2e8f0;
   --on-surface: #0f172a;
   --on-surface-variant: #475569;
-  --gold-accent: #6b5310;
+  --gold-accent: #594209;
   --on-gold: #ffffff;
-  --gold-hover: #5a450c;
-  --gold-light: #f7f0d8;
+  --gold-hover: #403006;
+  --gold-light: #fdfbf6;
   --outline: #e2e8f0;
   --outline-variant: #e2e8f0;
-  --success-green: #15803d;
+  --success-green: #0d4d20;
 }
 
 .dark {
@@ -55,13 +55,13 @@
   --surface-container-high: #334155;
   --on-surface: #f8fafc;
   --on-surface-variant: #cbd5e1;
-  --gold-accent: #d4af37;
-  --on-gold: #0f172a;
-  --gold-hover: #e5c354;
-  --gold-light: #4a3c0e;
+  --gold-accent: #ebd482;
+  --on-gold: #1a1303;
+  --gold-hover: #f2e2a7;
+  --gold-light: #332505;
   --outline: #334155;
   --outline-variant: #1e293b;
-  --success-green: #15803d;
+  --success-green: #22c55e;
 }
 
 /* Hide the default reCAPTCHA badge since we will display text inline */

@@ -222,7 +222,7 @@ function App() {
                     currentUser={currentUser}
                   />
                 ) : (
-                  <div className="flex-grow flex items-center justify-center p-6 text-center text-red-500 font-bold">
+                  <div className="flex-grow flex items-center justify-center p-6 text-center text-red-700 dark:text-red-500 font-bold">
                     Access Denied
                   </div>
                 )}

@@ -553,7 +553,7 @@ export default function ListPropertyView({
           {!isDone && (
             <button
               onClick={handleClearDraft}
-              className="py-2 px-3.5 border border-outline-variant hover:border-red-500/20 text-on-surface-variant hover:text-red-600 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors self-start sm:self-center cursor-pointer"
+              className="py-2 px-3.5 border border-outline-variant hover:border-red-500/20 text-on-surface-variant hover:text-red-700 dark:text-red-500 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors self-start sm:self-center cursor-pointer"
               title="Reset the entire multi-step form to empty state"
             >
               <RefreshCw className="h-3.5 w-3.5" />
@@ -587,7 +587,7 @@ export default function ListPropertyView({
                       isActive
                         ? 'bg-gold-accent/10 text-gold-accent border border-gold-accent/20 font-bold'
                         : isCompleted
-                          ? 'text-emerald-400 font-semibold'
+                          ? 'text-success-green font-semibold'
                           : 'text-on-surface-variant'
                     }`}
                   >
@@ -596,7 +596,7 @@ export default function ListPropertyView({
                         isActive
                           ? 'bg-gold-accent text-[var(--on-gold)]'
                           : isCompleted
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            ? 'bg-emerald-500/10 text-success-green border border-emerald-500/20'
                             : 'bg-slate-850 text-on-surface-variant'
                       }`}
                     >
@@ -650,7 +650,7 @@ export default function ListPropertyView({
                           htmlFor="step1-title-input"
                           className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest flex items-center gap-1.5"
                         >
-                          Property Listing Title <span className="text-red-600">*</span>
+                          Property Listing Title <span className="text-red-700 dark:text-red-500">*</span>
                         </label>
                         <input
                           id="step1-title-input"
@@ -674,7 +674,7 @@ export default function ListPropertyView({
                           htmlFor="step1-desc-input"
                           className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest"
                         >
-                          Detailed Description <span className="text-red-600">*</span>
+                          Detailed Description <span className="text-red-700 dark:text-red-500">*</span>
                         </label>
                         <textarea
                           id="step1-desc-input"
@@ -785,7 +785,7 @@ export default function ListPropertyView({
                           htmlFor="step1-locality-input"
                           className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest"
                         >
-                          Locality Sector / Block Address <span className="text-red-600">*</span>
+                          Locality Sector / Block Address <span className="text-red-700 dark:text-red-500">*</span>
                         </label>
                         <input
                           id="step1-locality-input"
@@ -818,7 +818,7 @@ export default function ListPropertyView({
                           htmlFor="step2-price-input"
                           className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest"
                         >
-                          Property Ask price <span className="text-red-600">*</span>
+                          Property Ask price <span className="text-red-700 dark:text-red-500">*</span>
                         </label>
                         <div className="flex gap-2.5">
                           <input
@@ -858,7 +858,7 @@ export default function ListPropertyView({
                           htmlFor="step2-area-input"
                           className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest"
                         >
-                          Super / Built-up Area <span className="text-red-600">*</span>
+                          Super / Built-up Area <span className="text-red-700 dark:text-red-500">*</span>
                         </label>
                         <div className="flex gap-2.5">
                           <input
@@ -985,7 +985,7 @@ export default function ListPropertyView({
                         <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                           Pre-attached Professional Presets
                         </p>
-                        <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold px-2.5 py-0.5 rounded-full uppercase">
+                        <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-success-green font-bold px-2.5 py-0.5 rounded-full uppercase">
                           Enabled
                         </span>
                       </div>
@@ -1071,7 +1071,7 @@ export default function ListPropertyView({
 
                       {/* LIMIT WARNING OVERFLOW */}
                       {imageFiles.length > 10 && (
-                        <div className="flex items-center gap-2 text-red-600 bg-red-500/5 border border-red-500/10 p-3.5 rounded-xl text-[10px] font-bold">
+                        <div className="flex items-center gap-2 text-red-700 dark:text-red-500 bg-red-500/5 border border-red-500/10 p-3.5 rounded-xl text-[10px] font-bold">
                           <AlertCircle className="h-4 w-4 shrink-0" />
                           Maximum 10 photos allowed.
                         </div>

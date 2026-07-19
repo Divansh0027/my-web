@@ -109,7 +109,7 @@ export function DetailContactForm({ property, onShowNotification }: DetailContac
             <h3 className="font-extrabold text-on-surface text-sm">
               {BUSINESS_CONFIG.consultantName}
             </h3>
-            <BadgeCheck className="h-4 w-4 text-emerald-400 shrink-0" />
+            <BadgeCheck className="h-4 w-4 text-success-green shrink-0" />
           </div>
           <p className="text-xs text-gold-accent font-semibold mt-0.5">Real Estate Consultant</p>
           <p className="text-[10px] text-on-surface-variant font-medium">

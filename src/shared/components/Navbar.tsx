@@ -268,9 +268,9 @@ export default React.memo(function Navbar({
                     <button
                       role="menuitem"
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-red-500/10 hover:text-red-600 transition-colors text-left font-semibold cursor-pointer"
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-red-500/10 hover:text-red-700 dark:text-red-500 transition-colors text-left font-semibold cursor-pointer"
                     >
-                      <LogOut className="h-4 w-4 text-red-500" />
+                      <LogOut className="h-4 w-4 text-red-700 dark:text-red-500" />
                       Sign Out
                     </button>
                   </motion.div>
@@ -436,7 +436,7 @@ export default React.memo(function Navbar({
                       <div className="border-t border-outline-variant/50 pt-2.5">
                         <button
                           onClick={handleLogout}
-                          className="w-full py-2 hover:bg-red-500/10 border border-red-500/10 rounded-lg text-xs text-red-600 font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                          className="w-full py-2 hover:bg-red-500/10 border border-red-500/10 rounded-lg text-xs text-red-700 dark:text-red-500 font-bold flex items-center justify-center gap-1.5 cursor-pointer"
                         >
                           <LogOut className="h-3.5 w-3.5" />
                           Sign Out Session

@@ -1,4 +1,4 @@
-import { SEO } from '@/shared/components/SEO';
+import { SEO } from '@/shared/components/Seo';
 import { WhyChooseUs } from '@/features/home/components/WhyChooseUs';
 import { ContactCTA } from '@/features/home/components/ContactCTA';
 import { formatPrice } from '@/shared/utils/format'

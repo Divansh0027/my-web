@@ -143,9 +143,9 @@ export default function EnquiriesManagement() {
                           }
                           className={`text-[9px] font-black uppercase rounded-lg border px-2 py-1 outline-none cursor-pointer focus:ring-1 ${
                             enq.status === 'New'
-                              ? 'bg-red-500/10 text-red-600 border-red-500/25 focus:ring-red-500'
+                              ? 'bg-red-500/10 text-red-700 dark:text-red-500 border-red-500/25 focus:ring-red-500'
                               : enq.status === 'Contacted'
-                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/25 focus:ring-amber-500'
+                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25 focus:ring-amber-500'
                                 : 'bg-gold-accent/10 text-success-green border-emerald-500/25 focus:ring-emerald-500'
                           }`}
                         >
@@ -173,7 +173,7 @@ export default function EnquiriesManagement() {
                           {/* Email directly */}
                           <a
                             href={`mailto:${enq.email}?subject=Response on your property enquiry - ${BUSINESS_CONFIG.businessName}&body=Hello ${enq.name},%0D%0AThank you for reaching out regarding ${enq.propertyName}.`}
-                            className="p-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/25"
+                            className="p-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/25"
                             title="Send Email response"
                             aria-label="Send Email response"
                           >
@@ -183,7 +183,7 @@ export default function EnquiriesManagement() {
                           {/* Delete Enquiry */}
                           <button
                             onClick={() => handleDeleteEnquiry(enq.id)}
-                            className="p-2 rounded-lg bg-slate-850 hover:bg-red-500/10 border border-outline-variant/50 hover:border-red-500/20 text-on-surface-variant hover:text-red-600 cursor-pointer"
+                            className="p-2 rounded-lg bg-slate-850 hover:bg-red-500/10 border border-outline-variant/50 hover:border-red-500/20 text-on-surface-variant hover:text-red-700 dark:text-red-500 cursor-pointer"
                             title="Delete Enquiry Record"
                             aria-label="Delete Enquiry Record"
                           >

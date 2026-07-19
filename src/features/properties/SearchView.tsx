@@ -112,7 +112,7 @@ export default function SearchView() {
       </div>
 
       {!hasKeys && (
-        <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl mb-8 text-sm flex items-center gap-3">
+        <div className="bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-500 p-4 rounded-xl mb-8 text-sm flex items-center gap-3">
           <Search className="w-5 h-5 shrink-0" />
           <p>
             Algolia Search keys are missing. Please add <strong>VITE_ALGOLIA_APP_ID</strong> and{' '}

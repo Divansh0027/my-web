@@ -45,7 +45,7 @@ export function PropertyCard({
           className="absolute top-3 right-3 bg-white/90 hover:bg-white p-2 rounded-full transition-colors"
           aria-label={isSaved ? 'Remove from saved' : 'Save property'}
         >
-          <Heart className={`w-5 h-5 ${isSaved ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+          <Heart className={`w-5 h-5 ${isSaved ? 'fill-red-500 text-red-700 dark:text-red-500' : 'text-gray-600'}`} />
         </button>
       </div>
 

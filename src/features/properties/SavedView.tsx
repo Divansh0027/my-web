@@ -70,7 +70,7 @@ export default function SavedView({
         ) : wishlistedItems.length === 0 ? (
           /* EMPTY STATE */
           <div className="text-center py-20 bg-surface-container/40 border border-outline-variant/50 rounded-3xl max-w-lg mx-auto p-8">
-            <div className="h-14 w-14 bg-red-500/10 text-red-600 rounded-full flex items-center justify-center mx-auto mb-5">
+            <div className="h-14 w-14 bg-red-500/10 text-red-700 dark:text-red-500 rounded-full flex items-center justify-center mx-auto mb-5">
               <Heart className="h-7 w-7" />
             </div>
             <h2 className="text-lg font-bold text-on-surface">Your Saved List Is Empty</h2>
@@ -125,7 +125,7 @@ export default function SavedView({
 
                   <button
                     onClick={() => onToggleSaved(prop.id)}
-                    className="absolute top-4 right-4 h-9 w-9 bg-surface/70 text-red-500 rounded-full flex items-center justify-center border border-outline-variant shadow"
+                    className="absolute top-4 right-4 h-9 w-9 bg-surface/70 text-red-700 dark:text-red-500 rounded-full flex items-center justify-center border border-outline-variant shadow"
                     title="Remove from bookmarks"
                     aria-label={`Remove ${prop.title} from saved list`}
                   >

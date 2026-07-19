@@ -40,7 +40,7 @@ export function RejectPropertyModal({
               >
                 <X className="h-4 w-4" />
               </button>
-              <h2 className="text-sm font-extrabold text-red-600 uppercase tracking-wide border-b border-outline-variant/50 pb-3 mb-5 flex items-center gap-1.5 font-sans">
+              <h2 className="text-sm font-extrabold text-red-700 dark:text-red-500 uppercase tracking-wide border-b border-outline-variant/50 pb-3 mb-5 flex items-center gap-1.5 font-sans">
                 <AlertTriangle className="h-4 w-4 text-red-550" /> Reject Property Listing
               </h2>
               <div className="space-y-4 text-xs text-on-surface-variant font-sans">

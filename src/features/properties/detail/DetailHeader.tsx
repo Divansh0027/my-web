@@ -50,7 +50,7 @@ export function DetailHeader({ property, isSaved, onToggleSaved, onShare }: Deta
             }
           >
             <Heart
-              className={`h-4 w-4 ${isSaved ? 'fill-red-500 text-red-500 border-none' : ''}`}
+              className={`h-4 w-4 ${isSaved ? 'fill-red-500 text-red-700 dark:text-red-500 border-none' : ''}`}
             />
           </button>
         </div>

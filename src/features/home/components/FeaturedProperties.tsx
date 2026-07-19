@@ -126,7 +126,7 @@ export function FeaturedProperties({
 
                       {/* Verified Badge */}
                       {prop.verified && (
-                        <span className="absolute bottom-4 left-4 bg-surface/80 backdrop-blur-md border border-outline-variant text-emerald-400 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md">
+                        <span className="absolute bottom-4 left-4 bg-surface/80 backdrop-blur-md border border-outline-variant text-success-green text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md">
                           ✓ RERA Verified
                         </span>
                       )}
@@ -137,10 +137,10 @@ export function FeaturedProperties({
                         onClick={() => onToggleSaved(prop.id)}
                         aria-pressed={isSaved}
                         aria-label={isSaved ? 'Remove from favorites' : 'Add to favorites'}
-                        className="absolute top-4 right-4 h-9 w-9 bg-surface/60 backdrop-blur-md rounded-full flex items-center justify-center border border-outline-variant text-on-surface-variant hover:text-red-600 transition-colors"
+                        className="absolute top-4 right-4 h-9 w-9 bg-surface/60 backdrop-blur-md rounded-full flex items-center justify-center border border-outline-variant text-on-surface-variant hover:text-red-700 dark:text-red-500 transition-colors"
                       >
                         <Heart
-                          className={`h-5 w-5 ${isSaved ? 'fill-red-500 text-red-500' : ''}`}
+                          className={`h-5 w-5 ${isSaved ? 'fill-red-500 text-red-700 dark:text-red-500' : ''}`}
                         />
                       </button>
 

@@ -93,7 +93,7 @@ export default function AdminOverview() {
           <div className="bg-surface-container border border-outline-variant/50 rounded-2xl p-5 shadow-md flex flex-col">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-outline-variant/50">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <AlertTriangle className="h-4 w-4 text-amber-700 dark:text-amber-500" />
                 <h2 className="font-extrabold text-on-surface text-sm">Pending Approvals</h2>
               </div>
               <span className="text-[10px] text-on-surface-variant font-bold bg-surface px-2 py-0.5 rounded-md">
@@ -140,7 +140,7 @@ export default function AdminOverview() {
                       </button>
                       <button
                         onClick={() => props.handlePropertyHideToggle(prop)}
-                        className="p-2 rounded-lg bg-surface-container-high hover:bg-red-500/10 border border-outline-variant/50 hover:border-red-500/20 text-on-surface-variant hover:text-red-600 cursor-pointer transition-all"
+                        className="p-2 rounded-lg bg-surface-container-high hover:bg-red-500/10 border border-outline-variant/50 hover:border-red-500/20 text-on-surface-variant hover:text-red-700 dark:text-red-500 cursor-pointer transition-all"
                         title="Reject Listing"
                       >
                         <X className="h-3.5 w-3.5" />
@@ -182,9 +182,9 @@ export default function AdminOverview() {
                     <span
                       className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
                         enq.status === 'New'
-                          ? 'bg-red-500/15 text-red-600 border border-red-500/10 animate-pulse'
+                          ? 'bg-red-500/15 text-red-700 dark:text-red-500 border border-red-500/10 animate-pulse'
                           : enq.status === 'Contacted'
-                            ? 'bg-amber-500/15 text-amber-400 border border-amber-500/10'
+                            ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/10'
                             : 'bg-gold-accent/15 text-gold-accent border border-gold-accent/20'
                       }`}
                     >

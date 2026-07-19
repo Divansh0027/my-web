@@ -61,7 +61,7 @@ export function DetailSimilarProperties({ property, allProperties }: DetailSimil
                     className="h-full w-full group-hover:scale-105 transition-transform duration-500"
                     sizes="(max-width: 768px) 100vw, 33vw"
                   />
-                  <span className="absolute bottom-3 left-3 bg-surface/80 text-emerald-400 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded">
+                  <span className="absolute bottom-3 left-3 bg-surface/80 text-success-green text-[9px] font-bold uppercase px-1.5 py-0.5 rounded">
                     ✓ Verified
                   </span>
                   <span className="absolute top-3 right-3 bg-surface/80 text-gold-accent text-[9px] font-bold uppercase px-1.5 py-0.5 rounded">

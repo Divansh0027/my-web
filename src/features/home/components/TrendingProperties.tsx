@@ -18,7 +18,7 @@ export function TrendingProperties({ properties }: TrendingPropertiesProps) {
     <section className="py-24 px-4 bg-surface border-t border-outline-variant/50">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-2 mb-10">
-          <Flame className="h-5 w-5 text-red-500" />
+          <Flame className="h-5 w-5 text-red-700 dark:text-red-500" />
           <h2 className="text-2xl font-bold text-on-surface">Trending Properties</h2>
         </div>
 

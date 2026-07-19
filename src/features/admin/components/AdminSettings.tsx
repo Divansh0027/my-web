@@ -213,7 +213,7 @@ export default function SystemSettings() {
                     <span>{adm}</span>
                     <button
                       onClick={() => handleRemoveAdmin(adm)}
-                      className="text-on-surface-variant hover:text-red-600 p-1 rounded transition-colors cursor-pointer"
+                      className="text-on-surface-variant hover:text-red-700 dark:text-red-500 p-1 rounded transition-colors cursor-pointer"
                       title="Strip admin privileges"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -326,9 +326,9 @@ export default function SystemSettings() {
                 <button
                   type="button"
                   onClick={handleClearTestData}
-                  className="w-full py-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/40 border border-red-500/10 hover:border-red-500/30 text-red-600 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/40 border border-red-500/10 hover:border-red-500/30 text-red-700 dark:text-red-500 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
-                  <Database className="h-3.5 w-3.5 text-red-600 animate-pulse" /> Clear Test Data
+                  <Database className="h-3.5 w-3.5 text-red-700 dark:text-red-500 animate-pulse" /> Clear Test Data
                 </button>
               </div>
             </div>

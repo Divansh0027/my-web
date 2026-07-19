@@ -50,7 +50,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
 
             {/* Warning Icon Badge */}
             <div className="flex flex-col items-center text-center space-y-4">
-              <div className="h-14 w-14 rounded-2xl bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-500">
+              <div className="h-14 w-14 rounded-2xl bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-700 dark:text-red-500">
                 <ShieldAlert className="h-7 w-7" />
               </div>
               <div className="space-y-1.5">
@@ -73,7 +73,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
                 <HelpCircle className="h-3.5 w-3.5 text-on-surface-variant" />
                 Technical Reference Logs
               </div>
-              <pre className="font-mono text-[10px] text-red-600 whitespace-pre-wrap select-text leading-relaxed overflow-x-auto max-h-32 bg-surface p-2 rounded border border-outline-variant/50">
+              <pre className="font-mono text-[10px] text-red-700 dark:text-red-500 whitespace-pre-wrap select-text leading-relaxed overflow-x-auto max-h-32 bg-surface p-2 rounded border border-outline-variant/50">
                 {this.state.error?.name || 'ErrorException'}:{' '}
                 {this.state.error?.message || 'Render pipeline failure'}
                 {'\n'}
@@ -122,7 +122,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
               <button
                 type="button"
                 onClick={this.handleReset}
-                className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-600 rounded-xl text-xs font-bold border border-red-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
+                className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-700 dark:text-red-500 rounded-xl text-xs font-bold border border-red-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
               >
                 <ShieldAlert className="h-4 w-4" />
                 Reset Application

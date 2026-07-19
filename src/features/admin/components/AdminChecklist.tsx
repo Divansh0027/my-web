@@ -62,7 +62,7 @@ export default function DiagnosticsPanel() {
                     {settings.reraNumber ? (
                       <Check className="h-4 w-4 text-success-green" />
                     ) : (
-                      <X className="h-4 w-4 text-red-600" />
+                      <X className="h-4 w-4 text-red-700 dark:text-red-500" />
                     )}
                   </div>
                   <div className="flex-1 space-y-0.5">
@@ -87,7 +87,7 @@ export default function DiagnosticsPanel() {
                     {properties.length > 0 ? (
                       <Check className="h-4 w-4 text-success-green" />
                     ) : (
-                      <X className="h-4 w-4 text-red-600" />
+                      <X className="h-4 w-4 text-red-700 dark:text-red-500" />
                     )}
                   </div>
                   <div className="flex-1 space-y-0.5">
@@ -110,7 +110,7 @@ export default function DiagnosticsPanel() {
                     {!properties.some((p: any) => !p.verified && p.moderationStatus !== 'rejected') ? (
                       <Check className="h-4 w-4 text-success-green" />
                     ) : (
-                      <AlertTriangle className="h-4 w-4 text-amber-400" />
+                      <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                     )}
                   </div>
                   <div className="flex-1 space-y-0.5">
@@ -133,7 +133,7 @@ export default function DiagnosticsPanel() {
                     {newEnquiriesCount === 0 ? (
                       <Check className="h-4 w-4 text-success-green" />
                     ) : (
-                      <AlertCircle className="h-4 w-4 text-amber-400 animate-pulse" />
+                      <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 animate-pulse" />
                     )}
                   </div>
                   <div className="flex-1 space-y-0.5">
@@ -155,7 +155,7 @@ export default function DiagnosticsPanel() {
                     {settings.consultantName ? (
                       <Check className="h-4 w-4 text-success-green" />
                     ) : (
-                      <X className="h-4 w-4 text-red-600" />
+                      <X className="h-4 w-4 text-red-700 dark:text-red-500" />
                     )}
                   </div>
                   <div className="flex-1 space-y-0.5">
@@ -218,8 +218,8 @@ export default function DiagnosticsPanel() {
                     </div>
                   </div>
                 ) : auditPassed === false ? (
-                  <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-600 rounded-xl space-y-2 flex flex-col items-center text-center">
-                    <AlertTriangle className="h-8 w-8 text-red-600" />
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-500 rounded-xl space-y-2 flex flex-col items-center text-center">
+                    <AlertTriangle className="h-8 w-8 text-red-700 dark:text-red-500" />
                     <div className="space-y-0.5">
                       <h3 className="font-extrabold text-xs text-on-surface uppercase tracking-wider">
                         Audit Diagnostic Failed

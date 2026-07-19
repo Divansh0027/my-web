@@ -366,7 +366,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                     id="close-login-modal"
                     onClick={onClose}
                     aria-label="Close modal"
-                    className="h-9 w-9 rounded-full bg-surface-container-high/80 hover:bg-red-500/10 hover:text-red-600 text-on-surface-variant flex items-center justify-center transition-colors border border-outline-variant/50 cursor-pointer"
+                    className="h-9 w-9 rounded-full bg-surface-container-high/80 hover:bg-red-500/10 hover:text-red-700 dark:text-red-500 text-on-surface-variant flex items-center justify-center transition-colors border border-outline-variant/50 cursor-pointer"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -378,7 +378,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                   {authError && (
                     <div
                       role="alert"
-                      className="p-3.5 bg-red-500/10 border border-red-500/25 rounded-xl text-red-600 text-xs flex gap-2.5 items-start"
+                      className="p-3.5 bg-red-500/10 border border-red-500/25 rounded-xl text-red-700 dark:text-red-500 text-xs flex gap-2.5 items-start"
                     >
                       <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                       <span>{authError}</span>
@@ -472,7 +472,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                             <span
                               id="login-email-error"
                               aria-live="polite"
-                              className="text-[10px] text-red-600 flex gap-1 items-center font-medium"
+                              className="text-[10px] text-red-700 dark:text-red-500 flex gap-1 items-center font-medium"
                             >
                               <AlertCircle className="h-3.5 w-3.5" /> {errors.loginEmail}
                             </span>
@@ -563,7 +563,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                             <span
                               id="signup-name-error"
                               aria-live="polite"
-                              className="text-[10px] text-red-600 flex gap-1 items-center font-medium"
+                              className="text-[10px] text-red-700 dark:text-red-500 flex gap-1 items-center font-medium"
                             >
                               <AlertCircle className="h-3.5 w-3.5" /> {errors.signupName}
                             </span>
@@ -595,7 +595,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                             <span
                               id="signup-email-error"
                               aria-live="polite"
-                              className="text-[10px] text-red-600 flex gap-1 items-center font-medium"
+                              className="text-[10px] text-red-700 dark:text-red-500 flex gap-1 items-center font-medium"
                             >
                               <AlertCircle className="h-3.5 w-3.5" /> {errors.signupEmail}
                             </span>
@@ -629,7 +629,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                             <span
                               id="signup-phone-error"
                               aria-live="polite"
-                              className="text-[10px] text-red-600 flex gap-1 items-center font-medium"
+                              className="text-[10px] text-red-700 dark:text-red-500 flex gap-1 items-center font-medium"
                             >
                               <AlertCircle className="h-3.5 w-3.5" /> {errors.signupPhone}
                             </span>
@@ -737,7 +737,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                           <span
                             id="signup-password-error"
                             aria-live="polite"
-                            className="text-[10px] text-red-600 flex gap-1 items-center font-medium"
+                            className="text-[10px] text-red-700 dark:text-red-500 flex gap-1 items-center font-medium"
                           >
                             <AlertCircle className="h-3.5 w-3.5" /> {errors.signupPassword}
                           </span>
@@ -746,7 +746,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                           <span
                             id="signup-confirm-error"
                             aria-live="polite"
-                            className="text-[10px] text-red-600 flex gap-1 items-center font-medium"
+                            className="text-[10px] text-red-700 dark:text-red-500 flex gap-1 items-center font-medium"
                           >
                             <AlertCircle className="h-3.5 w-3.5" /> {errors.signupConfirm}
                           </span>
@@ -795,7 +795,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                       </div>
 
                       {forgotSuccess ? (
-                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 text-xs space-y-3">
+                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-success-green text-xs space-y-3">
                           <div className="flex gap-2 items-center font-bold">
                             <CheckCircle className="h-5 w-5" />
                             <span>Check Your Inbox</span>
@@ -825,7 +825,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                           {forgotError && (
                             <div
                               role="alert"
-                              className="p-3.5 bg-red-500/10 border border-red-500/25 rounded-xl text-red-600 text-xs flex gap-2.5 items-start"
+                              className="p-3.5 bg-red-500/10 border border-red-500/25 rounded-xl text-red-700 dark:text-red-500 text-xs flex gap-2.5 items-start"
                             >
                               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                               <span>{forgotError}</span>

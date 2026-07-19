@@ -29,14 +29,14 @@ export default React.memo(function Notification({ message, type, onClose }: Noti
           <div
             className={`flex items-center gap-3.5 px-5 py-4 rounded-2xl shadow-md border backdrop-blur-md ${
               type === 'success'
-                ? 'bg-[#10B981]/15 border-[#10B981]/30 text-emerald-300 shadow-emerald-950/10'
+                ? 'bg-[#10B981]/15 border-[#10B981]/30 text-success-green shadow-emerald-950/10'
                 : type === 'error'
                   ? 'bg-[#EF4444] border-[#EF4444]/30 text-on-surface shadow-red-950/20'
                   : 'bg-surface-container/95 border-outline-variant text-on-surface shadow-black/30'
             }`}
           >
             {type === 'success' ? (
-              <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="h-5 w-5 text-success-green shrink-0" />
             ) : type === 'error' ? (
               <XCircle className="h-5 w-5 text-on-surface shrink-0" />
             ) : (

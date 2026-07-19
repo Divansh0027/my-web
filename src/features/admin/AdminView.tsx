@@ -1,4 +1,4 @@
-import { SEO } from '@/shared/components/SEO'
+import { SEO } from '@/shared/components/Seo'
 import React from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { RefreshCw } from 'lucide-react'

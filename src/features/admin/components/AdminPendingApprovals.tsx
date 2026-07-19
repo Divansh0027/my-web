@@ -77,7 +77,7 @@ export default function PropertyModeration() {
 
                       {/* Status tag */}
                       <td className="py-4 px-4 text-center">
-                        <span className="inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold border leading-none uppercase bg-amber-500/15 text-amber-400 border-amber-500/20 animate-pulse">
+                        <span className="inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold border leading-none uppercase bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20 animate-pulse">
                           {prop.moderationStatus}
                         </span>
                       </td>
@@ -97,7 +97,7 @@ export default function PropertyModeration() {
                           </button>
                           <button
                             onClick={() => props.handlePropertyHideToggle(prop)}
-                            className="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-red-500/20 text-on-surface-variant hover:text-red-600 border border-outline-variant/50 hover:border-red-500/30 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
+                            className="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-red-500/20 text-on-surface-variant hover:text-red-700 dark:text-red-500 border border-outline-variant/50 hover:border-red-500/30 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
                             title="Reject Listing"
                             aria-label="Reject Listing"
                           >
