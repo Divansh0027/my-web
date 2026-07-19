@@ -46,7 +46,7 @@
     "react-dom": "^19.0.1",
     "react-helmet-async": "^3.0.0",
     "react-i18next": "^17.0.9",
-    "react-instantsearch": "^7.39.0",
+    "react-instantsearch": "^7.39.1",
     "react-joyride": "^3.2.0",
     "react-router-dom": "^7.18.0",
     "react-tooltip": "^6.0.8",
